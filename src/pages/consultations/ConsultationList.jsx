@@ -6,7 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { PlusCircle, Search, Calendar, User, FileText } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  Calendar,
+  User,
+  FileText,
+  Eye,
+  Edit,
+} from 'lucide-react';
 import ConsultationForm from './ConsultationForm';
 
 const ConsultationList = () => {
@@ -30,7 +38,6 @@ const ConsultationList = () => {
   const fetchConsultations = async () => {
     try {
       const response = await getConsultations({ page: 1, size: 100 });
-      // El backend devuelve { items: [...], total_count: ..., page: ..., size: ... }
       setConsultations(response.data.items || []);
       setConsultationsFiltradas(response.data.items || []);
     } catch (error) {
@@ -94,7 +101,7 @@ const ConsultationList = () => {
 
   const handleConsultationCreated = () => {
     setIsFormOpen(false);
-    fetchConsultations(); // Recargar la lista
+    fetchConsultations();
   };
 
   if (loading) {
@@ -116,7 +123,7 @@ const ConsultationList = () => {
           <div>
             <h1 className='text-3xl font-bold text-gray-900 flex items-center gap-2'>
               <FileText className='h-8 w-8' />
-              Consultas Oftalmológicas
+              Consultas
             </h1>
             <p className='text-gray-600'>Historial de consultas y exámenes</p>
           </div>
@@ -124,7 +131,7 @@ const ConsultationList = () => {
             onClick={() => setIsFormOpen(true)}
             className='w-full sm:w-auto'
           >
-            <PlusCircle className='h-4 w-4 mr-2' />
+            <Plus className='h-4 w-4 mr-2' />
             Nueva Consulta
           </Button>
         </div>
@@ -150,7 +157,7 @@ const ConsultationList = () => {
               <div className='flex-1 relative'>
                 <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4' />
                 <Input
-                  placeholder='Buscar por nombre del cliente, folio o notas...'
+                  placeholder='Buscar por nombre del cliente, notas o recomendaciones...'
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
                   className='pl-10'
@@ -207,7 +214,7 @@ const ConsultationList = () => {
               </p>
               {!busqueda && !filtroFecha && (
                 <Button onClick={() => setIsFormOpen(true)}>
-                  <PlusCircle className='h-4 w-4 mr-2' />
+                  <Plus className='h-4 w-4 mr-2' />
                   Registrar Primera Consulta
                 </Button>
               )}
@@ -215,9 +222,9 @@ const ConsultationList = () => {
           </Card>
         ) : (
           <div className='grid gap-4'>
-            {consultationsFiltradas.map((consultation) => (
+            {consultationsFiltradas.map((consulta) => (
               <Card
-                key={consultation.id}
+                key={consulta.id}
                 className='hover:shadow-md transition-shadow'
               >
                 <CardContent className='p-6'>
@@ -227,18 +234,12 @@ const ConsultationList = () => {
                       <div className='flex flex-col sm:flex-row sm:items-center gap-2 mb-3'>
                         <h3 className='text-lg font-semibold text-gray-900 flex items-center gap-2'>
                           <User className='h-4 w-4' />
-                          {consultation.customer?.name ||
-                            'Cliente no especificado'}{' '}
-                          {consultation.customer?.paternal_surname || ''}
+                          {consulta.customer?.name || 'Cliente no especificado'}{' '}
+                          {consulta.customer?.paternal_surname || ''}
                         </h3>
                         <Badge variant='outline' className='w-fit'>
-                          {formatearFechaCorta(consultation.consultation_date)}
+                          {formatearFechaCorta(consulta.consultation_date)}
                         </Badge>
-                        {consultation.folio && (
-                          <Badge variant='secondary' className='w-fit'>
-                            {consultation.folio}
-                          </Badge>
-                        )}
                       </div>
 
                       {/* Prescripción */}
@@ -252,15 +253,21 @@ const ConsultationList = () => {
                             <div className='mb-1'>
                               <span className='font-medium'>RX:</span>{' '}
                               {formatearPrescripcion(
-                                consultation.re_sph_final,
-                                consultation.re_cyl_final,
-                                consultation.re_axis_final
+                                consulta.re_sph_final,
+                                consulta.re_cyl_final,
+                                consulta.re_axis_final
                               )}
                             </div>
-                            {consultation.re_add_final && (
+                            {consulta.re_add_final && (
                               <div className='mb-1'>
                                 <span className='font-medium'>Add:</span>{' '}
-                                {consultation.re_add_final}
+                                {consulta.re_add_final}
+                              </div>
+                            )}
+                            {consulta.re_va_final && (
+                              <div>
+                                <span className='font-medium'>AV:</span>{' '}
+                                {consulta.re_va_final}
                               </div>
                             )}
                           </div>
@@ -275,15 +282,21 @@ const ConsultationList = () => {
                             <div className='mb-1'>
                               <span className='font-medium'>RX:</span>{' '}
                               {formatearPrescripcion(
-                                consultation.le_sph_final,
-                                consultation.le_cyl_final,
-                                consultation.le_axis_final
+                                consulta.le_sph_final,
+                                consulta.le_cyl_final,
+                                consulta.le_axis_final
                               )}
                             </div>
-                            {consultation.le_add_final && (
+                            {consulta.le_add_final && (
                               <div className='mb-1'>
                                 <span className='font-medium'>Add:</span>{' '}
-                                {consultation.le_add_final}
+                                {consulta.le_add_final}
+                              </div>
+                            )}
+                            {consulta.le_va_final && (
+                              <div>
+                                <span className='font-medium'>AV:</span>{' '}
+                                {consulta.le_va_final}
                               </div>
                             )}
                           </div>
@@ -292,49 +305,80 @@ const ConsultationList = () => {
 
                       {/* Información Adicional */}
                       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-600 mb-4'>
-                        {consultation.re_pd_final && (
+                        {consulta.re_pd_final && (
                           <div>
                             <span className='font-medium'>DIP OD:</span>{' '}
-                            {consultation.re_pd_final} mm
+                            {consulta.re_pd_final} mm
                           </div>
                         )}
-                        {consultation.le_pd_final && (
+                        {consulta.le_pd_final && (
                           <div>
                             <span className='font-medium'>DIP OI:</span>{' '}
-                            {consultation.le_pd_final} mm
+                            {consulta.le_pd_final} mm
                           </div>
                         )}
-                        {consultation.created_by && (
+                        {consulta.created_by && (
                           <div>
                             <span className='font-medium'>Optometrista:</span>{' '}
-                            {consultation.created_by.name}
+                            {consulta.created_by.name}
                           </div>
                         )}
                       </div>
 
                       {/* Notas Adicionales */}
-                      {consultation.additional_notes && (
-                        <div className='mt-4 p-3 bg-blue-50 rounded-lg'>
-                          <p className='text-sm text-gray-700'>
-                            <span className='font-medium'>Notas:</span>{' '}
-                            {consultation.additional_notes}
+                      {consulta.additional_notes && (
+                        <div className='mb-3'>
+                          <span className='font-medium text-sm text-gray-700'>
+                            Notas:
+                          </span>
+                          <p className='text-sm text-gray-600 mt-1'>
+                            {consulta.additional_notes}
                           </p>
                         </div>
                       )}
                     </div>
 
                     {/* Acciones */}
-                    <div className='flex flex-row lg:flex-col gap-2'>
+                    <div className='flex flex-col sm:flex-row gap-2 lg:flex-col lg:w-40'>
                       <Button
                         variant='outline'
                         size='sm'
                         onClick={() =>
-                          navigate(`/consultations/${consultation.id}`)
+                          navigate(`/consultations/${consulta.id}`)
                         }
+                        className='w-full'
                       >
-                        Ver Detalle
+                        <Eye className='h-4 w-4 mr-2' />
+                        Ver Detalles
                       </Button>
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={() =>
+                          navigate(`/consultations/${consulta.id}/edit`)
+                        }
+                        className='w-full'
+                      >
+                        <Edit className='h-4 w-4 mr-2' />
+                        Editar
+                      </Button>
+                      {consulta.customer?.id && (
+                        <Button
+                          size='sm'
+                          onClick={() => setIsFormOpen(true)}
+                          className='w-full'
+                        >
+                          <Plus className='h-4 w-4 mr-2' />
+                          Nueva Consulta
+                        </Button>
+                      )}
                     </div>
+                  </div>
+
+                  {/* Footer con fecha de registro */}
+                  <div className='mt-4 pt-4 border-t border-gray-200 text-xs text-gray-500'>
+                    Consulta realizada el{' '}
+                    {formatearFecha(consulta.consultation_date)}
                   </div>
                 </CardContent>
               </Card>

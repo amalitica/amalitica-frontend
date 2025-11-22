@@ -234,8 +234,10 @@ const ConsultationList = () => {
                       <div className='flex flex-col sm:flex-row sm:items-center gap-2 mb-3'>
                         <h3 className='text-lg font-semibold text-gray-900 flex items-center gap-2'>
                           <User className='h-4 w-4' />
-                          {consulta.customer?.name || 'Cliente no especificado'}{' '}
-                          {consulta.customer?.paternal_surname || ''}
+                          {consulta.customer?.name ||
+                            'Cliente no especificado'}{' '}
+                          {consulta.customer?.paternal_surname || ''}{' '}
+                          {consulta.customer?.maternal_surname || ''}
                         </h3>
                         <Badge variant='outline' className='w-fit'>
                           {formatearFechaCorta(consulta.consultation_date)}

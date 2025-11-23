@@ -49,7 +49,7 @@ const consultationSchema = z.object({
   additional_notes: z.string().optional(),
 });
 
-const ConsultationForm = ({ isOpen, onClose, onSuccess }) => {
+const ConsultationsForm = ({ isOpen, onClose, onSuccess }) => {
   const { user } = useAuth();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -481,4 +481,4 @@ const ConsultationForm = ({ isOpen, onClose, onSuccess }) => {
   );
 };
 
-export default ConsultationForm;
+export default ConsultationsForm;

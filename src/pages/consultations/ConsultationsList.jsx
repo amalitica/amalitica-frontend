@@ -15,9 +15,9 @@ import {
   Eye,
   Edit,
 } from 'lucide-react';
-import ConsultationForm from './ConsultationForm';
+import ConsultationsForm from './ConsultationsForm';
 
-const ConsultationList = () => {
+const ConsultationsList = () => {
   const navigate = useNavigate();
   const [consultations, setConsultations] = useState([]);
   const [consultationsFiltradas, setConsultationsFiltradas] = useState([]);
@@ -144,7 +144,7 @@ const ConsultationList = () => {
         )}
 
         {/* Formulario Modal */}
-        <ConsultationForm
+        <ConsultationsForm
           isOpen={isFormOpen}
           onClose={() => setIsFormOpen(false)}
           onSuccess={handleConsultationCreated}
@@ -392,4 +392,4 @@ const ConsultationList = () => {
   );
 };
 
-export default ConsultationList;
+export default ConsultationsList;

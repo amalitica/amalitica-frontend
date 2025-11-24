@@ -4,12 +4,16 @@ import { AuthProvider } from './context/AuthContext';
 import Login from './pages/Login';
 // import Register from "./pages/Register";
 import Dashboard from './pages/Dashboard'; // Crear este archivo
-import ConsultationsList from './pages/consultations/ConsultationsList';
 import CustomersList from './pages/customers/CustomersList';
 import CreateCustomer from './pages/customers/CreateCustomer';
 import EditCustomer from './pages/customers/EditCustomer';
 import CustomerDetails from './pages/customers/CustomerDetails';
 // import useAuth from './hooks/useAuth';
+import ConsultationsList from './pages/consultations/ConsultationsList';
+import CreateConsultation from './pages/consultations/CreateConsultation';
+import EditConsultation from './pages/consultations/EditConsultation';
+import ConsultationDetails from './pages/consultations/ConsultationDetails';
+
 import PrivateRoute from './components/common/PrivateRoute';
 import useFavicon from './hooks/useFavicon';
 import logoAmalitica from './assets/images/amalitica_logo.png';
@@ -44,6 +48,15 @@ function App() {
           <Route element={<PrivateRoute />}>
             <Route path='/dashboard' element={<Dashboard />} />
             <Route path='/consultations' element={<ConsultationsList />} />
+            <Route path='/consultations/new' element={<CreateConsultation />} />
+            <Route
+              path='/consultations/:id/edit'
+              element={<EditConsultation />}
+            />
+            <Route
+              path='/consultations/:id'
+              element={<ConsultationDetails />}
+            />
             <Route path='/customers' element={<CustomersList />} />
             <Route path='/customers/new' element={<CreateCustomer />} />
             <Route path='/customers/:id/edit' element={<EditCustomer />} />

@@ -1,223 +1,136 @@
 // src/components/consultations/tabs/GeneralTab.jsx
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { getCustomers } from '@/api/customers';
+import { Input } from '@/components/ui/input';
+import CustomerSearchBox from '@/components/consultations/CustomerSearchBox';
+import { useAuth } from '@/hooks/useAuth';
+
+// Función para formatear la fecha y hora en un formato legible
+const formatDateTime = (date) => {
+  if (!date) return 'Se asignará al guardar';
+  const d = new Date(date);
+  const options = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  };
+  return d.toLocaleString('es-ES', options);
+};
 
 export default function GeneralTab() {
   const {
     register,
     setValue,
+    getValues,
     formState: { errors },
   } = useFormContext();
-  const [customers, setCustomers] = useState([]);
-  const [loadingCustomers, setLoadingCustomers] = useState(true);
+  const { user } = useAuth();
 
+  const [displayDate, setDisplayDate] = useState('');
+
+  const mode = getValues('id') ? 'edit' : 'create';
+
+  // Establecer branch_id automáticamente desde el usuario autenticado
   useEffect(() => {
-    loadCustomers();
-  }, []);
-
-  const loadCustomers = async () => {
-    try {
-      setLoadingCustomers(true);
-      // Llamar a getCustomers con params como objeto
-      const response = await getCustomers({ page: 1, size: 100 });
-      setCustomers(response.data.items || []);
-    } catch (error) {
-      console.error('Error al cargar clientes:', error);
-    } finally {
-      setLoadingCustomers(false);
+    if (user?.branch_id) {
+      setValue('branch_id', user.branch_id);
     }
-  };
+
+    // Lógica para la fecha
+    const existingDate = getValues('creation_date');
+
+    if (existingDate) {
+      // Modo Edición: Usar la fecha existente
+      setDisplayDate(formatDateTime(existingDate));
+    } else {
+      // Modo Creación: Usar la fecha actual
+      setDisplayDate(formatDateTime(new Date()));
+    }
+
+    const existingOptometrist = getValues('optomoetrist_user_id');
+    if (!existingOptometrist && user?.id) {
+      setValue('optometrist_user_id', user.id);
+    }
+
+    // El array de dependencias es más estable y no causa bucles.
+    // getValues es una función estable y no cambia entre renders.
+  }, [user, setValue, getValues]);
 
   return (
     <div className='space-y-6'>
-      {/* Información Básica */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Información General</CardTitle>
-        </CardHeader>
-        <CardContent className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-          {/* Folio */}
-          <div>
-            <Label htmlFor='folio'>
-              Folio <span className='text-red-500'>*</span>
-            </Label>
-            <Input
-              id='folio'
-              {...register('folio', { required: 'El folio es obligatorio' })}
-              placeholder='Ej: CONS-2024-001'
-            />
-            {errors.folio && (
-              <p className='text-red-500 text-sm mt-1'>
-                {errors.folio.message}
-              </p>
-            )}
-          </div>
-
-          {/* Fecha de Consulta */}
-          <div>
-            <Label htmlFor='consultation_date'>
-              Fecha de Consulta <span className='text-red-500'>*</span>
-            </Label>
-            <Input
-              id='consultation_date'
-              type='date'
-              {...register('consultation_date', {
-                required: 'La fecha es obligatoria',
-              })}
-            />
-            {errors.consultation_date && (
-              <p className='text-red-500 text-sm mt-1'>
-                {errors.consultation_date.message}
-              </p>
-            )}
-          </div>
-
-          {/* Cliente */}
-          <div className='md:col-span-2'>
-            <Label htmlFor='customer_id'>
-              Cliente <span className='text-red-500'>*</span>
-            </Label>
-            {loadingCustomers ? (
-              <p className='text-sm text-gray-500 py-2'>Cargando clientes...</p>
-            ) : (
-              <Select
-                onValueChange={(value) =>
-                  setValue('customer_id', parseInt(value))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Seleccionar cliente' />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem
-                      key={customer.id}
-                      value={customer.id.toString()}
-                    >
-                      {customer.first_name} {customer.last_name} -{' '}
-                      {customer.phone}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            {errors.customer_id && (
-              <p className='text-red-500 text-sm mt-1'>
-                {errors.customer_id.message}
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Cuestionario General */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Cuestionario General</CardTitle>
-        </CardHeader>
-        <CardContent className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-          {/* Fecha del último examen visual */}
-          <div>
-            <Label htmlFor='last_eye_exam_date'>
-              Fecha del último examen visual
-            </Label>
-            <Input
-              id='last_eye_exam_date'
-              type='date'
-              {...register('last_eye_exam_date')}
-            />
-          </div>
-
-          {/* Fecha del último examen de salud general */}
-          <div>
-            <Label htmlFor='last_health_exam_date'>
-              Fecha del último examen de salud general
-            </Label>
-            <Input
-              id='last_health_exam_date'
-              type='date'
-              {...register('last_health_exam_date')}
-            />
-          </div>
-
-          {/* Horas frente a pantallas */}
-          <div>
-            <Label htmlFor='screen_hours_per_day'>
-              Horas frente a pantallas (por día)
-            </Label>
-            <Input
-              id='screen_hours_per_day'
-              type='number'
-              step='0.5'
-              min='0'
-              max='24'
-              {...register('screen_hours_per_day')}
-              placeholder='Ej: 8'
-            />
-          </div>
-
-          {/* Actividad principal */}
-          <div>
-            <Label htmlFor='main_activity'>Actividad principal</Label>
-            <Input
-              id='main_activity'
-              {...register('main_activity')}
-              placeholder='Ej: Oficina, Construcción, Estudiante'
-            />
-          </div>
-
-          {/* ¿Usa lentes actualmente? */}
-          <div>
-            <Label htmlFor='currently_wears_glasses'>
-              ¿Usa lentes actualmente?
-            </Label>
-            <Select
-              onValueChange={(value) =>
-                setValue('currently_wears_glasses', value === 'true')
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder='Seleccionar' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='true'>Sí</SelectItem>
-                <SelectItem value='false'>No</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* ¿Usa lentes de contacto? */}
-          <div>
-            <Label htmlFor='wears_contact_lenses'>
-              ¿Usa lentes de contacto?
-            </Label>
-            <Select
-              onValueChange={(value) =>
-                setValue('wears_contact_lenses', value === 'true')
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder='Seleccionar' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='true'>Sí</SelectItem>
-                <SelectItem value='false'>No</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+        {/* --- CAMPO DE CLIENTE CON EL NUEVO COMPONENTE --- */}
+        <div className='space-y-2'>
+          <Label>
+            Cliente <span className='text-red-500'>*</span>
+          </Label>
+          <CustomerSearchBox mode={mode} />
+          <input
+            type='hidden'
+            {...register('customer_id', {
+              required: 'El cliente es obligatorio',
+            })}
+          />
+          {errors.customer_id && (
+            <p className='text-sm text-red-500'>{errors.customer_id.message}</p>
+          )}
+        </div>{' '}
+        {/* Branch ID */}
+        <div className='space-y-2'>
+          <Label htmlFor='branch_id'>
+            Sucursal <span className='text-red-500'>*</span>
+          </Label>
+          <Input
+            id='branch_id'
+            type='number'
+            {...register('branch_id', {
+              required: 'La sucursal es obligatoria',
+              valueAsNumber: true,
+            })}
+            placeholder='ID de la sucursal'
+            disabled
+          />
+          {errors.branch_id && (
+            <p className='text-sm text-red-500'>{errors.branch_id.message}</p>
+          )}
+        </div>
+        {/* Optometrist User ID */}
+        <div className='space-y-2'>
+          <Label htmlFor='optometrist_user_id'>Optometrista</Label>
+          <Input
+            id='optometrist_user_id'
+            type='number'
+            {...register('optometrist_user_id', { valueAsNumber: true })}
+            placeholder='ID del optometrista'
+            disabled
+          />
+        </div>
+        {/* Consultation Date */}
+        <div className='space-y-2'>
+          <Label htmlFor='creation_date_display'>Fecha de Consulta</Label>
+          <p
+            id='creation_date_display'
+            className='flex h-10 w-full rounded-md border border-input bg-slate-100 px-3 py-2 text-sm text-muted-foreground'
+          >
+            {displayDate}
+          </p>
+          {/* Campo oculto para que react-hook-form no pierda la referencia si lo necesitas */}
+          <input type='hidden' {...register('creation_date')} />
+        </div>
+        {/* Folio */}
+        <div className='space-y-2'>
+          <Label htmlFor='folio'>Folio</Label>
+          <Input
+            id='folio'
+            type='text'
+            {...register('folio')}
+            placeholder='Folio único de la consulta'
+          />
+        </div>
+      </div>
     </div>
   );
 }

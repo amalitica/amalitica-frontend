@@ -1,184 +1,200 @@
 // src/components/consultations/tabs/PrescriptionTab.jsx
 import { useFormContext } from 'react-hook-form';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function PrescriptionTab() {
-  const {
-    register,
-    formState: { errors },
-  } = useFormContext();
-
-  const RxFields = ({ eye, prefix }) => (
-    <div className='space-y-4'>
-      <h4 className='font-medium text-sm text-gray-700 uppercase'>{eye}</h4>
-      <div className='grid grid-cols-2 md:grid-cols-4 gap-3'>
-        {/* Esfera */}
-        <div>
-          <label className='block text-xs font-medium mb-1'>Esfera (SPH)</label>
-          <Input
-            type='number'
-            step='0.25'
-            {...register(`${prefix}.sphere`, { valueAsNumber: true })}
-            placeholder='0.00'
-            className='text-sm'
-          />
-        </div>
-
-        {/* Cilindro */}
-        <div>
-          <label className='block text-xs font-medium mb-1'>
-            Cilindro (CYL)
-          </label>
-          <Input
-            type='number'
-            step='0.25'
-            {...register(`${prefix}.cylinder`, { valueAsNumber: true })}
-            placeholder='0.00'
-            className='text-sm'
-          />
-        </div>
-
-        {/* Eje */}
-        <div>
-          <label className='block text-xs font-medium mb-1'>Eje (AXIS)</label>
-          <Input
-            type='number'
-            min='0'
-            max='180'
-            {...register(`${prefix}.axis`, { valueAsNumber: true })}
-            placeholder='0-180'
-            className='text-sm'
-          />
-        </div>
-
-        {/* Adición */}
-        <div>
-          <label className='block text-xs font-medium mb-1'>
-            Adición (ADD)
-          </label>
-          <Input
-            type='number'
-            step='0.25'
-            {...register(`${prefix}.addition`, { valueAsNumber: true })}
-            placeholder='0.00'
-            className='text-sm'
-          />
-        </div>
-
-        {/* Prisma */}
-        <div>
-          <label className='block text-xs font-medium mb-1'>Prisma</label>
-          <Input
-            type='number'
-            step='0.25'
-            {...register(`${prefix}.prism`, { valueAsNumber: true })}
-            placeholder='0.00'
-            className='text-sm'
-          />
-        </div>
-
-        {/* Base */}
-        <div>
-          <label className='block text-xs font-medium mb-1'>Base</label>
-          <Input
-            {...register(`${prefix}.base`)}
-            placeholder='Ej: UP, DOWN'
-            maxLength='50'
-            className='text-sm'
-          />
-        </div>
-
-        {/* DIP (Distancia Interpupilar) */}
-        <div>
-          <label className='block text-xs font-medium mb-1'>DIP (mm)</label>
-          <Input
-            type='number'
-            step='0.5'
-            min='0'
-            {...register(`${prefix}.dip`, { valueAsNumber: true })}
-            placeholder='mm'
-            className='text-sm'
-          />
-        </div>
-
-        {/* Altura */}
-        <div>
-          <label className='block text-xs font-medium mb-1'>Altura (mm)</label>
-          <Input
-            type='number'
-            step='0.5'
-            min='0'
-            {...register(`${prefix}.height`, { valueAsNumber: true })}
-            placeholder='mm'
-            className='text-sm'
-          />
-        </div>
-      </div>
-    </div>
-  );
+  const { register } = useFormContext();
 
   return (
-    <div className='space-y-6'>
-      {/* Prescripción Final (RX Final) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Prescripción Final (RX Final)</CardTitle>
-          <p className='text-sm text-gray-600'>
-            Graduación final prescrita al paciente
-          </p>
-        </CardHeader>
-        <CardContent className='space-y-6'>
-          {/* Ojo Derecho */}
-          <RxFields eye='Ojo Derecho (OD)' prefix='final_rx_od' />
+    <div className='space-y-8'>
+      {/* RX Final - Ojo Derecho (RE) */}
+      <div className='space-y-4'>
+        <h3 className='text-lg font-semibold border-b pb-2'>
+          RX Final - Ojo Derecho (OD/RE)
+        </h3>
+        <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='re_sph_final'>Esfera (SPH)</Label>
+            <Input
+              id='re_sph_final'
+              type='number'
+              step='0.25'
+              {...register('re_sph_final', { valueAsNumber: true })}
+              placeholder='-2.50'
+            />
+          </div>
 
-          {/* Separador */}
-          <div className='border-t my-6'></div>
+          <div className='space-y-2'>
+            <Label htmlFor='re_cyl_final'>Cilindro (CYL)</Label>
+            <Input
+              id='re_cyl_final'
+              type='number'
+              step='0.25'
+              {...register('re_cyl_final', { valueAsNumber: true })}
+              placeholder='-1.00'
+            />
+          </div>
 
-          {/* Ojo Izquierdo */}
-          <RxFields eye='Ojo Izquierdo (OS)' prefix='final_rx_os' />
-        </CardContent>
-      </Card>
+          <div className='space-y-2'>
+            <Label htmlFor='re_axis_final'>Eje (AXIS)</Label>
+            <Input
+              id='re_axis_final'
+              type='number'
+              {...register('re_axis_final', { valueAsNumber: true })}
+              placeholder='90'
+              min='0'
+              max='180'
+            />
+          </div>
 
-      {/* Prescripción Subjetiva */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Prescripción Subjetiva</CardTitle>
-          <p className='text-sm text-gray-600'>
-            Graduación basada en la respuesta del paciente
-          </p>
-        </CardHeader>
-        <CardContent className='space-y-6'>
-          {/* Ojo Derecho */}
-          <RxFields eye='Ojo Derecho (OD)' prefix='subjective_rx_od' />
+          <div className='space-y-2'>
+            <Label htmlFor='re_add_final'>Adición (ADD)</Label>
+            <Input
+              id='re_add_final'
+              type='number'
+              step='0.25'
+              {...register('re_add_final', { valueAsNumber: true })}
+              placeholder='+2.00'
+            />
+          </div>
+        </div>
+      </div>
 
-          {/* Separador */}
-          <div className='border-t my-6'></div>
+      {/* RX Final - Ojo Izquierdo (LE) */}
+      <div className='space-y-4'>
+        <h3 className='text-lg font-semibold border-b pb-2'>
+          RX Final - Ojo Izquierdo (OS/LE)
+        </h3>
+        <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='le_sph_final'>Esfera (SPH)</Label>
+            <Input
+              id='le_sph_final'
+              type='number'
+              step='0.25'
+              {...register('le_sph_final', { valueAsNumber: true })}
+              placeholder='-2.50'
+            />
+          </div>
 
-          {/* Ojo Izquierdo */}
-          <RxFields eye='Ojo Izquierdo (OS)' prefix='subjective_rx_os' />
-        </CardContent>
-      </Card>
+          <div className='space-y-2'>
+            <Label htmlFor='le_cyl_final'>Cilindro (CYL)</Label>
+            <Input
+              id='le_cyl_final'
+              type='number'
+              step='0.25'
+              {...register('le_cyl_final', { valueAsNumber: true })}
+              placeholder='-1.00'
+            />
+          </div>
 
-      {/* Prescripción Objetiva (Retinoscopía) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Prescripción Objetiva (Retinoscopía)</CardTitle>
-          <p className='text-sm text-gray-600'>
-            Graduación obtenida mediante retinoscopía
-          </p>
-        </CardHeader>
-        <CardContent className='space-y-6'>
-          {/* Ojo Derecho */}
-          <RxFields eye='Ojo Derecho (OD)' prefix='objective_rx_od' />
+          <div className='space-y-2'>
+            <Label htmlFor='le_axis_final'>Eje (AXIS)</Label>
+            <Input
+              id='le_axis_final'
+              type='number'
+              {...register('le_axis_final', { valueAsNumber: true })}
+              placeholder='90'
+              min='0'
+              max='180'
+            />
+          </div>
 
-          {/* Separador */}
-          <div className='border-t my-6'></div>
+          <div className='space-y-2'>
+            <Label htmlFor='le_add_final'>Adición (ADD)</Label>
+            <Input
+              id='le_add_final'
+              type='number'
+              step='0.25'
+              {...register('le_add_final', { valueAsNumber: true })}
+              placeholder='+2.00'
+            />
+          </div>
+        </div>
+      </div>
 
-          {/* Ojo Izquierdo */}
-          <RxFields eye='Ojo Izquierdo (OS)' prefix='objective_rx_os' />
-        </CardContent>
-      </Card>
+      {/* Mediciones Biométricas - Distancia Pupilar */}
+      <div className='space-y-4'>
+        <h3 className='text-lg font-semibold border-b pb-2'>
+          Distancia Pupilar (PD)
+        </h3>
+        <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='re_pd_final'>PD Ojo Derecho</Label>
+            <Input
+              id='re_pd_final'
+              type='number'
+              step='0.5'
+              {...register('re_pd_final', { valueAsNumber: true })}
+              placeholder='32.0'
+            />
+          </div>
+
+          <div className='space-y-2'>
+            <Label htmlFor='le_pd_final'>PD Ojo Izquierdo</Label>
+            <Input
+              id='le_pd_final'
+              type='number'
+              step='0.5'
+              {...register('le_pd_final', { valueAsNumber: true })}
+              placeholder='32.0'
+            />
+          </div>
+
+          <div className='space-y-2'>
+            <Label htmlFor='pd_final'>PD Binocular</Label>
+            <Input
+              id='pd_final'
+              type='number'
+              step='0.5'
+              {...register('pd_final', { valueAsNumber: true })}
+              placeholder='64.0'
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Mediciones Biométricas - Altura de Segmento */}
+      <div className='space-y-4'>
+        <h3 className='text-lg font-semibold border-b pb-2'>
+          Altura de Segmento
+        </h3>
+        <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='re_seg_height_final'>Seg Height Ojo Derecho</Label>
+            <Input
+              id='re_seg_height_final'
+              type='number'
+              step='0.5'
+              {...register('re_seg_height_final', { valueAsNumber: true })}
+              placeholder='18.0'
+            />
+          </div>
+
+          <div className='space-y-2'>
+            <Label htmlFor='le_seg_height_final'>Seg Height Ojo Izquierdo</Label>
+            <Input
+              id='le_seg_height_final'
+              type='number'
+              step='0.5'
+              {...register('le_seg_height_final', { valueAsNumber: true })}
+              placeholder='18.0'
+            />
+          </div>
+
+          <div className='space-y-2'>
+            <Label htmlFor='seg_height_final'>Seg Height Binocular</Label>
+            <Input
+              id='seg_height_final'
+              type='number'
+              step='0.5'
+              {...register('seg_height_final', { valueAsNumber: true })}
+              placeholder='18.0'
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -19,7 +19,11 @@ import SymptomsTab from './tabs/SymptomsTab';
 import ProductTab from './tabs/ProductTab';
 import NotesTab from './tabs/NotesTab';
 
-export default function ConsultationForm({ consultationId, mode = 'create' }) {
+export default function ConsultationForm({
+  consultationId,
+  mode = 'create',
+  initialData = {},
+}) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -27,68 +31,103 @@ export default function ConsultationForm({ consultationId, mode = 'create' }) {
 
   const methods = useForm({
     defaultValues: {
-      // Datos Generales
+      // --- General ---
       customer_id: '',
-      consultation_date: new Date().toISOString().split('T')[0],
+      branch_id: '',
+      optometrist_user_id: '',
+      creation_date: new Date().toISOString().split('T')[0],
       folio: '',
 
-      // Prescripción Final
-      final_rx_od: {},
-      final_rx_os: {},
+      // --- RX Final - Ojo Derecho ---
+      re_sph_final: null,
+      re_cyl_final: null,
+      re_axis_final: null,
+      re_add_final: null,
 
-      // Prescripción Subjetiva
-      subjective_rx_od: {},
-      subjective_rx_os: {},
+      // --- RX Final - Ojo Izquierdo ---
+      le_sph_final: null,
+      le_cyl_final: null,
+      le_axis_final: null,
+      le_add_final: null,
 
-      // Prescripción Objetiva
-      objective_rx_od: {},
-      objective_rx_os: {},
+      // --- RX Final - Mediciones Biométricas ---
+      re_pd_final: null,
+      le_pd_final: null,
+      pd_final: null,
+      re_seg_height_final: null,
+      le_seg_height_final: null,
+      seg_height_final: null,
 
-      // Agudeza Visual
-      visual_acuity_od: {},
-      visual_acuity_os: {},
-      visual_acuity_ou: {},
-      visual_acuity_notes: '',
+      // --- Agudeza Visual Final ---
+      va_final_re_distance: '',
+      va_final_re_near: '',
+      va_final_le_distance: '',
+      va_final_le_near: '',
+      va_final_both_distance: '',
+      va_final_both_near: '',
 
-      // Mediciones (JSONB)
-      lensometry: { od: {}, os: {} },
-      retinoscopy: { od: {}, os: {} },
-      keratometry: { od: {}, os: {} },
-      measurements_notes: '',
-
-      // Síntomas (JSONB)
-      symptoms: {
-        vision_symptoms: {},
-        headache_symptoms: {},
-        eye_discomfort_symptoms: {},
-        health_conditions: {},
-      },
-      additional_symptoms: '',
-
-      // Producto
+      // --- Producto ---
       frame_brand: '',
       frame_model: '',
       frame_color: '',
-      frame_price: null,
+      frame_size: '',
       lens_type: '',
+      re_lens_type: '',
+      le_lens_type: '',
       lens_material: '',
-      lens_treatment: '',
-      lens_price: null,
-
-      // Comercial
+      lens_design: '',
       total_price: null,
-      discount: null,
-      advance_payment: null,
-      balance: null,
-      payment_method: '',
-      delivery_date: '',
-      sales_notes: '',
+      delivery_days: null,
 
-      // Notas
-      diagnosis: '',
-      notes: '',
-      recommendations: '',
-      follow_up: '',
+      // --- Campos JSONB ---
+      lensometry: {
+        re: { sph: null, cyl: null, axis: null, add: null },
+        le: { sph: null, cyl: null, axis: null, add: null },
+      },
+      retinoscopy: {
+        re: { sph: null, cyl: null, axis: null, add: null },
+        le: { sph: null, cyl: null, axis: null, add: null },
+      },
+      symptoms: {
+        vision: {
+          blurry_distance: false,
+          blurry_near: false,
+          blurry_letters: false,
+          sun_sensitive: false,
+          artificial_light_sensitive: false,
+        },
+        headache: {
+          frontal: false,
+          occipital: false,
+          temporal: false,
+        },
+        eye_discomfort: {
+          eye_pain: false,
+          itching: false,
+          burning: false,
+          tearing: false,
+          watery_eyes: false,
+          irritation: false,
+          dry_eye: false,
+          fatigue: false,
+        },
+        health_conditions: {
+          hypertension: false,
+          diabetes: false,
+          tired: false,
+          screen_hours: null,
+        },
+        disease: '',
+        takes_medication: '',
+        observations: '',
+      },
+
+      // --- Notas ---
+      retinoscopy_notes: '',
+      additional_notes: '',
+
+      // Para el customer_id
+      ...initialData,
     },
   });
 
@@ -105,6 +144,19 @@ export default function ConsultationForm({ consultationId, mode = 'create' }) {
     try {
       setLoading(true);
       const response = await getConsultationById(consultationId);
+      const consultationData = response.data;
+
+      const initialData = {
+        ...consultationData,
+        customer_name: consultationData.customer
+          ? `${consultationData.customer.name} ${consultationData.customer.paternal_surname}`
+          : '',
+      };
+
+      // ✅ SIN TRANSFORMACIÓN: Los datos del backend ya tienen los nombres correctos
+      console.log('Datos cargados del backend:', response.data);
+
+      reset(initialData);
       reset(response.data);
     } catch (err) {
       setError('Error al cargar la consulta');
@@ -119,26 +171,23 @@ export default function ConsultationForm({ consultationId, mode = 'create' }) {
       setLoading(true);
       setError(null);
 
-      // Limpiar campos vacíos
-      const cleanData = Object.fromEntries(
-        Object.entries(data).filter(([_, v]) => {
-          if (v === null || v === undefined || v === '') return false;
-          if (typeof v === 'object' && Object.keys(v).length === 0)
-            return false;
-          return true;
-        })
-      );
+      const dataToSend = { ...data };
+      delete dataToSend.customer_name;
+
+      // ✅ SIN TRANSFORMACIÓN: Los datos del formulario ya tienen los nombres correctos
+      console.log('Datos a enviar al backend:', dataToSend);
 
       if (mode === 'create') {
-        await createConsultation(cleanData);
+        await createConsultation(dataToSend);
       } else {
-        await updateConsultation(consultationId, cleanData);
+        await updateConsultation(consultationId, dataToSend);
       }
 
       navigate('/consultations');
     } catch (err) {
       setError(err.response?.data?.detail || 'Error al guardar la consulta');
-      console.error(err);
+      console.error('Error completo:', err);
+      console.error('Respuesta del servidor:', err.response?.data);
     } finally {
       setLoading(false);
     }

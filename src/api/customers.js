@@ -4,6 +4,14 @@ export const getCustomers = (params) => {
   return apiClient.get('/customers/', { params });
 };
 
+export const searchCustomers = async (query) => {
+  if (!query || query.length < 2) return [];
+
+  // Llamamos a getCustomers con los parámetros justos para la búsqueda
+  const response = await getCustomers({ q: query, size: 10 });
+  return response.data.items;
+};
+
 export const getCustomerById = (id) => {
   return apiClient.get(`/customers/${id}`);
 };

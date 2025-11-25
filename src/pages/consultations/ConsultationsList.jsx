@@ -179,11 +179,11 @@ export default function ConsultationsList() {
                         </td>
                         <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
                           {consultation.customer
-                            ? `${consultation.customer.first_name} ${consultation.customer.last_name}`
+                            ? `${consultation.customer.name} ${consultation.customer.paternal_surname}`
                             : 'N/A'}
                         </td>
                         <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                          {formatDate(consultation.consultation_date)}
+                          {formatDate(consultation.creation_date)}
                         </td>
                         <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>
                           {formatPrice(consultation.total_price)}

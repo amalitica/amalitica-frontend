@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, MoreVertical, Eye, Edit, Trash2 } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  MoreVertical,
+  Eye,
+  Edit,
+  Trash2,
+  FilePlus,
+} from 'lucide-react';
 import { getCustomers, deleteCustomer } from '@/api/customers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -222,6 +230,18 @@ const CustomersList = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align='end'>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  navigate(
+                                    `/consultations/new?customerId=${customer.id}&customerName=${encodeURIComponent(
+                                      `${customer.name} ${customer.paternal_surname}`
+                                    )}`
+                                  )
+                                }
+                              >
+                                <FilePlus className='mr-2 h-4 w-4' />
+                                Crear Consulta
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() =>
                                   navigate(`/customers/${customer.id}`)

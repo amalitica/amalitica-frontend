@@ -9,8 +9,10 @@ import {
   User,
   Calendar,
   FileText,
+  Printer,
 } from 'lucide-react';
 import { getConsultationById, deleteConsultation } from '@/api/consultations';
+import { downloadConsultationTicket, downloadLabOrder } from '@/api/documents';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -25,6 +27,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 export default function ConsultationDetails() {
   const { id } = useParams();
@@ -57,6 +60,24 @@ export default function ConsultationDetails() {
     } catch (err) {
       setError('Error al eliminar la consulta');
       console.error(err);
+    }
+  };
+
+  const handlePrintTicket = async () => {
+    try {
+      await downloadConsultationTicket(consultation.id);
+      toast.success('Ticket descargado correctamente');
+    } catch (error) {
+      toast.error('Error al descargar el ticket');
+    }
+  };
+
+  const handlePrintLabOrder = async () => {
+    try {
+      await downloadLabOrder(consultation.id);
+      toast.success('Orden de laboratorio descargada correctamente');
+    } catch (error) {
+      toast.error('Error al descargar la orden de laboratorio');
     }
   };
 
@@ -191,6 +212,24 @@ export default function ConsultationDetails() {
           </div>
         </div>
         <div className='flex gap-3'>
+          <Button
+            onClick={handlePrintTicket}
+            variant='outline'
+            className='flex items-center gap-2'
+          >
+            <Printer className='h-4 w-4' />
+            Imprimir Ticket
+          </Button>
+
+          <Button
+            onClick={handlePrintLabOrder}
+            variant='outline'
+            className='flex items-center gap-2'
+          >
+            <FileText className='h-4 w-4' />
+            Orden de Laboratorio
+          </Button>
+
           <Button asChild variant='outline'>
             <Link to={`/consultations/${id}/edit`}>
               <Edit className='mr-2 h-4 w-4' />
@@ -244,7 +283,11 @@ export default function ConsultationDetails() {
           <DetailItem label='Sucursal' value={consultation.branch_id} />
           <DetailItem
             label='Optometrista'
-            value={consultation.optometrist_user_id}
+            value={
+              consultation.optometrist
+                ? consultation.optometrist.name
+                : consultation.created_by.name
+            }
           />
         </CardContent>
       </Card>

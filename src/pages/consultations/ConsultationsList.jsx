@@ -1,8 +1,18 @@
 // src/pages/ConsultationsList.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Eye, Edit, Trash2, MoreVertical } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  Eye,
+  Edit,
+  Trash2,
+  MoreVertical,
+  Printer,
+  FileText,
+} from 'lucide-react';
 import { getConsultations, deleteConsultation } from '@/api/consultations';
+import { downloadConsultationTicket, downloadLabOrder } from '@/api/documents';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,8 +20,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { toast } from 'sonner';
 
 export default function ConsultationsList() {
   const navigate = useNavigate();
@@ -69,6 +81,26 @@ export default function ConsultationsList() {
       fetchConsultations(); // Recargar la lista
     } catch (err) {
       alert(err.response?.data?.detail || 'Error al eliminar la consulta');
+    }
+  };
+
+  const handlePrintTicket = async (consultationId, event) => {
+    event.stopPropagation(); // Evitar que se abra el menú
+    try {
+      await downloadConsultationTicket(consultationId);
+      toast.success('Ticket descargado correctamente');
+    } catch (error) {
+      toast.error('Error al descargar el ticket');
+    }
+  };
+
+  const handlePrintLabOrder = async (consultationId, event) => {
+    event.stopPropagation(); // Evitar que se abra el menú
+    try {
+      await downloadLabOrder(consultationId);
+      toast.success('Orden de laboratorio descargada correctamente');
+    } catch (error) {
+      toast.error('Error al descargar la orden de laboratorio');
     }
   };
 
@@ -214,6 +246,24 @@ export default function ConsultationsList() {
                                 <Edit className='mr-2 h-4 w-4' />
                                 Editar
                               </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={(e) =>
+                                  handlePrintTicket(consultation.id, e)
+                                }
+                              >
+                                <Printer className='mr-2 h-4 w-4' />
+                                Imprimir Ticket
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) =>
+                                  handlePrintLabOrder(consultation.id, e)
+                                }
+                              >
+                                <FileText className='mr-2 h-4 w-4' />
+                                Orden de Laboratorio
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => handleDelete(consultation.id)}
                                 className='text-red-600'
@@ -271,6 +321,20 @@ export default function ConsultationsList() {
                         <Edit className='mr-2 h-4 w-4' />
                         Editar
                       </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={(e) => handlePrintTicket(consultation.id, e)}
+                      >
+                        <Printer className='mr-2 h-4 w-4' />
+                        Imprimir Ticket
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => handlePrintLabOrder(consultation.id, e)}
+                      >
+                        <FileText className='mr-2 h-4 w-4' />
+                        Orden de Laboratorio
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => handleDelete(consultation.id)}
                         className='text-red-600'

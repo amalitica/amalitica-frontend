@@ -4,6 +4,7 @@ import { useFormContext } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import CustomerSearchBox from '@/components/consultations/CustomerSearchBox';
+import OptometristSelect from '@/components/consultations/OptometristSelect';
 import { useAuth } from '@/hooks/useAuth';
 
 // Función para formatear la fecha y hora en un formato legible
@@ -78,34 +79,32 @@ export default function GeneralTab() {
             <p className='text-sm text-red-500'>{errors.customer_id.message}</p>
           )}
         </div>{' '}
-        {/* Branch ID */}
+        {/* Sucursal */}
         <div className='space-y-2'>
           <Label htmlFor='branch_id'>
             Sucursal <span className='text-red-500'>*</span>
           </Label>
-          <Input
-            id='branch_id'
-            type='number'
+          <p className='flex h-10 w-full items-center rounded-md border border-input bg-slate-100 px-3 py-2 text-sm'>
+            {user?.branch_name || 'Sucursal del usuario'}
+          </p>
+          <input
+            type='hidden'
             {...register('branch_id', {
               required: 'La sucursal es obligatoria',
               valueAsNumber: true,
             })}
-            placeholder='ID de la sucursal'
-            disabled
           />
           {errors.branch_id && (
             <p className='text-sm text-red-500'>{errors.branch_id.message}</p>
           )}
         </div>
-        {/* Optometrist User ID */}
+        {/* Optometrista */}
         <div className='space-y-2'>
           <Label htmlFor='optometrist_user_id'>Optometrista</Label>
-          <Input
-            id='optometrist_user_id'
-            type='number'
+          <OptometristSelect mode={mode} />
+          <input
+            type='hidden'
             {...register('optometrist_user_id', { valueAsNumber: true })}
-            placeholder='ID del optometrista'
-            disabled
           />
         </div>
         {/* Consultation Date */}

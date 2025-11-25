@@ -11,7 +11,7 @@ import apiClient from './axios';
 export const getConsultations = async (page = 1, size = 20, search = '') => {
   const params = { page, size };
   if (search) {
-    params.search = search;
+    params.q = search; // Cambiar 'search' a 'q' para coincidir con el backend
   }
   return apiClient.get('/consultations/', { params });
 };

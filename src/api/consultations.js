@@ -60,3 +60,15 @@ export const deleteConsultation = async (id) => {
 export const getConsultationStats = async () => {
   return apiClient.get('/consultations/stats/summary');
 };
+
+/**
+ * Obtener consultas con entregas pendientes
+ *
+ * Retorna las consultas que tienen productos pendientes de entrega,
+ * ordenadas por fecha de entrega más próxima.
+ *
+ * @returns {Promise} - Lista de consultas con entregas pendientes
+ */
+export const getPendingDeliveries = async () => {
+  return apiClient.get('/consultations/pending-deliveries');
+};

@@ -32,7 +32,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Users, label: 'Clientes', path: '/customers' },
     { icon: FileText, label: 'Consultas', path: '/consultations' },
-    { icon: ShoppingCart, label: 'Pedidos', path: '/orders' },
+    // { icon: ShoppingCart, label: 'Pedidos', path: '/orders' },
   ];
 
   const SidebarContent = () => (

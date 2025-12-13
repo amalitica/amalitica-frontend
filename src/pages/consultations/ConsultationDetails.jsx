@@ -280,7 +280,7 @@ export default function ConsultationDetails() {
             label='Fecha de Consulta'
             value={formatDate(consultation.creation_date)}
           />
-          <DetailItem label='Sucursal' value={consultation.branch_id} />
+          {/*<DetailItem label='Sucursal' value={consultation.branch_id} />*/}
           <DetailItem
             label='Optometrista'
             value={
@@ -723,11 +723,11 @@ export default function ConsultationDetails() {
             </div>
           </div>
 
-          {/* Informaci\u00f3n Comercial */}
+          {/* Información Comercial */}
           {(consultation.total_price || consultation.delivery_days) && (
             <div>
               <h4 className='font-semibold text-gray-800 mb-3'>
-                Informaci\u00f3n Comercial
+                Información Comercial
               </h4>
               <div className='grid grid-cols-2 sm:grid-cols-3 gap-4 p-4 bg-green-50 rounded-lg'>
                 <DetailItem
@@ -735,7 +735,7 @@ export default function ConsultationDetails() {
                   value={formatPrice(consultation.total_price)}
                 />
                 <DetailItem
-                  label='D\u00edas de Entrega'
+                  label='Días de Entrega'
                   value={consultation.delivery_days}
                 />
               </div>

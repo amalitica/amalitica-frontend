@@ -80,7 +80,7 @@ export default function GeneralTab() {
           )}
         </div>{' '}
         {/* Sucursal */}
-        <div className='space-y-2'>
+        {/*<div className='space-y-2'>
           <Label htmlFor='branch_id'>
             Sucursal <span className='text-red-500'>*</span>
           </Label>
@@ -97,7 +97,7 @@ export default function GeneralTab() {
           {errors.branch_id && (
             <p className='text-sm text-red-500'>{errors.branch_id.message}</p>
           )}
-        </div>
+        </div> */}
         {/* Optometrista */}
         <div className='space-y-2'>
           <Label htmlFor='optometrist_user_id'>Optometrista</Label>

@@ -41,7 +41,7 @@ const Register = () => {
     admin_email: '',
     admin_phone: '',
     admin_password: '',
-    confirm_password: '',
+    admin_password_confirmation: '', // Cambiado para coincidir con el backend
   });
 
   const handleChange = (e) => {
@@ -55,12 +55,24 @@ const Register = () => {
       setError('El nombre del negocio es requerido');
       return false;
     }
+    if (formData.business_name.trim().length < 2) {
+      setError('El nombre del negocio debe tener al menos 2 caracteres');
+      return false;
+    }
     if (!formData.business_email.trim()) {
       setError('El correo del negocio es requerido');
       return false;
     }
     if (!formData.business_phone.trim()) {
       setError('El teléfono del negocio es requerido');
+      return false;
+    }
+    if (!/^\d+$/.test(formData.business_phone)) {
+      setError('El teléfono solo debe contener dígitos');
+      return false;
+    }
+    if (formData.business_phone.length < 10) {
+      setError('El teléfono debe tener al menos 10 dígitos');
       return false;
     }
     return true;
@@ -71,12 +83,24 @@ const Register = () => {
       setError('La dirección de la sucursal es requerida');
       return false;
     }
+    if (formData.branch_address.trim().length < 5) {
+      setError('La dirección debe tener al menos 5 caracteres');
+      return false;
+    }
     if (!formData.branch_city.trim()) {
       setError('La ciudad es requerida');
       return false;
     }
+    if (formData.branch_city.trim().length < 2) {
+      setError('La ciudad debe tener al menos 2 caracteres');
+      return false;
+    }
     if (!formData.branch_state.trim()) {
       setError('El estado es requerido');
+      return false;
+    }
+    if (formData.branch_state.trim().length < 2) {
+      setError('El estado debe tener al menos 2 caracteres');
       return false;
     }
     return true;
@@ -87,8 +111,24 @@ const Register = () => {
       setError('Tu nombre es requerido');
       return false;
     }
+    if (formData.admin_name.trim().length < 2) {
+      setError('Tu nombre debe tener al menos 2 caracteres');
+      return false;
+    }
     if (!formData.admin_email.trim()) {
       setError('Tu correo electrónico es requerido');
+      return false;
+    }
+    if (!formData.admin_phone.trim()) {
+      setError('Tu teléfono es requerido');
+      return false;
+    }
+    if (!/^\d+$/.test(formData.admin_phone)) {
+      setError('El teléfono solo debe contener dígitos');
+      return false;
+    }
+    if (formData.admin_phone.length < 10) {
+      setError('El teléfono debe tener al menos 10 dígitos');
       return false;
     }
     if (!formData.admin_password) {
@@ -99,7 +139,23 @@ const Register = () => {
       setError('La contraseña debe tener al menos 8 caracteres');
       return false;
     }
-    if (formData.admin_password !== formData.confirm_password) {
+    if (!/[A-Z]/.test(formData.admin_password)) {
+      setError('La contraseña debe contener al menos una mayúscula');
+      return false;
+    }
+    if (!/[a-z]/.test(formData.admin_password)) {
+      setError('La contraseña debe contener al menos una minúscula');
+      return false;
+    }
+    if (!/[0-9]/.test(formData.admin_password)) {
+      setError('La contraseña debe contener al menos un número');
+      return false;
+    }
+    if (/\s/.test(formData.admin_password)) {
+      setError('La contraseña no debe contener espacios');
+      return false;
+    }
+    if (formData.admin_password !== formData.admin_password_confirmation) {
       setError('Las contraseñas no coinciden');
       return false;
     }
@@ -130,19 +186,20 @@ const Register = () => {
 
     try {
       const response = await registerTenant({
-        business_name: formData.business_name,
-        business_email: formData.business_email,
-        business_phone: formData.business_phone,
-        branch_code: formData.branch_code,
-        branch_name: formData.branch_name,
-        branch_address: formData.branch_address,
-        branch_city: formData.branch_city,
-        branch_state: formData.branch_state,
-        branch_postal_code: formData.branch_postal_code || null,
-        admin_name: formData.admin_name,
-        admin_email: formData.admin_email,
-        admin_phone: formData.admin_phone || null,
+        business_name: formData.business_name.trim(),
+        business_email: formData.business_email.trim(),
+        business_phone: formData.business_phone.trim(),
+        branch_code: formData.branch_code.trim().toUpperCase(),
+        branch_name: formData.branch_name.trim(),
+        branch_address: formData.branch_address.trim(),
+        branch_city: formData.branch_city.trim(),
+        branch_state: formData.branch_state.trim(),
+        branch_postal_code: formData.branch_postal_code.trim() || null,
+        admin_name: formData.admin_name.trim(),
+        admin_email: formData.admin_email.trim(),
+        admin_phone: formData.admin_phone.trim(),
         admin_password: formData.admin_password,
+        admin_password_confirmation: formData.admin_password_confirmation,
       });
 
       // Guardar tokens en localStorage
@@ -156,9 +213,18 @@ const Register = () => {
         navigate('/dashboard');
       }, 2000);
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.detail ||
-        'Error al registrar. Por favor, intenta de nuevo.';
+      console.error('Error de registro:', err);
+      const errorData = err.response?.data;
+      let errorMessage = 'Error al registrar. Por favor, intenta de nuevo.';
+      
+      if (errorData?.detail) {
+        if (typeof errorData.detail === 'string') {
+          errorMessage = errorData.detail;
+        } else if (Array.isArray(errorData.detail)) {
+          // Pydantic validation errors
+          errorMessage = errorData.detail.map(e => e.msg).join('. ');
+        }
+      }
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -305,6 +371,7 @@ const Register = () => {
                       required
                       disabled={loading}
                     />
+                    <p className='text-xs text-muted-foreground'>Solo dígitos, mínimo 10</p>
                   </div>
                 </>
               )}
@@ -430,7 +497,9 @@ const Register = () => {
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='admin_phone'>Tu Teléfono</Label>
+                    <Label htmlFor='admin_phone'>
+                      Tu Teléfono <span className='text-red-500'>*</span>
+                    </Label>
                     <Input
                       id='admin_phone'
                       name='admin_phone'
@@ -438,8 +507,10 @@ const Register = () => {
                       value={formData.admin_phone}
                       onChange={handleChange}
                       placeholder='5512345678'
+                      required
                       disabled={loading}
                     />
+                    <p className='text-xs text-muted-foreground'>Solo dígitos, mínimo 10</p>
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='admin_password'>
@@ -471,18 +542,21 @@ const Register = () => {
                         )}
                       </Button>
                     </div>
+                    <p className='text-xs text-muted-foreground'>
+                      Debe contener mayúscula, minúscula y número
+                    </p>
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='confirm_password'>
+                    <Label htmlFor='admin_password_confirmation'>
                       Confirmar Contraseña{' '}
                       <span className='text-red-500'>*</span>
                     </Label>
                     <div className='relative'>
                       <Input
-                        id='confirm_password'
-                        name='confirm_password'
+                        id='admin_password_confirmation'
+                        name='admin_password_confirmation'
                         type={showConfirmPassword ? 'text' : 'password'}
-                        value={formData.confirm_password}
+                        value={formData.admin_password_confirmation}
                         onChange={handleChange}
                         placeholder='Repite tu contraseña'
                         required

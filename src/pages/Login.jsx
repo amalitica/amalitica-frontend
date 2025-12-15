@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -118,6 +118,19 @@ const Login = () => {
                 )}
               </Button>
             </form>
+
+            {/* Link to Register */}
+            <div className='mt-6 text-center text-sm'>
+              <span className='text-muted-foreground'>
+                ¿No tienes una cuenta?{' '}
+              </span>
+              <Link
+                to='/register'
+                className='text-primary hover:underline font-medium'
+              >
+                Regístrate gratis
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>

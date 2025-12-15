@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // import { useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Login from './pages/Login';
-// import Register from "./pages/Register";
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard'; // Crear este archivo
 import CustomersList from './pages/customers/CustomersList';
 import CreateCustomer from './pages/customers/CreateCustomer';
@@ -42,7 +42,7 @@ function App() {
         <FaviconManager />
         <Routes>
           <Route path='/login' element={<Login />} />
-          {/* <Route path="/register" element={<Register />} /> */}
+          <Route path='/register' element={<Register />} />
 
           {/* Rutas Protegidas */}
           <Route element={<PrivateRoute />}>

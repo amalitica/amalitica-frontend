@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Card,
   CardContent,
@@ -10,9 +11,31 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Eye, EyeOff, Loader2, CheckCircle2, Building2, User, MapPin } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Eye, EyeOff, Loader2, CheckCircle2, Building2, User, MapPin, ChevronsUpDown, Check, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import logoAmalitica from '@/assets/images/amalitica_logo.png';
 import { registerTenant } from '@/api/tenants';
+import { getStates, getMunicipalitiesByState, lookupByPostalCode } from '@/api/catalogs';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -23,31 +46,160 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
+  // Estados para catálogos geográficos
+  const [states, setStates] = useState([]);
+  const [municipalities, setMunicipalities] = useState([]);
+  const [settlements, setSettlements] = useState([]);
+  const [loadingStates, setLoadingStates] = useState(true);
+  const [loadingMunicipalities, setLoadingMunicipalities] = useState(false);
+  const [loadingSettlements, setLoadingSettlements] = useState(false);
+  const [postalCodeError, setPostalCodeError] = useState('');
+  const [customSettlement, setCustomSettlement] = useState(false);
+
+  // Popover states
+  const [stateOpen, setStateOpen] = useState(false);
+  const [municipalityOpen, setMunicipalityOpen] = useState(false);
+  const [settlementOpen, setSettlementOpen] = useState(false);
+
   // Estado del formulario
   const [formData, setFormData] = useState({
     // Datos del negocio
     business_name: '',
-    business_email: '',
-    business_phone: '',
-    // Datos de la sucursal
-    branch_code: 'MTZ',
+    // Datos de la sucursal (geográficos)
     branch_name: 'Matriz',
-    branch_address: '',
-    branch_city: '',
-    branch_state: '',
     branch_postal_code: '',
+    branch_state_id: null,
+    branch_municipality_id: null,
+    branch_settlement_id: null,
+    branch_settlement_custom: '',
+    branch_street: '',
+    branch_exterior_number: '',
+    branch_interior_number: '',
     // Datos del administrador
     admin_name: '',
     admin_email: '',
     admin_phone: '',
     admin_password: '',
-    admin_password_confirmation: '', // Cambiado para coincidir con el backend
+    admin_password_confirmation: '',
   });
+
+  // Cargar estados al montar el componente
+  useEffect(() => {
+    const loadStates = async () => {
+      try {
+        const data = await getStates();
+        setStates(data);
+      } catch (err) {
+        console.error('Error cargando estados:', err);
+      } finally {
+        setLoadingStates(false);
+      }
+    };
+    loadStates();
+  }, []);
+
+  // Cargar municipios cuando cambia el estado
+  useEffect(() => {
+    if (formData.branch_state_id) {
+      setLoadingMunicipalities(true);
+      getMunicipalitiesByState(formData.branch_state_id)
+        .then(data => {
+          setMunicipalities(data);
+        })
+        .catch(err => {
+          console.error('Error cargando municipios:', err);
+        })
+        .finally(() => {
+          setLoadingMunicipalities(false);
+        });
+    } else {
+      setMunicipalities([]);
+    }
+  }, [formData.branch_state_id]);
+
+  // Buscar por código postal
+  const handlePostalCodeChange = async (e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 5);
+    setFormData(prev => ({ ...prev, branch_postal_code: value }));
+    setPostalCodeError('');
+
+    if (value.length === 5) {
+      setLoadingSettlements(true);
+      try {
+        const data = await lookupByPostalCode(value);
+        if (data.state && data.municipality) {
+          setFormData(prev => ({
+            ...prev,
+            branch_state_id: data.state.id,
+            branch_municipality_id: data.municipality.id,
+            branch_settlement_id: null,
+            branch_settlement_custom: '',
+          }));
+          setSettlements(data.settlements);
+          setCustomSettlement(false);
+        } else {
+          setPostalCodeError('Código postal no encontrado. Verifica que sea correcto.');
+          setSettlements([]);
+        }
+      } catch (err) {
+        console.error('Error buscando CP:', err);
+        setPostalCodeError('Error al buscar el código postal.');
+      } finally {
+        setLoadingSettlements(false);
+      }
+    } else {
+      setSettlements([]);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setError('');
+  };
+
+  const handleStateChange = (stateId) => {
+    setFormData(prev => ({
+      ...prev,
+      branch_state_id: stateId,
+      branch_municipality_id: null,
+      branch_settlement_id: null,
+    }));
+    setSettlements([]);
+    setStateOpen(false);
+  };
+
+  const handleMunicipalityChange = (municipalityId) => {
+    setFormData(prev => ({
+      ...prev,
+      branch_municipality_id: municipalityId,
+      branch_settlement_id: null,
+    }));
+    setMunicipalityOpen(false);
+  };
+
+  const handleSettlementChange = (settlementId) => {
+    setFormData(prev => ({
+      ...prev,
+      branch_settlement_id: settlementId,
+      branch_settlement_custom: '',
+    }));
+    setSettlementOpen(false);
+  };
+
+  const handleCustomSettlementToggle = (checked) => {
+    setCustomSettlement(checked);
+    if (checked) {
+      setFormData(prev => ({
+        ...prev,
+        branch_settlement_id: null,
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        branch_settlement_custom: '',
+      }));
+    }
   };
 
   const validateStep1 = () => {
@@ -59,48 +211,36 @@ const Register = () => {
       setError('El nombre del negocio debe tener al menos 2 caracteres');
       return false;
     }
-    if (!formData.business_email.trim()) {
-      setError('El correo del negocio es requerido');
-      return false;
-    }
-    if (!formData.business_phone.trim()) {
-      setError('El teléfono del negocio es requerido');
-      return false;
-    }
-    if (!/^\d+$/.test(formData.business_phone)) {
-      setError('El teléfono solo debe contener dígitos');
-      return false;
-    }
-    if (formData.business_phone.length < 10) {
-      setError('El teléfono debe tener al menos 10 dígitos');
-      return false;
-    }
     return true;
   };
 
   const validateStep2 = () => {
-    if (!formData.branch_address.trim()) {
-      setError('La dirección de la sucursal es requerida');
+    if (!formData.branch_postal_code || formData.branch_postal_code.length !== 5) {
+      setError('El código postal debe tener 5 dígitos');
       return false;
     }
-    if (formData.branch_address.trim().length < 5) {
-      setError('La dirección debe tener al menos 5 caracteres');
+    if (!formData.branch_state_id) {
+      setError('Selecciona un estado');
       return false;
     }
-    if (!formData.branch_city.trim()) {
-      setError('La ciudad es requerida');
+    if (!formData.branch_municipality_id) {
+      setError('Selecciona un municipio');
       return false;
     }
-    if (formData.branch_city.trim().length < 2) {
-      setError('La ciudad debe tener al menos 2 caracteres');
+    if (!customSettlement && !formData.branch_settlement_id) {
+      setError('Selecciona una colonia o marca "Mi colonia no aparece"');
       return false;
     }
-    if (!formData.branch_state.trim()) {
-      setError('El estado es requerido');
+    if (customSettlement && !formData.branch_settlement_custom.trim()) {
+      setError('Escribe el nombre de tu colonia');
       return false;
     }
-    if (formData.branch_state.trim().length < 2) {
-      setError('El estado debe tener al menos 2 caracteres');
+    if (!formData.branch_street.trim()) {
+      setError('La calle es requerida');
+      return false;
+    }
+    if (!formData.branch_exterior_number.trim()) {
+      setError('El número exterior es requerido');
       return false;
     }
     return true;
@@ -185,22 +325,25 @@ const Register = () => {
     setError('');
 
     try {
-      const response = await registerTenant({
+      const payload = {
         business_name: formData.business_name.trim(),
-        business_email: formData.business_email.trim(),
-        business_phone: formData.business_phone.trim(),
-        branch_code: formData.branch_code.trim().toUpperCase(),
-        branch_name: formData.branch_name.trim(),
-        branch_address: formData.branch_address.trim(),
-        branch_city: formData.branch_city.trim(),
-        branch_state: formData.branch_state.trim(),
-        branch_postal_code: formData.branch_postal_code.trim() || null,
+        branch_name: formData.branch_name.trim() || 'Matriz',
+        branch_postal_code: formData.branch_postal_code,
+        branch_state_id: formData.branch_state_id,
+        branch_municipality_id: formData.branch_municipality_id,
+        branch_settlement_id: customSettlement ? null : formData.branch_settlement_id,
+        branch_settlement_custom: customSettlement ? formData.branch_settlement_custom.trim() : null,
+        branch_street: formData.branch_street.trim(),
+        branch_exterior_number: formData.branch_exterior_number.trim(),
+        branch_interior_number: formData.branch_interior_number.trim() || null,
         admin_name: formData.admin_name.trim(),
         admin_email: formData.admin_email.trim(),
         admin_phone: formData.admin_phone.trim(),
         admin_password: formData.admin_password,
         admin_password_confirmation: formData.admin_password_confirmation,
-      });
+      };
+
+      const response = await registerTenant(payload);
 
       // Guardar tokens en localStorage
       localStorage.setItem('accessToken', response.access_token);
@@ -221,7 +364,6 @@ const Register = () => {
         if (typeof errorData.detail === 'string') {
           errorMessage = errorData.detail;
         } else if (Array.isArray(errorData.detail)) {
-          // Pydantic validation errors
           errorMessage = errorData.detail.map(e => e.msg).join('. ');
         }
       }
@@ -233,9 +375,14 @@ const Register = () => {
 
   const steps = [
     { number: 1, title: 'Negocio', icon: Building2 },
-    { number: 2, title: 'Sucursal', icon: MapPin },
+    { number: 2, title: 'Ubicación', icon: MapPin },
     { number: 3, title: 'Cuenta', icon: User },
   ];
+
+  // Obtener nombres para mostrar
+  const selectedState = states.find(s => s.id === formData.branch_state_id);
+  const selectedMunicipality = municipalities.find(m => m.id === formData.branch_municipality_id);
+  const selectedSettlement = settlements.find(s => s.id === formData.branch_settlement_id);
 
   if (success) {
     return (
@@ -304,14 +451,14 @@ const Register = () => {
           <CardHeader className='px-4 sm:px-6'>
             <CardTitle className='text-xl sm:text-2xl'>
               {currentStep === 1 && 'Datos del Negocio'}
-              {currentStep === 2 && 'Sucursal Principal'}
+              {currentStep === 2 && 'Ubicación de tu Óptica'}
               {currentStep === 3 && 'Tu Cuenta'}
             </CardTitle>
             <CardDescription>
               {currentStep === 1 &&
-                'Ingresa la información básica de tu óptica.'}
+                'Ingresa el nombre de tu óptica.'}
               {currentStep === 2 &&
-                'Configura tu primera sucursal (puedes agregar más después).'}
+                'Ingresa la dirección de tu sucursal principal.'}
               {currentStep === 3 &&
                 'Crea tu cuenta de administrador para acceder al sistema.'}
             </CardDescription>
@@ -321,6 +468,7 @@ const Register = () => {
             <form onSubmit={handleSubmit} className='space-y-4'>
               {error && (
                 <div className='bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive'>
+                  <AlertCircle className='w-4 h-4 flex-shrink-0' />
                   <p>{error}</p>
                 </div>
               )}
@@ -330,7 +478,7 @@ const Register = () => {
                 <>
                   <div className='space-y-2'>
                     <Label htmlFor='business_name'>
-                      Nombre del Negocio <span className='text-red-500'>*</span>
+                      Nombre de tu Óptica <span className='text-red-500'>*</span>
                     </Label>
                     <Input
                       id='business_name'
@@ -340,125 +488,276 @@ const Register = () => {
                       placeholder='Óptica Visión Clara'
                       required
                       disabled={loading}
+                      autoFocus
                     />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='business_email'>
-                      Correo del Negocio <span className='text-red-500'>*</span>
-                    </Label>
-                    <Input
-                      id='business_email'
-                      name='business_email'
-                      type='email'
-                      value={formData.business_email}
-                      onChange={handleChange}
-                      placeholder='contacto@tuoptica.com'
-                      required
-                      disabled={loading}
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='business_phone'>
-                      Teléfono del Negocio <span className='text-red-500'>*</span>
-                    </Label>
-                    <Input
-                      id='business_phone'
-                      name='business_phone'
-                      type='tel'
-                      value={formData.business_phone}
-                      onChange={handleChange}
-                      placeholder='5512345678'
-                      required
-                      disabled={loading}
-                    />
-                    <p className='text-xs text-muted-foreground'>Solo dígitos, mínimo 10</p>
+                    <p className='text-xs text-muted-foreground'>
+                      Este será el nombre que verán tus clientes
+                    </p>
                   </div>
                 </>
               )}
 
-              {/* Step 2: Datos de la Sucursal */}
+              {/* Step 2: Datos Geográficos */}
               {currentStep === 2 && (
                 <>
-                  <div className='grid grid-cols-2 gap-4'>
-                    <div className='space-y-2'>
-                      <Label htmlFor='branch_code'>Código</Label>
+                  {/* Código Postal */}
+                  <div className='space-y-2'>
+                    <Label htmlFor='branch_postal_code'>
+                      Código Postal <span className='text-red-500'>*</span>
+                    </Label>
+                    <div className='relative'>
                       <Input
-                        id='branch_code'
-                        name='branch_code'
-                        value={formData.branch_code}
-                        onChange={handleChange}
-                        placeholder='MTZ'
-                        maxLength={10}
+                        id='branch_postal_code'
+                        name='branch_postal_code'
+                        value={formData.branch_postal_code}
+                        onChange={handlePostalCodeChange}
+                        placeholder='06600'
+                        maxLength={5}
                         disabled={loading}
+                        className={postalCodeError ? 'border-red-500' : ''}
                       />
+                      {loadingSettlements && (
+                        <Loader2 className='absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground' />
+                      )}
                     </div>
+                    {postalCodeError && (
+                      <p className='text-xs text-red-500'>{postalCodeError}</p>
+                    )}
+                    <p className='text-xs text-muted-foreground'>
+                      El estado y municipio se completarán automáticamente
+                    </p>
+                  </div>
+
+                  {/* Estado y Municipio */}
+                  <div className='grid grid-cols-2 gap-4'>
+                    {/* Estado */}
                     <div className='space-y-2'>
-                      <Label htmlFor='branch_name'>Nombre</Label>
-                      <Input
-                        id='branch_name'
-                        name='branch_name'
-                        value={formData.branch_name}
-                        onChange={handleChange}
-                        placeholder='Matriz'
-                        disabled={loading}
-                      />
+                      <Label>Estado <span className='text-red-500'>*</span></Label>
+                      <Popover open={stateOpen} onOpenChange={setStateOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant='outline'
+                            role='combobox'
+                            aria-expanded={stateOpen}
+                            className='w-full justify-between font-normal'
+                            disabled={loading || loadingStates}
+                          >
+                            {loadingStates ? (
+                              <Loader2 className='w-4 h-4 animate-spin' />
+                            ) : selectedState ? (
+                              selectedState.name
+                            ) : (
+                              'Seleccionar...'
+                            )}
+                            <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className='w-[200px] p-0'>
+                          <Command>
+                            <CommandInput placeholder='Buscar estado...' />
+                            <CommandList>
+                              <CommandEmpty>No encontrado</CommandEmpty>
+                              <CommandGroup>
+                                {states.map((state) => (
+                                  <CommandItem
+                                    key={state.id}
+                                    value={state.name}
+                                    onSelect={() => handleStateChange(state.id)}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        'mr-2 h-4 w-4',
+                                        formData.branch_state_id === state.id
+                                          ? 'opacity-100'
+                                          : 'opacity-0'
+                                      )}
+                                    />
+                                    {state.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    {/* Municipio */}
+                    <div className='space-y-2'>
+                      <Label>Municipio <span className='text-red-500'>*</span></Label>
+                      <Popover open={municipalityOpen} onOpenChange={setMunicipalityOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant='outline'
+                            role='combobox'
+                            aria-expanded={municipalityOpen}
+                            className='w-full justify-between font-normal'
+                            disabled={loading || !formData.branch_state_id || loadingMunicipalities}
+                          >
+                            {loadingMunicipalities ? (
+                              <Loader2 className='w-4 h-4 animate-spin' />
+                            ) : selectedMunicipality ? (
+                              <span className='truncate'>{selectedMunicipality.name}</span>
+                            ) : (
+                              'Seleccionar...'
+                            )}
+                            <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className='w-[200px] p-0'>
+                          <Command>
+                            <CommandInput placeholder='Buscar municipio...' />
+                            <CommandList>
+                              <CommandEmpty>No encontrado</CommandEmpty>
+                              <CommandGroup>
+                                {municipalities.map((muni) => (
+                                  <CommandItem
+                                    key={muni.id}
+                                    value={muni.name}
+                                    onSelect={() => handleMunicipalityChange(muni.id)}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        'mr-2 h-4 w-4',
+                                        formData.branch_municipality_id === muni.id
+                                          ? 'opacity-100'
+                                          : 'opacity-0'
+                                      )}
+                                    />
+                                    {muni.name}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </div>
+
+                  {/* Colonia */}
                   <div className='space-y-2'>
-                    <Label htmlFor='branch_address'>
-                      Dirección <span className='text-red-500'>*</span>
+                    <Label>Colonia <span className='text-red-500'>*</span></Label>
+                    {!customSettlement ? (
+                      <Popover open={settlementOpen} onOpenChange={setSettlementOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant='outline'
+                            role='combobox'
+                            aria-expanded={settlementOpen}
+                            className='w-full justify-between font-normal'
+                            disabled={loading || settlements.length === 0}
+                          >
+                            {selectedSettlement ? (
+                              <span className='truncate'>{selectedSettlement.name}</span>
+                            ) : settlements.length === 0 ? (
+                              'Ingresa el CP primero'
+                            ) : (
+                              'Seleccionar colonia...'
+                            )}
+                            <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className='w-[300px] p-0'>
+                          <Command>
+                            <CommandInput placeholder='Buscar colonia...' />
+                            <CommandList>
+                              <CommandEmpty>No encontrada</CommandEmpty>
+                              <CommandGroup>
+                                {settlements.map((settlement) => (
+                                  <CommandItem
+                                    key={settlement.id}
+                                    value={settlement.name}
+                                    onSelect={() => handleSettlementChange(settlement.id)}
+                                  >
+                                    <Check
+                                      className={cn(
+                                        'mr-2 h-4 w-4',
+                                        formData.branch_settlement_id === settlement.id
+                                          ? 'opacity-100'
+                                          : 'opacity-0'
+                                      )}
+                                    />
+                                    <div className='flex flex-col'>
+                                      <span>{settlement.name}</span>
+                                      {settlement.settlement_type && (
+                                        <span className='text-xs text-muted-foreground'>
+                                          {settlement.settlement_type}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    ) : (
+                      <Input
+                        name='branch_settlement_custom'
+                        value={formData.branch_settlement_custom}
+                        onChange={handleChange}
+                        placeholder='Nombre de tu colonia'
+                        disabled={loading}
+                      />
+                    )}
+                    <div className='flex items-center space-x-2'>
+                      <Checkbox
+                        id='customSettlement'
+                        checked={customSettlement}
+                        onCheckedChange={handleCustomSettlementToggle}
+                        disabled={loading || settlements.length === 0}
+                      />
+                      <label
+                        htmlFor='customSettlement'
+                        className='text-sm text-muted-foreground cursor-pointer'
+                      >
+                        Mi colonia no aparece en la lista
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Calle y Número */}
+                  <div className='space-y-2'>
+                    <Label htmlFor='branch_street'>
+                      Calle <span className='text-red-500'>*</span>
                     </Label>
                     <Input
-                      id='branch_address'
-                      name='branch_address'
-                      value={formData.branch_address}
+                      id='branch_street'
+                      name='branch_street'
+                      value={formData.branch_street}
                       onChange={handleChange}
-                      placeholder='Av. Principal #123, Col. Centro'
-                      required
+                      placeholder='Av. Insurgentes Sur'
                       disabled={loading}
                     />
                   </div>
+
                   <div className='grid grid-cols-2 gap-4'>
                     <div className='space-y-2'>
-                      <Label htmlFor='branch_city'>
-                        Ciudad <span className='text-red-500'>*</span>
+                      <Label htmlFor='branch_exterior_number'>
+                        Número Ext. <span className='text-red-500'>*</span>
                       </Label>
                       <Input
-                        id='branch_city'
-                        name='branch_city'
-                        value={formData.branch_city}
+                        id='branch_exterior_number'
+                        name='branch_exterior_number'
+                        value={formData.branch_exterior_number}
                         onChange={handleChange}
-                        placeholder='Ciudad de México'
-                        required
+                        placeholder='1234'
                         disabled={loading}
                       />
                     </div>
                     <div className='space-y-2'>
-                      <Label htmlFor='branch_state'>
-                        Estado <span className='text-red-500'>*</span>
-                      </Label>
+                      <Label htmlFor='branch_interior_number'>Número Int.</Label>
                       <Input
-                        id='branch_state'
-                        name='branch_state'
-                        value={formData.branch_state}
+                        id='branch_interior_number'
+                        name='branch_interior_number'
+                        value={formData.branch_interior_number}
                         onChange={handleChange}
-                        placeholder='CDMX'
-                        required
+                        placeholder='Local 5'
                         disabled={loading}
                       />
                     </div>
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='branch_postal_code'>Código Postal</Label>
-                    <Input
-                      id='branch_postal_code'
-                      name='branch_postal_code'
-                      value={formData.branch_postal_code}
-                      onChange={handleChange}
-                      placeholder='06600'
-                      maxLength={10}
-                      disabled={loading}
-                    />
                   </div>
                 </>
               )}
@@ -482,8 +781,7 @@ const Register = () => {
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='admin_email'>
-                      Tu Correo Electrónico{' '}
-                      <span className='text-red-500'>*</span>
+                      Tu Correo Electrónico <span className='text-red-500'>*</span>
                     </Label>
                     <Input
                       id='admin_email'
@@ -495,6 +793,9 @@ const Register = () => {
                       required
                       disabled={loading}
                     />
+                    <p className='text-xs text-muted-foreground'>
+                      Este será tu usuario para iniciar sesión
+                    </p>
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='admin_phone'>
@@ -510,7 +811,9 @@ const Register = () => {
                       required
                       disabled={loading}
                     />
-                    <p className='text-xs text-muted-foreground'>Solo dígitos, mínimo 10</p>
+                    <p className='text-xs text-muted-foreground'>
+                      Solo dígitos, mínimo 10
+                    </p>
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='admin_password'>
@@ -523,7 +826,7 @@ const Register = () => {
                         type={showPassword ? 'text' : 'password'}
                         value={formData.admin_password}
                         onChange={handleChange}
-                        placeholder='Mínimo 8 caracteres'
+                        placeholder='••••••••'
                         required
                         disabled={loading}
                       />
@@ -543,13 +846,13 @@ const Register = () => {
                       </Button>
                     </div>
                     <p className='text-xs text-muted-foreground'>
-                      Debe contener mayúscula, minúscula y número
+                      Mínimo 8 caracteres, una mayúscula, una minúscula y un
+                      número
                     </p>
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='admin_password_confirmation'>
-                      Confirmar Contraseña{' '}
-                      <span className='text-red-500'>*</span>
+                      Confirmar Contraseña <span className='text-red-500'>*</span>
                     </Label>
                     <div className='relative'>
                       <Input
@@ -558,7 +861,7 @@ const Register = () => {
                         type={showConfirmPassword ? 'text' : 'password'}
                         value={formData.admin_password_confirmation}
                         onChange={handleChange}
-                        placeholder='Repite tu contraseña'
+                        placeholder='••••••••'
                         required
                         disabled={loading}
                       />
@@ -606,7 +909,11 @@ const Register = () => {
                     Siguiente
                   </Button>
                 ) : (
-                  <Button type='submit' disabled={loading} className='flex-1'>
+                  <Button
+                    type='submit'
+                    disabled={loading}
+                    className='flex-1'
+                  >
                     {loading ? (
                       <>
                         <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -619,26 +926,15 @@ const Register = () => {
                 )}
               </div>
             </form>
-
-            {/* Link to Login */}
-            <div className='mt-6 text-center text-sm'>
-              <span className='text-muted-foreground'>
-                ¿Ya tienes una cuenta?{' '}
-              </span>
-              <Link
-                to='/login'
-                className='text-primary hover:underline font-medium'
-              >
-                Inicia Sesión
-              </Link>
-            </div>
           </CardContent>
         </Card>
 
-        {/* Trial Info */}
-        <p className='text-center text-xs text-muted-foreground mt-4'>
-          Al registrarte obtienes 14 días de prueba gratis. Sin tarjeta de
-          crédito.
+        {/* Footer */}
+        <p className='text-center text-sm text-muted-foreground mt-4'>
+          ¿Ya tienes una cuenta?{' '}
+          <Link to='/login' className='text-primary hover:underline font-medium'>
+            Inicia sesión
+          </Link>
         </p>
       </div>
     </div>

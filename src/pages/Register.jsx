@@ -528,7 +528,17 @@ const Register = () => {
           <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className='w-[--radix-popover-trigger-width] p-0' align='start'>
+      <PopoverContent 
+        className='w-[--radix-popover-trigger-width] p-0' 
+        align='start'
+        onInteractOutside={(e) => {
+          // Evitar que se cierre al hacer clic en el input de búsqueda
+          const target = e.target;
+          if (target.closest('[role="combobox"]')) {
+            e.preventDefault();
+          }
+        }}
+      >
         <div className='flex flex-col'>
           {/* Input de búsqueda */}
           <div className='flex items-center border-b px-3 py-2'>
@@ -844,8 +854,11 @@ const Register = () => {
                         />
                       </div>
 
-                      {/* Colonia */}
-                      {settlements.length > 0 && (
+                    </>
+                  )}
+
+                  {/* Colonia (común para ambos modos) */}
+                  {settlements.length > 0 && (
                     <div className='space-y-2'>
                       <Label>
                         Colonia <span className='text-red-500'>*</span>
@@ -916,8 +929,6 @@ const Register = () => {
                         </label>
                       </div>
                     </div>
-                  )}
-                    </>
                   )}
 
                   {/* Código Postal (solo lectura en modo state_municipality) */}

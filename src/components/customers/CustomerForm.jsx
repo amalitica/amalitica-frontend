@@ -664,7 +664,17 @@ const CustomerForm = ({ mode = 'create' }) => {
                           <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className='w-full p-0' align='start'>
+                      <PopoverContent 
+                      className='w-full p-0' 
+                      align='start'
+                      onInteractOutside={(e) => {
+                        // Evitar que se cierre al hacer clic en el input de búsqueda
+                        const target = e.target;
+                        if (target.closest('[role="combobox"]')) {
+                          e.preventDefault();
+                        }
+                      }}
+                    >
                         <div className='p-2'>
                           <div className='flex items-center border-b px-2 pb-2'>
                             <Search className='h-4 w-4 mr-2 opacity-50' />
@@ -719,7 +729,17 @@ const CustomerForm = ({ mode = 'create' }) => {
                           <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className='w-full p-0' align='start'>
+                      <PopoverContent 
+                      className='w-full p-0' 
+                      align='start'
+                      onInteractOutside={(e) => {
+                        // Evitar que se cierre al hacer clic en el input de búsqueda
+                        const target = e.target;
+                        if (target.closest('[role="combobox"]')) {
+                          e.preventDefault();
+                        }
+                      }}
+                    >
                         <div className='p-2'>
                           <div className='flex items-center border-b px-2 pb-2'>
                             <Search className='h-4 w-4 mr-2 opacity-50' />
@@ -777,7 +797,17 @@ const CustomerForm = ({ mode = 'create' }) => {
                         <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className='w-full p-0' align='start'>
+                    <PopoverContent 
+                      className='w-full p-0' 
+                      align='start'
+                      onInteractOutside={(e) => {
+                        // Evitar que se cierre al hacer clic en el input de búsqueda
+                        const target = e.target;
+                        if (target.closest('[role="combobox"]')) {
+                          e.preventDefault();
+                        }
+                      }}
+                    >
                       <div className='p-2'>
                         <div className='flex items-center border-b px-2 pb-2'>
                           <Search className='h-4 w-4 mr-2 opacity-50' />

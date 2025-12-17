@@ -61,6 +61,10 @@ const CustomerForm = ({ mode = 'create' }) => {
   const [postalCodeError, setPostalCodeError] = useState('');
   const [customSettlement, setCustomSettlement] = useState(false);
 
+  // Nombres de estado y municipio para modo CP (vienen de la respuesta del backend)
+  const [cpStateName, setCpStateName] = useState('');
+  const [cpMunicipalityName, setCpMunicipalityName] = useState('');
+
   // Popover states
   const [stateOpen, setStateOpen] = useState(false);
   const [municipalityOpen, setMunicipalityOpen] = useState(false);
@@ -188,6 +192,9 @@ const CustomerForm = ({ mode = 'create' }) => {
         if (locationMode === 'postal_code') {
           setValue('state_id', data.state?.id || null);
           setValue('municipality_id', data.municipality?.id || null);
+          // Guardar nombres para mostrar en modo CP
+          setCpStateName(data.state?.name || '');
+          setCpMunicipalityName(data.municipality?.name || '');
         }
       } else {
         setPostalCodeError('Código postal no encontrado');
@@ -266,6 +273,8 @@ const CustomerForm = ({ mode = 'create' }) => {
     setPostalCodes([]);
     setPostalCodeError('');
     setCustomSettlement(false);
+    setCpStateName('');
+    setCpMunicipalityName('');
   };
 
   const onSubmit = async (data) => {
@@ -589,15 +598,15 @@ const CustomerForm = ({ mode = 'create' }) => {
                 </div>
 
                 {/* Estado y Municipio (solo lectura) */}
-                {watchedStateId && (
+                {(cpStateName || cpMunicipalityName) && (
                   <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                     <div className='space-y-2'>
                       <Label>Estado</Label>
-                      <Input value={selectedStateName} disabled className='bg-muted' />
+                      <Input value={cpStateName} disabled className='bg-muted' />
                     </div>
                     <div className='space-y-2'>
                       <Label>Municipio</Label>
-                      <Input value={selectedMunicipalityName} disabled className='bg-muted' />
+                      <Input value={cpMunicipalityName} disabled className='bg-muted' />
                     </div>
                   </div>
                 )}

@@ -456,8 +456,10 @@ const Register = () => {
       setSuccess(true);
 
       // Redirigir al dashboard después de 2 segundos
+      // Usamos window.location.href para forzar una recarga completa
+      // y que el AuthContext detecte la nueva sesión
       setTimeout(() => {
-        navigate('/dashboard');
+        window.location.href = '/dashboard';
       }, 2000);
     } catch (err) {
       console.error('Error de registro:', err);

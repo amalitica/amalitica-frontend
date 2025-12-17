@@ -60,6 +60,16 @@ export const getSettlementsByMunicipality = async (municipalityId, limit = 100, 
 };
 
 /**
+ * Obtiene el código postal de un asentamiento específico.
+ * @param {number} settlementId - ID del asentamiento
+ * @returns {Promise<string>} Código postal de 5 dígitos
+ */
+export const getPostalCodeBySettlement = async (settlementId) => {
+  const response = await api.get(`/catalogs/settlements/${settlementId}/postal-code`);
+  return response.data;
+};
+
+/**
  * Crea un asentamiento personalizado (cuando la colonia no está en el catálogo).
  * @param {Object} data - Datos del asentamiento
  * @param {string} data.postal_code - Código postal de 5 dígitos
@@ -94,6 +104,7 @@ export default {
   lookupByPostalCode,
   getPostalCodesByMunicipality,
   getSettlementsByMunicipality,
+  getPostalCodeBySettlement,
   createCustomSettlement,
   searchSettlements,
 };

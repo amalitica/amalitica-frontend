@@ -38,6 +38,8 @@ import {
   getMunicipalitiesByState,
   lookupByPostalCode,
   getPostalCodesByMunicipality,
+  getSettlementsByMunicipality,
+  getPostalCodeBySettlement,
 } from '@/api/catalogs';
 
 const Register = () => {
@@ -130,34 +132,13 @@ const Register = () => {
     }
   }, [formData.branch_state_id, locationMode]);
 
-  // Cargar códigos postales cuando cambia el municipio (solo en modo state_municipality)
+  // Cargar asentamientos cuando cambia el municipio (solo en modo state_municipality)
   useEffect(() => {
     if (locationMode === 'state_municipality' && formData.branch_municipality_id) {
-      setLoadingPostalCodes(true);
-      getPostalCodesByMunicipality(formData.branch_municipality_id)
-        .then((data) => {
-          setPostalCodes(data);
-        })
-        .catch((err) => {
-          console.error('Error cargando códigos postales:', err);
-        })
-        .finally(() => {
-          setLoadingPostalCodes(false);
-        });
-    }
-  }, [formData.branch_municipality_id, locationMode]);
-
-  // Cargar asentamientos cuando cambia el CP (en modo state_municipality)
-  useEffect(() => {
-    if (
-      locationMode === 'state_municipality' &&
-      formData.branch_postal_code &&
-      formData.branch_postal_code.length === 5
-    ) {
       setLoadingSettlements(true);
-      lookupByPostalCode(formData.branch_postal_code)
+      getSettlementsByMunicipality(formData.branch_municipality_id)
         .then((data) => {
-          setSettlements(data.settlements || []);
+          setSettlements(data);
         })
         .catch((err) => {
           console.error('Error cargando asentamientos:', err);
@@ -166,7 +147,7 @@ const Register = () => {
           setLoadingSettlements(false);
         });
     }
-  }, [formData.branch_postal_code, locationMode]);
+  }, [formData.branch_municipality_id, locationMode]);
 
   // Manejar cambio de modo de ubicación
   const handleLocationModeChange = (mode) => {
@@ -253,10 +234,9 @@ const Register = () => {
     setFormData((prev) => ({
       ...prev,
       branch_municipality_id: municipalityId,
-      branch_postal_code: '',
       branch_settlement_id: null,
+      branch_postal_code: '',
     }));
-    setPostalCodes([]);
     setSettlements([]);
     setMunicipalityOpen(false);
     setMunicipalitySearch('');
@@ -272,7 +252,7 @@ const Register = () => {
     setPostalCodeSearch('');
   };
 
-  const handleSettlementChange = (settlementId) => {
+  const handleSettlementChange = async (settlementId) => {
     setFormData((prev) => ({
       ...prev,
       branch_settlement_id: settlementId,
@@ -280,6 +260,17 @@ const Register = () => {
     }));
     setSettlementOpen(false);
     setSettlementSearch('');
+    
+    // Autocompletar código postal basado en la colonia seleccionada
+    try {
+      const postalCode = await getPostalCodeBySettlement(settlementId);
+      setFormData((prev) => ({
+        ...prev,
+        branch_postal_code: postalCode,
+      }));
+    } catch (err) {
+      console.error('Error obteniendo código postal:', err);
+    }
   };
 
   const handleCustomSettlementToggle = (checked) => {
@@ -846,58 +837,8 @@ const Register = () => {
                         />
                       </div>
 
-                      {/* Código Postal (desplegable) */}
-                      <div className='space-y-2'>
-                        <Label>
-                          Código Postal <span className='text-red-500'>*</span>
-                        </Label>
-                        <SearchablePopover
-                          open={postalCodeOpen}
-                          onOpenChange={(open) => {
-                            setPostalCodeOpen(open);
-                            if (!open) setPostalCodeSearch('');
-                          }}
-                          triggerText={
-                            formData.branch_postal_code || 'Seleccionar código postal...'
-                          }
-                          placeholder='Buscar código postal...'
-                          searchValue={postalCodeSearch}
-                          onSearchChange={setPostalCodeSearch}
-                          items={filteredPostalCodes}
-                          disabled={loading || !formData.branch_municipality_id}
-                          isLoading={loadingPostalCodes}
-                          emptyText={
-                            !formData.branch_municipality_id
-                              ? 'Selecciona un municipio primero'
-                              : 'No se encontraron códigos postales'
-                          }
-                          renderItem={(pc) => (
-                            <div
-                              key={pc.postal_code}
-                              onClick={() => handlePostalCodeSelect(pc.postal_code)}
-                              className='relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors'
-                            >
-                              <Check
-                                className={cn(
-                                  'mr-2 h-4 w-4 flex-shrink-0',
-                                  formData.branch_postal_code === pc.postal_code
-                                    ? 'opacity-100'
-                                    : 'opacity-0'
-                                )}
-                              />
-                              <span>{pc.postal_code}</span>
-                              <span className='ml-auto text-xs text-muted-foreground'>
-                                {pc.settlement_count} colonias
-                              </span>
-                            </div>
-                          )}
-                        />
-                      </div>
-                    </>
-                  )}
-
-                  {/* Colonia (común para ambos modos) */}
-                  {settlements.length > 0 && (
+                      {/* Colonia */}
+                      {settlements.length > 0 && (
                     <div className='space-y-2'>
                       <Label>
                         Colonia <span className='text-red-500'>*</span>
@@ -967,6 +908,23 @@ const Register = () => {
                           Mi colonia no aparece en la lista
                         </label>
                       </div>
+                    </div>
+                  )}
+                    </>
+                  )}
+
+                  {/* Código Postal (solo lectura en modo state_municipality) */}
+                  {locationMode === 'state_municipality' && formData.branch_postal_code && (
+                    <div className='space-y-2'>
+                      <Label>Código Postal</Label>
+                      <Input
+                        value={formData.branch_postal_code}
+                        disabled
+                        className='bg-gray-50'
+                      />
+                      <p className='text-xs text-muted-foreground'>
+                        Autocompletado según la colonia seleccionada
+                      </p>
                     </div>
                   )}
 

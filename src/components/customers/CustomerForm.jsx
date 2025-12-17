@@ -12,6 +12,8 @@ import {
   getMunicipalitiesByState,
   lookupByPostalCode,
   getPostalCodesByMunicipality,
+  getSettlementsByMunicipality,
+  getPostalCodeBySettlement,
 } from '@/api/catalogs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -137,10 +139,10 @@ const CustomerForm = ({ mode = 'create' }) => {
     }
   }, [watchedStateId, locationMode]);
 
-  // Cargar códigos postales cuando cambia el municipio (modo state_municipality)
+  // Cargar asentamientos cuando cambia el municipio (modo state_municipality)
   useEffect(() => {
     if (locationMode === 'state_municipality' && watchedMunicipalityId) {
-      loadPostalCodes(watchedMunicipalityId);
+      loadSettlementsByMunicipality(watchedMunicipalityId);
     }
   }, [watchedMunicipalityId, locationMode]);
 
@@ -177,6 +179,18 @@ const CustomerForm = ({ mode = 'create' }) => {
       console.error('Error al cargar códigos postales:', err);
     } finally {
       setLoadingPostalCodes(false);
+    }
+  };
+
+  const loadSettlementsByMunicipality = async (municipalityId) => {
+    try {
+      setLoadingSettlements(true);
+      const data = await getSettlementsByMunicipality(municipalityId);
+      setSettlements(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error al cargar asentamientos:', err);
+    } finally {
+      setLoadingSettlements(false);
     }
   };
 
@@ -252,11 +266,20 @@ const CustomerForm = ({ mode = 'create' }) => {
     }
   };
 
-  // Handler para cambio de código postal en modo state_municipality
-  const handlePostalCodeSelect = async (postalCode) => {
-    setValue('postal_code', postalCode);
-    setPostalCodeOpen(false);
-    await loadSettlementsByPostalCode(postalCode);
+  // Handler para cambio de asentamiento en modo state_municipality
+  const handleSettlementChange = async (settlementId) => {
+    setValue('settlement_id', settlementId);
+    setValue('settlement_custom', '');
+    setSettlementOpen(false);
+    setSettlementSearch('');
+    
+    // Autocompletar código postal basado en la colonia seleccionada
+    try {
+      const postalCode = await getPostalCodeBySettlement(settlementId);
+      setValue('postal_code', postalCode);
+    } catch (err) {
+      console.error('Error obteniendo código postal:', err);
+    }
   };
 
   // Handler para cambio de modo de ubicación
@@ -708,9 +731,8 @@ const CustomerForm = ({ mode = 'create' }) => {
                                 )}
                                 onClick={() => {
                                   setValue('municipality_id', muni.id);
-                                  setValue('postal_code', '');
                                   setValue('settlement_id', null);
-                                  setPostalCodes([]);
+                                  setValue('postal_code', '');
                                   setSettlements([]);
                                   setMunicipalityOpen(false);
                                 }}
@@ -726,58 +748,6 @@ const CustomerForm = ({ mode = 'create' }) => {
                   </div>
                 </div>
 
-                {/* Código Postal (desplegable) */}
-                {watchedMunicipalityId && (
-                  <div className='space-y-2'>
-                    <Label>Código Postal</Label>
-                    <Popover open={postalCodeOpen} onOpenChange={setPostalCodeOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant='outline'
-                          role='combobox'
-                          className='w-full justify-between font-normal'
-                          disabled={loadingPostalCodes}
-                        >
-                          {watchedPostalCode || 'Selecciona un código postal...'}
-                          <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className='w-full p-0' align='start'>
-                        <div className='p-2'>
-                          <div className='flex items-center border-b px-2 pb-2'>
-                            <Search className='h-4 w-4 mr-2 opacity-50' />
-                            <input
-                              className='flex-1 bg-transparent outline-none text-sm'
-                              placeholder='Buscar CP...'
-                              value={postalCodeSearch}
-                              onChange={(e) => setPostalCodeSearch(e.target.value)}
-                            />
-                          </div>
-                          <div className='max-h-60 overflow-y-auto mt-2'>
-                            {filteredPostalCodes.map((pc) => (
-                              <div
-                                key={pc.postal_code}
-                                className={cn(
-                                  'flex items-center justify-between px-2 py-2 cursor-pointer rounded hover:bg-accent',
-                                  watchedPostalCode === pc.postal_code && 'bg-accent'
-                                )}
-                                onClick={() => handlePostalCodeSelect(pc.postal_code)}
-                              >
-                                <div className='flex items-center'>
-                                  <Check className={cn('mr-2 h-4 w-4', watchedPostalCode === pc.postal_code ? 'opacity-100' : 'opacity-0')} />
-                                  {pc.postal_code}
-                                </div>
-                                <span className='text-xs text-muted-foreground'>
-                                  {pc.settlement_count} colonias
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                )}
               </div>
             )}
 
@@ -817,10 +787,7 @@ const CustomerForm = ({ mode = 'create' }) => {
                                 'flex items-center px-2 py-2 cursor-pointer rounded hover:bg-accent',
                                 watchedSettlementId === settlement.id && 'bg-accent'
                               )}
-                              onClick={() => {
-                                setValue('settlement_id', settlement.id);
-                                setSettlementOpen(false);
-                              }}
+                              onClick={() => handleSettlementChange(settlement.id)}
                             >
                               <Check className={cn('mr-2 h-4 w-4', watchedSettlementId === settlement.id ? 'opacity-100' : 'opacity-0')} />
                               <div>
@@ -872,6 +839,21 @@ const CustomerForm = ({ mode = 'create' }) => {
                     )}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Código Postal (solo lectura en modo state_municipality) */}
+            {locationMode === 'state_municipality' && watchedPostalCode && (
+              <div className='space-y-2'>
+                <Label>Código Postal</Label>
+                <Input
+                  value={watchedPostalCode}
+                  disabled
+                  className='bg-muted'
+                />
+                <p className='text-xs text-muted-foreground'>
+                  Autocompletado según la colonia seleccionada
+                </p>
               </div>
             )}
 

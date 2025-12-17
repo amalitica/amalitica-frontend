@@ -448,6 +448,10 @@ const Register = () => {
       
       // Actualizar el header de Authorization en apiClient inmediatamente
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${response.access_token}`;
+      
+      // Obtener información del usuario autenticado
+      const userResponse = await apiClient.get('/users/me');
+      localStorage.setItem('user', JSON.stringify(userResponse.data));
 
       setSuccess(true);
 

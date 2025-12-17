@@ -33,6 +33,7 @@ import {
 import { cn } from '@/lib/utils';
 import logoAmalitica from '@/assets/images/amalitica_logo.png';
 import { registerTenant } from '@/api/tenants';
+import apiClient from '@/api/axios';
 import {
   getStates,
   getMunicipalitiesByState,
@@ -438,9 +439,15 @@ const Register = () => {
 
       const response = await registerTenant(payload);
 
-      // Guardar tokens en localStorage
+      // Limpiar localStorage completamente antes de guardar nuevos tokens
+      localStorage.clear();
+      
+      // Guardar nuevos tokens en localStorage
       localStorage.setItem('accessToken', response.access_token);
       localStorage.setItem('refreshToken', response.refresh_token);
+      
+      // Actualizar el header de Authorization en apiClient inmediatamente
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${response.access_token}`;
 
       setSuccess(true);
 

@@ -132,11 +132,11 @@ const Register = () => {
     }
   }, [formData.branch_state_id, locationMode]);
 
-  // Cargar asentamientos cuando cambia el municipio (solo en modo state_municipality)
+  // Cargar asentamientos cuando cambia el municipio o el término de búsqueda (solo en modo state_municipality)
   useEffect(() => {
     if (locationMode === 'state_municipality' && formData.branch_municipality_id) {
       setLoadingSettlements(true);
-      getSettlementsByMunicipality(formData.branch_municipality_id)
+      getSettlementsByMunicipality(formData.branch_municipality_id, settlementSearch)
         .then((data) => {
           setSettlements(data);
         })
@@ -147,7 +147,7 @@ const Register = () => {
           setLoadingSettlements(false);
         });
     }
-  }, [formData.branch_municipality_id, locationMode]);
+  }, [formData.branch_municipality_id, settlementSearch, locationMode]);
 
   // Manejar cambio de modo de ubicación
   const handleLocationModeChange = (mode) => {
@@ -179,14 +179,19 @@ const Register = () => {
       try {
         const data = await lookupByPostalCode(value);
         if (data.state && data.municipality) {
+          const settlements = data.settlements || [];
+          
+          // Si solo hay una colonia, autoseleccionarla
+          const autoSelectedSettlement = settlements.length === 1 ? settlements[0].id : null;
+          
           setFormData((prev) => ({
             ...prev,
             branch_state_id: data.state.id,
             branch_municipality_id: data.municipality.id,
-            branch_settlement_id: null,
+            branch_settlement_id: autoSelectedSettlement,
             branch_settlement_custom: '',
           }));
-          setSettlements(data.settlements);
+          setSettlements(settlements);
           setCustomSettlement(false);
         } else {
           setPostalCodeError('Código postal no encontrado. Verifica que sea correcto.');
@@ -486,9 +491,11 @@ const Register = () => {
   const filteredPostalCodes = postalCodes.filter((pc) =>
     pc.postal_code.includes(postalCodeSearch)
   );
-  const filteredSettlements = settlements.filter((s) =>
-    s.name.toLowerCase().includes(settlementSearch.toLowerCase())
-  );
+  // Para settlements en modo state_municipality, el filtrado se hace en el backend
+  // En modo postal_code, usamos filtrado local ya que la lista es pequeña
+  const filteredSettlements = locationMode === 'postal_code'
+    ? settlements.filter((s) => s.name.toLowerCase().includes(settlementSearch.toLowerCase()))
+    : settlements;
 
   // Componente reutilizable para Popover con búsqueda
   const SearchablePopover = ({

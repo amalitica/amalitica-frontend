@@ -48,13 +48,18 @@ export const getPostalCodesByMunicipality = async (municipalityId) => {
 /**
  * Obtiene los asentamientos de un municipio específico.
  * @param {number} municipalityId - ID del municipio
- * @param {number} limit - Límite de resultados (default: 100)
+ * @param {string} [searchQuery] - Término de búsqueda para filtrar por nombre (opcional)
+ * @param {number} limit - Límite de resultados (default: 1000)
  * @param {number} offset - Offset para paginación (default: 0)
  * @returns {Promise<Array>} Lista de asentamientos
  */
-export const getSettlementsByMunicipality = async (municipalityId, limit = 100, offset = 0) => {
+export const getSettlementsByMunicipality = async (municipalityId, searchQuery = null, limit = 1000, offset = 0) => {
+  const params = { limit, offset };
+  if (searchQuery) {
+    params.q = searchQuery;
+  }
   const response = await api.get(`/catalogs/municipalities/${municipalityId}/settlements`, {
-    params: { limit, offset }
+    params
   });
   return response.data;
 };

@@ -139,12 +139,12 @@ const CustomerForm = ({ mode = 'create' }) => {
     }
   }, [watchedStateId, locationMode]);
 
-  // Cargar asentamientos cuando cambia el municipio (modo state_municipality)
+  // Cargar asentamientos cuando cambia el municipio o el término de búsqueda (modo state_municipality)
   useEffect(() => {
     if (locationMode === 'state_municipality' && watchedMunicipalityId) {
-      loadSettlementsByMunicipality(watchedMunicipalityId);
+      loadSettlementsByMunicipality(watchedMunicipalityId, settlementSearch);
     }
-  }, [watchedMunicipalityId, locationMode]);
+  }, [watchedMunicipalityId, settlementSearch, locationMode]);
 
   const loadStates = async () => {
     try {
@@ -182,10 +182,10 @@ const CustomerForm = ({ mode = 'create' }) => {
     }
   };
 
-  const loadSettlementsByMunicipality = async (municipalityId) => {
+  const loadSettlementsByMunicipality = async (municipalityId, searchQuery = null) => {
     try {
       setLoadingSettlements(true);
-      const data = await getSettlementsByMunicipality(municipalityId);
+      const data = await getSettlementsByMunicipality(municipalityId, searchQuery);
       setSettlements(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error al cargar asentamientos:', err);
@@ -201,7 +201,9 @@ const CustomerForm = ({ mode = 'create' }) => {
       const data = await lookupByPostalCode(postalCode);
       
       if (data && data.settlements && data.settlements.length > 0) {
-        setSettlements(data.settlements);
+        const settlements = data.settlements;
+        setSettlements(settlements);
+        
         // En modo postal_code, autocompletar estado y municipio
         if (locationMode === 'postal_code') {
           setValue('state_id', data.state?.id || null);
@@ -209,6 +211,11 @@ const CustomerForm = ({ mode = 'create' }) => {
           // Guardar nombres para mostrar en modo CP
           setCpStateName(data.state?.name || '');
           setCpMunicipalityName(data.municipality?.name || '');
+          
+          // Si solo hay una colonia, autoseleccionarla
+          if (settlements.length === 1) {
+            setValue('settlement_id', settlements[0].id);
+          }
         }
       } else {
         setPostalCodeError('Código postal no encontrado');
@@ -350,9 +357,11 @@ const CustomerForm = ({ mode = 'create' }) => {
   const filteredPostalCodes = postalCodes.filter(pc =>
     pc.postal_code.includes(postalCodeSearch)
   );
-  const filteredSettlements = settlements.filter(s =>
-    s.name.toLowerCase().includes(settlementSearch.toLowerCase())
-  );
+  // Para settlements en modo state_municipality, el filtrado se hace en el backend
+  // En modo postal_code, usamos filtrado local ya que la lista es pequeña
+  const filteredSettlements = locationMode === 'postal_code' 
+    ? settlements.filter(s => s.name.toLowerCase().includes(settlementSearch.toLowerCase()))
+    : settlements;
 
   // Obtener nombres para mostrar
   const selectedStateName = states.find(s => s.id === watchedStateId)?.name || '';

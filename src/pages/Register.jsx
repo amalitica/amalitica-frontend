@@ -547,6 +547,8 @@ const Register = () => {
               placeholder={placeholder}
               value={searchValue}
               onChange={(e) => onSearchChange(e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              autoFocus
               className='border-0 p-0 h-8 focus-visible:ring-0 focus-visible:ring-offset-0'
             />
           </div>

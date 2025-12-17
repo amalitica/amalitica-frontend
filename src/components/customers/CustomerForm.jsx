@@ -683,6 +683,8 @@ const CustomerForm = ({ mode = 'create' }) => {
                               placeholder='Buscar estado...'
                               value={stateSearch}
                               onChange={(e) => setStateSearch(e.target.value)}
+                              autoFocus
+                              onKeyDown={(e) => e.stopPropagation()}
                             />
                           </div>
                           <div className='max-h-60 overflow-y-auto mt-2'>
@@ -748,6 +750,8 @@ const CustomerForm = ({ mode = 'create' }) => {
                               placeholder='Buscar municipio...'
                               value={municipalitySearch}
                               onChange={(e) => setMunicipalitySearch(e.target.value)}
+                              autoFocus
+                              onKeyDown={(e) => e.stopPropagation()}
                             />
                           </div>
                           <div className='max-h-60 overflow-y-auto mt-2'>
@@ -816,6 +820,8 @@ const CustomerForm = ({ mode = 'create' }) => {
                             placeholder='Buscar colonia...'
                             value={settlementSearch}
                             onChange={(e) => setSettlementSearch(e.target.value)}
+                            autoFocus
+                            onKeyDown={(e) => e.stopPropagation()}
                           />
                         </div>
                         <div className='max-h-60 overflow-y-auto mt-2'>

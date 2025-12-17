@@ -143,8 +143,8 @@ const CustomerForm = ({ mode = 'create' }) => {
   const loadStates = async () => {
     try {
       setLoadingStates(true);
-      const response = await getStates();
-      setStates(response.data || []);
+      const data = await getStates();
+      setStates(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error al cargar estados:', err);
     } finally {
@@ -155,8 +155,8 @@ const CustomerForm = ({ mode = 'create' }) => {
   const loadMunicipalities = async (stateId) => {
     try {
       setLoadingMunicipalities(true);
-      const response = await getMunicipalitiesByState(stateId);
-      setMunicipalities(response.data || []);
+      const data = await getMunicipalitiesByState(stateId);
+      setMunicipalities(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error al cargar municipios:', err);
     } finally {
@@ -167,8 +167,8 @@ const CustomerForm = ({ mode = 'create' }) => {
   const loadPostalCodes = async (municipalityId) => {
     try {
       setLoadingPostalCodes(true);
-      const response = await getPostalCodesByMunicipality(municipalityId);
-      setPostalCodes(response.data || []);
+      const data = await getPostalCodesByMunicipality(municipalityId);
+      setPostalCodes(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error al cargar códigos postales:', err);
     } finally {
@@ -180,10 +180,9 @@ const CustomerForm = ({ mode = 'create' }) => {
     try {
       setLoadingSettlements(true);
       setPostalCodeError('');
-      const response = await lookupByPostalCode(postalCode);
-      const data = response.data;
+      const data = await lookupByPostalCode(postalCode);
       
-      if (data.settlements && data.settlements.length > 0) {
+      if (data && data.settlements && data.settlements.length > 0) {
         setSettlements(data.settlements);
         // En modo postal_code, autocompletar estado y municipio
         if (locationMode === 'postal_code') {
@@ -207,7 +206,7 @@ const CustomerForm = ({ mode = 'create' }) => {
     try {
       setLoadingData(true);
       const response = await getCustomerById(id);
-      const customer = response.data;
+      const customer = response.data || response;
 
       // Llenar el formulario con los datos del cliente
       Object.keys(customer).forEach((key) => {

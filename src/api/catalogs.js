@@ -36,6 +36,16 @@ export const lookupByPostalCode = async (postalCode) => {
 };
 
 /**
+ * Obtiene los códigos postales de un municipio específico.
+ * @param {number} municipalityId - ID del municipio
+ * @returns {Promise<Array>} Lista de códigos postales con postal_code y settlement_count
+ */
+export const getPostalCodesByMunicipality = async (municipalityId) => {
+  const response = await api.get(`/catalogs/municipalities/${municipalityId}/postal-codes`);
+  return response.data;
+};
+
+/**
  * Obtiene los asentamientos de un municipio específico.
  * @param {number} municipalityId - ID del municipio
  * @param {number} limit - Límite de resultados (default: 100)
@@ -82,6 +92,7 @@ export default {
   getStates,
   getMunicipalitiesByState,
   lookupByPostalCode,
+  getPostalCodesByMunicipality,
   getSettlementsByMunicipality,
   createCustomSettlement,
   searchSettlements,

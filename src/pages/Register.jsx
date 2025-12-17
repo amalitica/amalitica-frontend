@@ -12,30 +12,33 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Eye, EyeOff, Loader2, CheckCircle2, Building2, User, MapPin, ChevronsUpDown, Check, AlertCircle } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  CheckCircle2,
+  Building2,
+  User,
+  MapPin,
+  ChevronsUpDown,
+  Check,
+  AlertCircle,
+  Search,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import logoAmalitica from '@/assets/images/amalitica_logo.png';
 import { registerTenant } from '@/api/tenants';
-import { getStates, getMunicipalitiesByState, lookupByPostalCode } from '@/api/catalogs';
+import {
+  getStates,
+  getMunicipalitiesByState,
+  lookupByPostalCode,
+  getPostalCodesByMunicipality,
+} from '@/api/catalogs';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -46,12 +49,17 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
+  // Modo de entrada de ubicación: 'postal_code' o 'state_municipality'
+  const [locationMode, setLocationMode] = useState('postal_code');
+
   // Estados para catálogos geográficos
   const [states, setStates] = useState([]);
   const [municipalities, setMunicipalities] = useState([]);
+  const [postalCodes, setPostalCodes] = useState([]);
   const [settlements, setSettlements] = useState([]);
   const [loadingStates, setLoadingStates] = useState(true);
   const [loadingMunicipalities, setLoadingMunicipalities] = useState(false);
+  const [loadingPostalCodes, setLoadingPostalCodes] = useState(false);
   const [loadingSettlements, setLoadingSettlements] = useState(false);
   const [postalCodeError, setPostalCodeError] = useState('');
   const [customSettlement, setCustomSettlement] = useState(false);
@@ -59,7 +67,14 @@ const Register = () => {
   // Popover states
   const [stateOpen, setStateOpen] = useState(false);
   const [municipalityOpen, setMunicipalityOpen] = useState(false);
+  const [postalCodeOpen, setPostalCodeOpen] = useState(false);
   const [settlementOpen, setSettlementOpen] = useState(false);
+
+  // Search filters para los popovers
+  const [stateSearch, setStateSearch] = useState('');
+  const [municipalitySearch, setMunicipalitySearch] = useState('');
+  const [postalCodeSearch, setPostalCodeSearch] = useState('');
+  const [settlementSearch, setSettlementSearch] = useState('');
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -98,29 +113,84 @@ const Register = () => {
     loadStates();
   }, []);
 
-  // Cargar municipios cuando cambia el estado
+  // Cargar municipios cuando cambia el estado (solo en modo state_municipality)
   useEffect(() => {
-    if (formData.branch_state_id) {
+    if (locationMode === 'state_municipality' && formData.branch_state_id) {
       setLoadingMunicipalities(true);
       getMunicipalitiesByState(formData.branch_state_id)
-        .then(data => {
+        .then((data) => {
           setMunicipalities(data);
         })
-        .catch(err => {
+        .catch((err) => {
           console.error('Error cargando municipios:', err);
         })
         .finally(() => {
           setLoadingMunicipalities(false);
         });
-    } else {
-      setMunicipalities([]);
     }
-  }, [formData.branch_state_id]);
+  }, [formData.branch_state_id, locationMode]);
 
-  // Buscar por código postal
-  const handlePostalCodeChange = async (e) => {
+  // Cargar códigos postales cuando cambia el municipio (solo en modo state_municipality)
+  useEffect(() => {
+    if (locationMode === 'state_municipality' && formData.branch_municipality_id) {
+      setLoadingPostalCodes(true);
+      getPostalCodesByMunicipality(formData.branch_municipality_id)
+        .then((data) => {
+          setPostalCodes(data);
+        })
+        .catch((err) => {
+          console.error('Error cargando códigos postales:', err);
+        })
+        .finally(() => {
+          setLoadingPostalCodes(false);
+        });
+    }
+  }, [formData.branch_municipality_id, locationMode]);
+
+  // Cargar asentamientos cuando cambia el CP (en modo state_municipality)
+  useEffect(() => {
+    if (
+      locationMode === 'state_municipality' &&
+      formData.branch_postal_code &&
+      formData.branch_postal_code.length === 5
+    ) {
+      setLoadingSettlements(true);
+      lookupByPostalCode(formData.branch_postal_code)
+        .then((data) => {
+          setSettlements(data.settlements || []);
+        })
+        .catch((err) => {
+          console.error('Error cargando asentamientos:', err);
+        })
+        .finally(() => {
+          setLoadingSettlements(false);
+        });
+    }
+  }, [formData.branch_postal_code, locationMode]);
+
+  // Manejar cambio de modo de ubicación
+  const handleLocationModeChange = (mode) => {
+    setLocationMode(mode);
+    // Limpiar datos geográficos al cambiar de modo
+    setFormData((prev) => ({
+      ...prev,
+      branch_postal_code: '',
+      branch_state_id: null,
+      branch_municipality_id: null,
+      branch_settlement_id: null,
+      branch_settlement_custom: '',
+    }));
+    setMunicipalities([]);
+    setPostalCodes([]);
+    setSettlements([]);
+    setPostalCodeError('');
+    setCustomSettlement(false);
+  };
+
+  // Buscar por código postal (modo postal_code)
+  const handlePostalCodeInput = async (e) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 5);
-    setFormData(prev => ({ ...prev, branch_postal_code: value }));
+    setFormData((prev) => ({ ...prev, branch_postal_code: value }));
     setPostalCodeError('');
 
     if (value.length === 5) {
@@ -128,7 +198,7 @@ const Register = () => {
       try {
         const data = await lookupByPostalCode(value);
         if (data.state && data.municipality) {
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
             branch_state_id: data.state.id,
             branch_municipality_id: data.municipality.id,
@@ -149,6 +219,12 @@ const Register = () => {
       }
     } else {
       setSettlements([]);
+      setFormData((prev) => ({
+        ...prev,
+        branch_state_id: null,
+        branch_municipality_id: null,
+        branch_settlement_id: null,
+      }));
     }
   };
 
@@ -159,43 +235,62 @@ const Register = () => {
   };
 
   const handleStateChange = (stateId) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       branch_state_id: stateId,
       branch_municipality_id: null,
+      branch_postal_code: '',
       branch_settlement_id: null,
     }));
+    setMunicipalities([]);
+    setPostalCodes([]);
     setSettlements([]);
     setStateOpen(false);
+    setStateSearch('');
   };
 
   const handleMunicipalityChange = (municipalityId) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       branch_municipality_id: municipalityId,
+      branch_postal_code: '',
       branch_settlement_id: null,
     }));
+    setPostalCodes([]);
+    setSettlements([]);
     setMunicipalityOpen(false);
+    setMunicipalitySearch('');
+  };
+
+  const handlePostalCodeSelect = (postalCode) => {
+    setFormData((prev) => ({
+      ...prev,
+      branch_postal_code: postalCode,
+      branch_settlement_id: null,
+    }));
+    setPostalCodeOpen(false);
+    setPostalCodeSearch('');
   };
 
   const handleSettlementChange = (settlementId) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       branch_settlement_id: settlementId,
       branch_settlement_custom: '',
     }));
     setSettlementOpen(false);
+    setSettlementSearch('');
   };
 
   const handleCustomSettlementToggle = (checked) => {
     setCustomSettlement(checked);
     if (checked) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         branch_settlement_id: null,
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         branch_settlement_custom: '',
       }));
@@ -331,8 +426,10 @@ const Register = () => {
         branch_postal_code: formData.branch_postal_code,
         branch_state_id: formData.branch_state_id,
         branch_municipality_id: formData.branch_municipality_id,
-        branch_settlement_id: customSettlement ? null : formData.branch_settlement_id,
-        branch_settlement_custom: customSettlement ? formData.branch_settlement_custom.trim() : null,
+        branch_settlement_id: formData.branch_settlement_id,
+        branch_settlement_custom: customSettlement
+          ? formData.branch_settlement_custom.trim()
+          : null,
         branch_street: formData.branch_street.trim(),
         branch_exterior_number: formData.branch_exterior_number.trim(),
         branch_interior_number: formData.branch_interior_number.trim() || null,
@@ -359,12 +456,12 @@ const Register = () => {
       console.error('Error de registro:', err);
       const errorData = err.response?.data;
       let errorMessage = 'Error al registrar. Por favor, intenta de nuevo.';
-      
+
       if (errorData?.detail) {
         if (typeof errorData.detail === 'string') {
           errorMessage = errorData.detail;
         } else if (Array.isArray(errorData.detail)) {
-          errorMessage = errorData.detail.map(e => e.msg).join('. ');
+          errorMessage = errorData.detail.map((e) => e.msg).join('. ');
         }
       }
       setError(errorMessage);
@@ -380,9 +477,86 @@ const Register = () => {
   ];
 
   // Obtener nombres para mostrar
-  const selectedState = states.find(s => s.id === formData.branch_state_id);
-  const selectedMunicipality = municipalities.find(m => m.id === formData.branch_municipality_id);
-  const selectedSettlement = settlements.find(s => s.id === formData.branch_settlement_id);
+  const selectedState = states.find((s) => s.id === formData.branch_state_id);
+  const selectedMunicipality = municipalities.find(
+    (m) => m.id === formData.branch_municipality_id
+  );
+  const selectedSettlement = settlements.find(
+    (s) => s.id === formData.branch_settlement_id
+  );
+
+  // Filtrar listas según búsqueda
+  const filteredStates = states.filter((s) =>
+    s.name.toLowerCase().includes(stateSearch.toLowerCase())
+  );
+  const filteredMunicipalities = municipalities.filter((m) =>
+    m.name.toLowerCase().includes(municipalitySearch.toLowerCase())
+  );
+  const filteredPostalCodes = postalCodes.filter((pc) =>
+    pc.postal_code.includes(postalCodeSearch)
+  );
+  const filteredSettlements = settlements.filter((s) =>
+    s.name.toLowerCase().includes(settlementSearch.toLowerCase())
+  );
+
+  // Componente reutilizable para Popover con búsqueda
+  const SearchablePopover = ({
+    open,
+    onOpenChange,
+    triggerText,
+    placeholder,
+    searchValue,
+    onSearchChange,
+    items,
+    renderItem,
+    disabled,
+    isLoading,
+    emptyText,
+  }) => (
+    <Popover open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger asChild>
+        <Button
+          variant='outline'
+          role='combobox'
+          aria-expanded={open}
+          className='w-full justify-between font-normal'
+          disabled={disabled || isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className='w-4 h-4 animate-spin' />
+          ) : (
+            <span className='truncate'>{triggerText}</span>
+          )}
+          <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className='w-[--radix-popover-trigger-width] p-0' align='start'>
+        <div className='flex flex-col'>
+          {/* Input de búsqueda */}
+          <div className='flex items-center border-b px-3 py-2'>
+            <Search className='mr-2 h-4 w-4 shrink-0 opacity-50' />
+            <Input
+              placeholder={placeholder}
+              value={searchValue}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className='border-0 p-0 h-8 focus-visible:ring-0 focus-visible:ring-offset-0'
+            />
+          </div>
+
+          {/* Lista de resultados */}
+          <div className='max-h-[300px] overflow-y-auto overflow-x-hidden'>
+            {items.length === 0 ? (
+              <div className='py-6 text-center text-sm text-gray-500'>
+                {emptyText || 'No se encontraron resultados'}
+              </div>
+            ) : (
+              <div className='p-1'>{items.map(renderItem)}</div>
+            )}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 
   if (success) {
     return (
@@ -394,8 +568,8 @@ const Register = () => {
               ¡Registro Exitoso!
             </h2>
             <p className='text-muted-foreground mb-4'>
-              Tu cuenta ha sido creada. Serás redirigido al panel de control en
-              unos segundos...
+              Tu cuenta ha sido creada. Serás redirigido al panel de control en unos
+              segundos...
             </p>
             <Loader2 className='w-6 h-6 animate-spin mx-auto text-primary' />
           </CardContent>
@@ -414,9 +588,7 @@ const Register = () => {
             alt='Logo de Amalitica'
             className='w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-2'
           />
-          <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>
-            Amalitica
-          </h1>
+          <h1 className='text-2xl sm:text-3xl font-bold text-gray-900'>Amalitica</h1>
           <p className='text-sm text-muted-foreground'>
             Plataforma de Gestión para Ópticas
           </p>
@@ -455,10 +627,8 @@ const Register = () => {
               {currentStep === 3 && 'Tu Cuenta'}
             </CardTitle>
             <CardDescription>
-              {currentStep === 1 &&
-                'Ingresa el nombre de tu óptica.'}
-              {currentStep === 2 &&
-                'Ingresa la dirección de tu sucursal principal.'}
+              {currentStep === 1 && 'Ingresa el nombre de tu óptica.'}
+              {currentStep === 2 && 'Ingresa la dirección de tu sucursal principal.'}
               {currentStep === 3 &&
                 'Crea tu cuenta de administrador para acceder al sistema.'}
             </CardDescription>
@@ -500,223 +670,305 @@ const Register = () => {
               {/* Step 2: Datos Geográficos */}
               {currentStep === 2 && (
                 <>
-                  {/* Código Postal */}
-                  <div className='space-y-2'>
-                    <Label htmlFor='branch_postal_code'>
-                      Código Postal <span className='text-red-500'>*</span>
-                    </Label>
-                    <div className='relative'>
-                      <Input
-                        id='branch_postal_code'
-                        name='branch_postal_code'
-                        value={formData.branch_postal_code}
-                        onChange={handlePostalCodeChange}
-                        placeholder='06600'
-                        maxLength={5}
-                        disabled={loading}
-                        className={postalCodeError ? 'border-red-500' : ''}
-                      />
-                      {loadingSettlements && (
-                        <Loader2 className='absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground' />
+                  {/* Selector de modo de ubicación */}
+                  <div className='space-y-3'>
+                    <Label>¿Cómo prefieres ingresar tu ubicación?</Label>
+                    <RadioGroup
+                      value={locationMode}
+                      onValueChange={handleLocationModeChange}
+                      className='flex flex-col space-y-2'
+                    >
+                      <div className='flex items-center space-x-2'>
+                        <RadioGroupItem value='postal_code' id='mode_cp' />
+                        <Label htmlFor='mode_cp' className='font-normal cursor-pointer'>
+                          Conozco mi Código Postal
+                        </Label>
+                      </div>
+                      <div className='flex items-center space-x-2'>
+                        <RadioGroupItem value='state_municipality' id='mode_state' />
+                        <Label
+                          htmlFor='mode_state'
+                          className='font-normal cursor-pointer'
+                        >
+                          Prefiero seleccionar Estado y Municipio
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <hr className='my-4' />
+
+                  {/* Modo: Código Postal primero */}
+                  {locationMode === 'postal_code' && (
+                    <>
+                      {/* Código Postal (input) */}
+                      <div className='space-y-2'>
+                        <Label htmlFor='branch_postal_code'>
+                          Código Postal <span className='text-red-500'>*</span>
+                        </Label>
+                        <div className='relative'>
+                          <Input
+                            id='branch_postal_code'
+                            name='branch_postal_code'
+                            value={formData.branch_postal_code}
+                            onChange={handlePostalCodeInput}
+                            placeholder='06600'
+                            maxLength={5}
+                            disabled={loading}
+                            className={postalCodeError ? 'border-red-500' : ''}
+                          />
+                          {loadingSettlements && (
+                            <Loader2 className='absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground' />
+                          )}
+                        </div>
+                        {postalCodeError && (
+                          <p className='text-xs text-red-500'>{postalCodeError}</p>
+                        )}
+                        <p className='text-xs text-muted-foreground'>
+                          El estado y municipio se completarán automáticamente
+                        </p>
+                      </div>
+
+                      {/* Estado y Municipio (solo lectura) */}
+                      {formData.branch_state_id && (
+                        <div className='grid grid-cols-2 gap-4'>
+                          <div className='space-y-2'>
+                            <Label>Estado</Label>
+                            <Input
+                              value={selectedState?.name || ''}
+                              disabled
+                              className='bg-gray-50'
+                            />
+                          </div>
+                          <div className='space-y-2'>
+                            <Label>Municipio</Label>
+                            <Input
+                              value={
+                                municipalities.find(
+                                  (m) => m.id === formData.branch_municipality_id
+                                )?.name ||
+                                settlements[0]?.municipality_name ||
+                                ''
+                              }
+                              disabled
+                              className='bg-gray-50'
+                            />
+                          </div>
+                        </div>
                       )}
-                    </div>
-                    {postalCodeError && (
-                      <p className='text-xs text-red-500'>{postalCodeError}</p>
-                    )}
-                    <p className='text-xs text-muted-foreground'>
-                      El estado y municipio se completarán automáticamente
-                    </p>
-                  </div>
+                    </>
+                  )}
 
-                  {/* Estado y Municipio */}
-                  <div className='grid grid-cols-2 gap-4'>
-                    {/* Estado */}
+                  {/* Modo: Estado/Municipio primero */}
+                  {locationMode === 'state_municipality' && (
+                    <>
+                      {/* Estado */}
+                      <div className='space-y-2'>
+                        <Label>
+                          Estado <span className='text-red-500'>*</span>
+                        </Label>
+                        <SearchablePopover
+                          open={stateOpen}
+                          onOpenChange={(open) => {
+                            setStateOpen(open);
+                            if (!open) setStateSearch('');
+                          }}
+                          triggerText={selectedState?.name || 'Seleccionar estado...'}
+                          placeholder='Buscar estado...'
+                          searchValue={stateSearch}
+                          onSearchChange={setStateSearch}
+                          items={filteredStates}
+                          disabled={loading}
+                          isLoading={loadingStates}
+                          emptyText='No se encontró el estado'
+                          renderItem={(state) => (
+                            <div
+                              key={state.id}
+                              onClick={() => handleStateChange(state.id)}
+                              className='relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors'
+                            >
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4 flex-shrink-0',
+                                  formData.branch_state_id === state.id
+                                    ? 'opacity-100'
+                                    : 'opacity-0'
+                                )}
+                              />
+                              {state.name}
+                            </div>
+                          )}
+                        />
+                      </div>
+
+                      {/* Municipio */}
+                      <div className='space-y-2'>
+                        <Label>
+                          Municipio <span className='text-red-500'>*</span>
+                        </Label>
+                        <SearchablePopover
+                          open={municipalityOpen}
+                          onOpenChange={(open) => {
+                            setMunicipalityOpen(open);
+                            if (!open) setMunicipalitySearch('');
+                          }}
+                          triggerText={
+                            selectedMunicipality?.name || 'Seleccionar municipio...'
+                          }
+                          placeholder='Buscar municipio...'
+                          searchValue={municipalitySearch}
+                          onSearchChange={setMunicipalitySearch}
+                          items={filteredMunicipalities}
+                          disabled={loading || !formData.branch_state_id}
+                          isLoading={loadingMunicipalities}
+                          emptyText={
+                            !formData.branch_state_id
+                              ? 'Selecciona un estado primero'
+                              : 'No se encontró el municipio'
+                          }
+                          renderItem={(muni) => (
+                            <div
+                              key={muni.id}
+                              onClick={() => handleMunicipalityChange(muni.id)}
+                              className='relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors'
+                            >
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4 flex-shrink-0',
+                                  formData.branch_municipality_id === muni.id
+                                    ? 'opacity-100'
+                                    : 'opacity-0'
+                                )}
+                              />
+                              {muni.name}
+                            </div>
+                          )}
+                        />
+                      </div>
+
+                      {/* Código Postal (desplegable) */}
+                      <div className='space-y-2'>
+                        <Label>
+                          Código Postal <span className='text-red-500'>*</span>
+                        </Label>
+                        <SearchablePopover
+                          open={postalCodeOpen}
+                          onOpenChange={(open) => {
+                            setPostalCodeOpen(open);
+                            if (!open) setPostalCodeSearch('');
+                          }}
+                          triggerText={
+                            formData.branch_postal_code || 'Seleccionar código postal...'
+                          }
+                          placeholder='Buscar código postal...'
+                          searchValue={postalCodeSearch}
+                          onSearchChange={setPostalCodeSearch}
+                          items={filteredPostalCodes}
+                          disabled={loading || !formData.branch_municipality_id}
+                          isLoading={loadingPostalCodes}
+                          emptyText={
+                            !formData.branch_municipality_id
+                              ? 'Selecciona un municipio primero'
+                              : 'No se encontraron códigos postales'
+                          }
+                          renderItem={(pc) => (
+                            <div
+                              key={pc.postal_code}
+                              onClick={() => handlePostalCodeSelect(pc.postal_code)}
+                              className='relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors'
+                            >
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4 flex-shrink-0',
+                                  formData.branch_postal_code === pc.postal_code
+                                    ? 'opacity-100'
+                                    : 'opacity-0'
+                                )}
+                              />
+                              <span>{pc.postal_code}</span>
+                              <span className='ml-auto text-xs text-muted-foreground'>
+                                {pc.settlement_count} colonias
+                              </span>
+                            </div>
+                          )}
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {/* Colonia (común para ambos modos) */}
+                  {settlements.length > 0 && (
                     <div className='space-y-2'>
-                      <Label>Estado <span className='text-red-500'>*</span></Label>
-                      <Popover open={stateOpen} onOpenChange={setStateOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant='outline'
-                            role='combobox'
-                            aria-expanded={stateOpen}
-                            className='w-full justify-between font-normal'
-                            disabled={loading || loadingStates}
-                          >
-                            {loadingStates ? (
-                              <Loader2 className='w-4 h-4 animate-spin' />
-                            ) : selectedState ? (
-                              selectedState.name
-                            ) : (
-                              'Seleccionar...'
-                            )}
-                            <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className='w-[200px] p-0'>
-                          <Command>
-                            <CommandInput placeholder='Buscar estado...' />
-                            <CommandList>
-                              <CommandEmpty>No encontrado</CommandEmpty>
-                              <CommandGroup>
-                                {states.map((state) => (
-                                  <CommandItem
-                                    key={state.id}
-                                    value={state.name}
-                                    onSelect={() => handleStateChange(state.id)}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        'mr-2 h-4 w-4',
-                                        formData.branch_state_id === state.id
-                                          ? 'opacity-100'
-                                          : 'opacity-0'
-                                      )}
-                                    />
-                                    {state.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
+                      <Label>
+                        Colonia <span className='text-red-500'>*</span>
+                      </Label>
+                      {!customSettlement ? (
+                        <SearchablePopover
+                          open={settlementOpen}
+                          onOpenChange={(open) => {
+                            setSettlementOpen(open);
+                            if (!open) setSettlementSearch('');
+                          }}
+                          triggerText={
+                            selectedSettlement?.name || 'Seleccionar colonia...'
+                          }
+                          placeholder='Buscar colonia...'
+                          searchValue={settlementSearch}
+                          onSearchChange={setSettlementSearch}
+                          items={filteredSettlements}
+                          disabled={loading}
+                          isLoading={loadingSettlements}
+                          emptyText='No se encontró la colonia'
+                          renderItem={(settlement) => (
+                            <div
+                              key={settlement.id}
+                              onClick={() => handleSettlementChange(settlement.id)}
+                              className='relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors'
+                            >
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4 flex-shrink-0',
+                                  formData.branch_settlement_id === settlement.id
+                                    ? 'opacity-100'
+                                    : 'opacity-0'
+                                )}
+                              />
+                              <div className='flex flex-col'>
+                                <span>{settlement.name}</span>
+                                {settlement.settlement_type && (
+                                  <span className='text-xs text-muted-foreground'>
+                                    {settlement.settlement_type}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        />
+                      ) : (
+                        <Input
+                          name='branch_settlement_custom'
+                          value={formData.branch_settlement_custom}
+                          onChange={handleChange}
+                          placeholder='Nombre de tu colonia'
+                          disabled={loading}
+                        />
+                      )}
+                      <div className='flex items-center space-x-2'>
+                        <Checkbox
+                          id='customSettlement'
+                          checked={customSettlement}
+                          onCheckedChange={handleCustomSettlementToggle}
+                          disabled={loading}
+                        />
+                        <label
+                          htmlFor='customSettlement'
+                          className='text-sm text-muted-foreground cursor-pointer'
+                        >
+                          Mi colonia no aparece en la lista
+                        </label>
+                      </div>
                     </div>
-
-                    {/* Municipio */}
-                    <div className='space-y-2'>
-                      <Label>Municipio <span className='text-red-500'>*</span></Label>
-                      <Popover open={municipalityOpen} onOpenChange={setMunicipalityOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant='outline'
-                            role='combobox'
-                            aria-expanded={municipalityOpen}
-                            className='w-full justify-between font-normal'
-                            disabled={loading || !formData.branch_state_id || loadingMunicipalities}
-                          >
-                            {loadingMunicipalities ? (
-                              <Loader2 className='w-4 h-4 animate-spin' />
-                            ) : selectedMunicipality ? (
-                              <span className='truncate'>{selectedMunicipality.name}</span>
-                            ) : (
-                              'Seleccionar...'
-                            )}
-                            <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className='w-[200px] p-0'>
-                          <Command>
-                            <CommandInput placeholder='Buscar municipio...' />
-                            <CommandList>
-                              <CommandEmpty>No encontrado</CommandEmpty>
-                              <CommandGroup>
-                                {municipalities.map((muni) => (
-                                  <CommandItem
-                                    key={muni.id}
-                                    value={muni.name}
-                                    onSelect={() => handleMunicipalityChange(muni.id)}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        'mr-2 h-4 w-4',
-                                        formData.branch_municipality_id === muni.id
-                                          ? 'opacity-100'
-                                          : 'opacity-0'
-                                      )}
-                                    />
-                                    {muni.name}
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </div>
-
-                  {/* Colonia */}
-                  <div className='space-y-2'>
-                    <Label>Colonia <span className='text-red-500'>*</span></Label>
-                    {!customSettlement ? (
-                      <Popover open={settlementOpen} onOpenChange={setSettlementOpen}>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant='outline'
-                            role='combobox'
-                            aria-expanded={settlementOpen}
-                            className='w-full justify-between font-normal'
-                            disabled={loading || settlements.length === 0}
-                          >
-                            {selectedSettlement ? (
-                              <span className='truncate'>{selectedSettlement.name}</span>
-                            ) : settlements.length === 0 ? (
-                              'Ingresa el CP primero'
-                            ) : (
-                              'Seleccionar colonia...'
-                            )}
-                            <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className='w-[300px] p-0'>
-                          <Command>
-                            <CommandInput placeholder='Buscar colonia...' />
-                            <CommandList>
-                              <CommandEmpty>No encontrada</CommandEmpty>
-                              <CommandGroup>
-                                {settlements.map((settlement) => (
-                                  <CommandItem
-                                    key={settlement.id}
-                                    value={settlement.name}
-                                    onSelect={() => handleSettlementChange(settlement.id)}
-                                  >
-                                    <Check
-                                      className={cn(
-                                        'mr-2 h-4 w-4',
-                                        formData.branch_settlement_id === settlement.id
-                                          ? 'opacity-100'
-                                          : 'opacity-0'
-                                      )}
-                                    />
-                                    <div className='flex flex-col'>
-                                      <span>{settlement.name}</span>
-                                      {settlement.settlement_type && (
-                                        <span className='text-xs text-muted-foreground'>
-                                          {settlement.settlement_type}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </CommandItem>
-                                ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    ) : (
-                      <Input
-                        name='branch_settlement_custom'
-                        value={formData.branch_settlement_custom}
-                        onChange={handleChange}
-                        placeholder='Nombre de tu colonia'
-                        disabled={loading}
-                      />
-                    )}
-                    <div className='flex items-center space-x-2'>
-                      <Checkbox
-                        id='customSettlement'
-                        checked={customSettlement}
-                        onCheckedChange={handleCustomSettlementToggle}
-                        disabled={loading || settlements.length === 0}
-                      />
-                      <label
-                        htmlFor='customSettlement'
-                        className='text-sm text-muted-foreground cursor-pointer'
-                      >
-                        Mi colonia no aparece en la lista
-                      </label>
-                    </div>
-                  </div>
+                  )}
 
                   {/* Calle y Número */}
                   <div className='space-y-2'>
@@ -846,8 +1098,7 @@ const Register = () => {
                       </Button>
                     </div>
                     <p className='text-xs text-muted-foreground'>
-                      Mínimo 8 caracteres, una mayúscula, una minúscula y un
-                      número
+                      Mínimo 8 caracteres, una mayúscula, una minúscula y un número
                     </p>
                   </div>
                   <div className='space-y-2'>
@@ -870,9 +1121,7 @@ const Register = () => {
                         variant='ghost'
                         size='sm'
                         className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         disabled={loading}
                       >
                         {showConfirmPassword ? (
@@ -909,11 +1158,7 @@ const Register = () => {
                     Siguiente
                   </Button>
                 ) : (
-                  <Button
-                    type='submit'
-                    disabled={loading}
-                    className='flex-1'
-                  >
+                  <Button type='submit' disabled={loading} className='flex-1'>
                     {loading ? (
                       <>
                         <Loader2 className='mr-2 h-4 w-4 animate-spin' />

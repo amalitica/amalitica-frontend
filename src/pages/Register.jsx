@@ -38,9 +38,9 @@ import {
   getStates,
   getMunicipalitiesByState,
   lookupByPostalCode,
-  getPostalCodesByMunicipality,
   getSettlementsByMunicipality,
-  getPostalCodeBySettlement,
+  getPostalCodesBySettlementName,
+  createCustomSettlement,
 } from '@/api/catalogs';
 
 const Register = () => {
@@ -66,6 +66,7 @@ const Register = () => {
   const [loadingSettlements, setLoadingSettlements] = useState(false);
   const [postalCodeError, setPostalCodeError] = useState('');
   const [customSettlement, setCustomSettlement] = useState(false);
+  const [manualPostalCode, setManualPostalCode] = useState(''); // Para colonia personalizada en Flujo 2
 
   // Popover states
   const [stateOpen, setStateOpen] = useState(false);
@@ -167,6 +168,7 @@ const Register = () => {
     setSettlements([]);
     setPostalCodeError('');
     setCustomSettlement(false);
+    setManualPostalCode('');
   };
 
   // Buscar por código postal (modo postal_code)
@@ -259,6 +261,9 @@ const Register = () => {
   };
 
   const handleSettlementChange = async (settlementId) => {
+    const settlement = settlements.find(s => s.id === settlementId);
+    if (!settlement) return;
+
     setFormData((prev) => ({
       ...prev,
       branch_settlement_id: settlementId,
@@ -267,15 +272,33 @@ const Register = () => {
     setSettlementOpen(false);
     setSettlementSearch('');
     
-    // Autocompletar código postal basado en la colonia seleccionada
-    try {
-      const postalCode = await getPostalCodeBySettlement(settlementId);
-      setFormData((prev) => ({
-        ...prev,
-        branch_postal_code: postalCode,
-      }));
-    } catch (err) {
-      console.error('Error obteniendo código postal:', err);
+    // Autocompletar código postal basado en la colonia seleccionada (solo en Flujo 2)
+    if (locationMode === 'state_municipality') {
+      try {
+        const data = await getPostalCodesBySettlementName(
+          formData.branch_municipality_id,
+          settlement.name,
+          settlement.settlement_type
+        );
+        
+        if (data.total_postal_codes === 1) {
+          // Un solo CP, autocompletar
+          setFormData((prev) => ({
+            ...prev,
+            branch_postal_code: data.postal_codes[0],
+          }));
+        } else if (data.total_postal_codes > 1) {
+          // Múltiples CPs, mostrar el primero o permitir selección
+          // Para simplificar, usamos el primero
+          setFormData((prev) => ({
+            ...prev,
+            branch_postal_code: data.postal_codes[0],
+          }));
+        }
+      } catch (err) {
+        console.error('Error obteniendo código postal:', err);
+        // Si falla, no es crítico, el usuario puede continuar
+      }
     }
   };
 
@@ -286,11 +309,20 @@ const Register = () => {
         ...prev,
         branch_settlement_id: null,
       }));
+      // En Flujo 2, limpiar el CP para que el usuario lo ingrese manualmente
+      if (locationMode === 'state_municipality') {
+        setFormData((prev) => ({
+          ...prev,
+          branch_postal_code: '',
+        }));
+        setManualPostalCode('');
+      }
     } else {
       setFormData((prev) => ({
         ...prev,
         branch_settlement_custom: '',
       }));
+      setManualPostalCode('');
     }
   };
 
@@ -873,7 +905,90 @@ const Register = () => {
                   )}
 
                   {/* Colonia (común para ambos modos) */}
-                  {settlements.length > 0 && (
+                  {/* Mostrar colonia cuando hay municipio seleccionado en Flujo 2 */}
+                  {locationMode === 'state_municipality' && formData.branch_municipality_id && (
+                    <div className='space-y-2'>
+                      <Label>
+                        Colonia <span className='text-red-500'>*</span>
+                      </Label>
+                      {settlements.length > 0 && !customSettlement ? (
+                        <SearchablePopover
+                          open={settlementOpen}
+                          onOpenChange={(open) => {
+                            setSettlementOpen(open);
+                            if (!open) setSettlementSearch('');
+                          }}
+                          triggerText={
+                            selectedSettlement?.name || 'Seleccionar colonia...'
+                          }
+                          placeholder='Buscar colonia...'
+                          searchValue={settlementSearch}
+                          onSearchChange={setSettlementSearch}
+                          items={filteredSettlements}
+                          disabled={loading}
+                          isLoading={loadingSettlements}
+                          emptyText='No se encontró la colonia'
+                          renderItem={(settlement) => (
+                            <div
+                              key={settlement.id}
+                              onClick={() => handleSettlementChange(settlement.id)}
+                              className='relative flex cursor-pointer select-none items-center rounded-sm px-2 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors'
+                            >
+                              <Check
+                                className={cn(
+                                  'mr-2 h-4 w-4 flex-shrink-0',
+                                  formData.branch_settlement_id === settlement.id
+                                    ? 'opacity-100'
+                                    : 'opacity-0'
+                                )}
+                              />
+                              <div className='flex flex-col'>
+                                <span>{settlement.name}</span>
+                                {settlement.settlement_type && (
+                                  <span className='text-xs text-muted-foreground'>
+                                    {settlement.settlement_type}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        />
+                      ) : (
+                        <Input
+                          name='branch_settlement_custom'
+                          value={formData.branch_settlement_custom}
+                          onChange={handleChange}
+                          placeholder='Nombre de tu colonia'
+                          disabled={loading}
+                        />
+                      )}
+                      {settlements.length === 0 && !loadingSettlements && (
+                        <p className='text-xs text-muted-foreground'>
+                          <AlertCircle className='inline w-3 h-3 mr-1' />
+                          No hay colonias registradas en este municipio. Ingresa el nombre de tu colonia.
+                        </p>
+                      )}
+                      {settlements.length > 0 && (
+                        <div className='flex items-center space-x-2'>
+                          <Checkbox
+                            id='customSettlement'
+                            checked={customSettlement}
+                            onCheckedChange={handleCustomSettlementToggle}
+                            disabled={loading}
+                          />
+                          <label
+                            htmlFor='customSettlement'
+                            className='text-sm text-muted-foreground cursor-pointer'
+                          >
+                            Mi colonia no aparece en la lista
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Colonia en Flujo 1 (CP primero) */}
+                  {locationMode === 'postal_code' && settlements.length > 0 && (
                     <div className='space-y-2'>
                       <Label>
                         Colonia <span className='text-red-500'>*</span>
@@ -946,18 +1061,50 @@ const Register = () => {
                     </div>
                   )}
 
-                  {/* Código Postal (solo lectura en modo state_municipality) */}
-                  {locationMode === 'state_municipality' && formData.branch_postal_code && (
+                  {/* Código Postal en modo state_municipality */}
+                  {locationMode === 'state_municipality' && (
                     <div className='space-y-2'>
-                      <Label>Código Postal</Label>
-                      <Input
-                        value={formData.branch_postal_code}
-                        disabled
-                        className='bg-gray-50'
-                      />
-                      <p className='text-xs text-muted-foreground'>
-                        Autocompletado según la colonia seleccionada
-                      </p>
+                      <Label>
+                        Código Postal <span className='text-red-500'>*</span>
+                      </Label>
+                      {customSettlement ? (
+                        // Campo manual para colonia personalizada
+                        <>
+                          <Input
+                            value={manualPostalCode}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, '').slice(0, 5);
+                              setManualPostalCode(value);
+                              if (value.length === 5) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  branch_postal_code: value,
+                                }));
+                              }
+                            }}
+                            placeholder='06600'
+                            maxLength={5}
+                            disabled={loading}
+                          />
+                          <p className='text-xs text-muted-foreground'>
+                            Ingresa el código postal de tu domicilio
+                          </p>
+                        </>
+                      ) : (
+                        // Campo de solo lectura para colonia del catálogo
+                        formData.branch_postal_code && (
+                          <>
+                            <Input
+                              value={formData.branch_postal_code}
+                              disabled
+                              className='bg-gray-50'
+                            />
+                            <p className='text-xs text-muted-foreground'>
+                              Autocompletado según la colonia seleccionada
+                            </p>
+                          </>
+                        )
+                      )}
                     </div>
                   )}
 

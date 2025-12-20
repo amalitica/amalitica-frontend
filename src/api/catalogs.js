@@ -36,16 +36,6 @@ export const lookupByPostalCode = async (postalCode) => {
 };
 
 /**
- * Obtiene los códigos postales de un municipio específico.
- * @param {number} municipalityId - ID del municipio
- * @returns {Promise<Array>} Lista de códigos postales con postal_code y settlement_count
- */
-export const getPostalCodesByMunicipality = async (municipalityId) => {
-  const response = await api.get(`/catalogs/municipalities/${municipalityId}/postal-codes`);
-  return response.data;
-};
-
-/**
  * Obtiene los asentamientos de un municipio específico.
  * @param {number} municipalityId - ID del municipio
  * @param {string} [searchQuery] - Término de búsqueda para filtrar por nombre (opcional)
@@ -65,12 +55,22 @@ export const getSettlementsByMunicipality = async (municipalityId, searchQuery =
 };
 
 /**
- * Obtiene el código postal de un asentamiento específico.
- * @param {number} settlementId - ID del asentamiento
- * @returns {Promise<string>} Código postal de 5 dígitos
+ * Obtiene los códigos postales de una colonia específica por nombre.
+ * Devuelve información completa incluyendo estado, municipio y lista de CPs.
+ * @param {number} municipalityId - ID del municipio
+ * @param {string} settlementName - Nombre de la colonia
+ * @param {string} [settlementType] - Tipo de asentamiento (opcional, para desambiguar)
+ * @returns {Promise<Object>} Objeto con settlement_name, settlement_type, municipality, state, postal_codes y total_postal_codes
  */
-export const getPostalCodeBySettlement = async (settlementId) => {
-  const response = await api.get(`/catalogs/settlements/${settlementId}/postal-code`);
+export const getPostalCodesBySettlementName = async (municipalityId, settlementName, settlementType = null) => {
+  const params = {
+    municipality_id: municipalityId,
+    settlement_name: settlementName
+  };
+  if (settlementType) {
+    params.settlement_type = settlementType;
+  }
+  const response = await api.get('/catalogs/settlements/by-name/postal-codes', { params });
   return response.data;
 };
 
@@ -88,28 +88,11 @@ export const createCustomSettlement = async (data) => {
   return response.data;
 };
 
-/**
- * Busca asentamientos por nombre.
- * @param {string} query - Término de búsqueda (mínimo 2 caracteres)
- * @param {number} [stateId] - Filtrar por estado (opcional)
- * @param {number} [limit] - Límite de resultados (default: 20)
- * @returns {Promise<Array>} Lista de asentamientos que coinciden
- */
-export const searchSettlements = async (query, stateId = null, limit = 20) => {
-  const params = { q: query, limit };
-  if (stateId) params.state_id = stateId;
-  
-  const response = await api.get('/catalogs/settlements/search', { params });
-  return response.data;
-};
-
 export default {
   getStates,
   getMunicipalitiesByState,
   lookupByPostalCode,
-  getPostalCodesByMunicipality,
   getSettlementsByMunicipality,
-  getPostalCodeBySettlement,
+  getPostalCodesBySettlementName,
   createCustomSettlement,
-  searchSettlements,
 };

@@ -226,6 +226,21 @@ const Register = () => {
     setStateSearch('');
   };
 
+  const handleStateChange = (stateId) => {
+    setFormData((prev) => ({
+      ...prev,
+      branch_state_id: stateId,
+      branch_municipality_id: null,
+      branch_settlement_id: null,
+      branch_postal_code: '',
+    }));
+    setMunicipalities([]);
+    setPostalCodes([]);
+    setSettlements([]);
+    setStateOpen(false);
+    setStateSearch('');
+  };
+
   const handleMunicipalityChange = (municipalityId) => {
     setFormData((prev) => ({
       ...prev,

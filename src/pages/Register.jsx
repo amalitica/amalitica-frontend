@@ -67,6 +67,7 @@ const Register = () => {
   const [postalCodeError, setPostalCodeError] = useState('');
   const [customSettlement, setCustomSettlement] = useState(false);
   const [manualPostalCode, setManualPostalCode] = useState(''); // Para colonia personalizada en Flujo 2
+  const [availablePostalCodes, setAvailablePostalCodes] = useState([]); // Lista de CPs cuando hay múltiples
 
   // Popover states
   const [stateOpen, setStateOpen] = useState(false);
@@ -220,13 +221,13 @@ const Register = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    setError('');
   };
 
-  const handleStateChange = (stateId) => {
+  const handleLocationModeChange = (mode) => {
+    setLocationMode(mode);
     setFormData((prev) => ({
       ...prev,
-      branch_state_id: stateId,
+      branch_state_id: null,
       branch_municipality_id: null,
       branch_postal_code: '',
       branch_settlement_id: null,
@@ -234,6 +235,8 @@ const Register = () => {
     setMunicipalities([]);
     setPostalCodes([]);
     setSettlements([]);
+    setAvailablePostalCodes([]);
+    setManualPostalCode('');
     setStateOpen(false);
     setStateSearch('');
   };
@@ -287,9 +290,11 @@ const Register = () => {
             ...prev,
             branch_postal_code: data.postal_codes[0],
           }));
+          setAvailablePostalCodes([]); // Limpiar lista
         } else if (data.total_postal_codes > 1) {
-          // Múltiples CPs, mostrar el primero o permitir selección
-          // Para simplificar, usamos el primero
+          // Múltiples CPs, guardar lista para que usuario seleccione
+          setAvailablePostalCodes(data.postal_codes);
+          // Preseleccionar el primero
           setFormData((prev) => ({
             ...prev,
             branch_postal_code: data.postal_codes[0],
@@ -316,6 +321,7 @@ const Register = () => {
           branch_postal_code: '',
         }));
         setManualPostalCode('');
+        setAvailablePostalCodes([]);
       }
     } else {
       setFormData((prev) => ({
@@ -323,6 +329,7 @@ const Register = () => {
         branch_settlement_custom: '',
       }));
       setManualPostalCode('');
+      setAvailablePostalCodes([]);
     }
   };
 
@@ -1090,8 +1097,36 @@ const Register = () => {
                             Ingresa el código postal de tu domicilio
                           </p>
                         </>
+                      ) : availablePostalCodes.length > 1 ? (
+                        // Selector cuando hay múltiples CPs
+                        <>
+                          <Select
+                            value={formData.branch_postal_code}
+                            onValueChange={(value) => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                branch_postal_code: value,
+                              }));
+                            }}
+                            disabled={loading}
+                          >
+                            <SelectTrigger className='w-full'>
+                              <SelectValue placeholder='Selecciona tu código postal' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availablePostalCodes.map((cp) => (
+                                <SelectItem key={cp} value={cp}>
+                                  {cp}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <p className='text-xs text-muted-foreground'>
+                            ⚠️ Esta colonia tiene {availablePostalCodes.length} códigos postales. Selecciona el tuyo.
+                          </p>
+                        </>
                       ) : (
-                        // Campo de solo lectura para colonia del catálogo
+                        // Campo de solo lectura para colonia con un solo CP
                         formData.branch_postal_code && (
                           <>
                             <Input

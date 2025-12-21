@@ -63,6 +63,7 @@ const CustomerForm = ({ mode = 'create' }) => {
   const [postalCodeError, setPostalCodeError] = useState('');
   const [customSettlement, setCustomSettlement] = useState(false);
   const [manualPostalCode, setManualPostalCode] = useState(''); // Para colonia personalizada en Flujo 2
+  const [availablePostalCodes, setAvailablePostalCodes] = useState([]); // Lista de CPs cuando hay múltiples
 
   // Nombres de estado y municipio para modo CP (vienen de la respuesta del backend)
   const [cpStateName, setCpStateName] = useState('');
@@ -296,8 +297,11 @@ const CustomerForm = ({ mode = 'create' }) => {
         if (data.total_postal_codes === 1) {
           // Un solo CP, autocompletar
           setValue('postal_code', data.postal_codes[0]);
+          setAvailablePostalCodes([]); // Limpiar lista
         } else if (data.total_postal_codes > 1) {
-          // Múltiples CPs, usar el primero
+          // Múltiples CPs, guardar lista para que usuario seleccione
+          setAvailablePostalCodes(data.postal_codes);
+          // Preseleccionar el primero
           setValue('postal_code', data.postal_codes[0]);
         }
       } catch (err) {
@@ -322,6 +326,7 @@ const CustomerForm = ({ mode = 'create' }) => {
     setPostalCodeError('');
     setCustomSettlement(false);
     setManualPostalCode('');
+    setAvailablePostalCodes([]);
     setCpStateName('');
     setCpMunicipalityName('');
   };
@@ -1007,10 +1012,12 @@ const CustomerForm = ({ mode = 'create' }) => {
                         if (locationMode === 'state_municipality') {
                           setValue('postal_code', '');
                           setManualPostalCode('');
+                          setAvailablePostalCodes([]);
                         }
                       } else {
                         setValue('settlement_custom', '');
                         setManualPostalCode('');
+                        setAvailablePostalCodes([]);
                       }
                     }}
                   />
@@ -1063,8 +1070,32 @@ const CustomerForm = ({ mode = 'create' }) => {
                       Ingresa el código postal de tu domicilio
                     </p>
                   </>
+                ) : availablePostalCodes.length > 1 ? (
+                  // Selector cuando hay múltiples CPs
+                  <>
+                    <Select
+                      value={watchedPostalCode}
+                      onValueChange={(value) => {
+                        setValue('postal_code', value);
+                      }}
+                    >
+                      <SelectTrigger className='w-full'>
+                        <SelectValue placeholder='Selecciona tu código postal' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availablePostalCodes.map((cp) => (
+                          <SelectItem key={cp} value={cp}>
+                            {cp}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className='text-xs text-muted-foreground'>
+                      ⚠️ Esta colonia tiene {availablePostalCodes.length} códigos postales. Selecciona el tuyo.
+                    </p>
+                  </>
                 ) : (
-                  // Campo de solo lectura para colonia del catálogo
+                  // Campo de solo lectura para colonia con un solo CP
                   watchedPostalCode && (
                     <>
                       <Input

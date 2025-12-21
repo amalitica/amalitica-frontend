@@ -284,6 +284,13 @@ const Register = () => {
           settlement.settlement_type
         );
         
+        console.log('=== DEBUG: Respuesta del API ===');
+        console.log('Colonia:', settlement.name);
+        console.log('Data completa:', data);
+        console.log('Total CPs:', data.total_postal_codes);
+        console.log('CPs:', data.postal_codes);
+        console.log('===============================');
+        
         if (data.total_postal_codes === 1) {
           // Un solo CP, autocompletar
           setFormData((prev) => ({

@@ -152,25 +152,7 @@ const Register = () => {
     }
   }, [formData.branch_municipality_id, settlementSearch, locationMode]);
 
-  // Manejar cambio de modo de ubicación
-  const handleLocationModeChange = (mode) => {
-    setLocationMode(mode);
-    // Limpiar datos geográficos al cambiar de modo
-    setFormData((prev) => ({
-      ...prev,
-      branch_postal_code: '',
-      branch_state_id: null,
-      branch_municipality_id: null,
-      branch_settlement_id: null,
-      branch_settlement_custom: '',
-    }));
-    setMunicipalities([]);
-    setPostalCodes([]);
-    setSettlements([]);
-    setPostalCodeError('');
-    setCustomSettlement(false);
-    setManualPostalCode('');
-  };
+  // Manejar cambio de modo de ubicación (declaración movida más abajo)
 
   // Buscar por código postal (modo postal_code)
   const handlePostalCodeInput = async (e) => {
@@ -231,12 +213,15 @@ const Register = () => {
       branch_municipality_id: null,
       branch_postal_code: '',
       branch_settlement_id: null,
+      branch_settlement_custom: '',
     }));
     setMunicipalities([]);
     setPostalCodes([]);
     setSettlements([]);
     setAvailablePostalCodes([]);
     setManualPostalCode('');
+    setPostalCodeError('');
+    setCustomSettlement(false);
     setStateOpen(false);
     setStateSearch('');
   };

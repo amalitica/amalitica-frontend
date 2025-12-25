@@ -12,7 +12,6 @@ import {
   getMunicipalitiesByState,
   lookupByPostalCode,
   getSettlementsByMunicipality,
-  getPostalCodesBySettlementName,
   createCustomSettlement,
 } from '@/api/catalogs';
 import { Button } from '@/components/ui/button';
@@ -276,7 +275,7 @@ const CustomerForm = ({ mode = 'create' }) => {
   };
 
   // Handler para cambio de asentamiento en modo state_municipality
-  const handleSettlementSelect = async (settlementId) => {
+  const handleSettlementSelect = (settlementId) => {
     const settlement = settlements.find(s => s.id === settlementId);
     if (!settlement) return;
 
@@ -286,27 +285,26 @@ const CustomerForm = ({ mode = 'create' }) => {
     setSettlementSearch('');
     
     // Autocompletar código postal basado en la colonia seleccionada (solo en Flujo 2)
+    // NOTA: En Flujo 2, los settlements ahora vienen con postal_codes incluidos
     if (locationMode === 'state_municipality') {
-      try {
-        const data = await getPostalCodesBySettlementName(
-          watch('municipality_id'),
-          settlement.name,
-          settlement.settlement_type
-        );
-        
-        if (data.total_postal_codes === 1) {
-          // Un solo CP, autocompletar
-          setValue('postal_code', data.postal_codes[0]);
-          setAvailablePostalCodes([]); // Limpiar lista
-        } else if (data.total_postal_codes > 1) {
-          // Múltiples CPs, guardar lista para que usuario seleccione
-          setAvailablePostalCodes(data.postal_codes);
-          // Preseleccionar el primero
-          setValue('postal_code', data.postal_codes[0]);
-        }
-      } catch (err) {
-        console.error('Error obteniendo código postal:', err);
-        // Si falla, no es crítico
+      // Los asentamientos agrupados tienen postal_codes como array
+      const postalCodes = settlement.postal_codes || [];
+      
+      console.log('=== DEBUG: Colonia seleccionada ===');
+      console.log('Colonia:', settlement.name);
+      console.log('CPs disponibles:', postalCodes);
+      console.log('Total CPs:', postalCodes.length);
+      console.log('===================================');
+      
+      if (postalCodes.length === 1) {
+        // Un solo CP, autocompletar
+        setValue('postal_code', postalCodes[0]);
+        setAvailablePostalCodes([]); // Limpiar lista
+      } else if (postalCodes.length > 1) {
+        // Múltiples CPs, guardar lista para que usuario seleccione
+        setAvailablePostalCodes(postalCodes);
+        // Preseleccionar el primero
+        setValue('postal_code', postalCodes[0]);
       }
     }
   };
@@ -858,8 +856,15 @@ const CustomerForm = ({ mode = 'create' }) => {
                                 onClick={() => handleSettlementSelect(settlement.id)}
                               >
                                 <Check className={cn('mr-2 h-4 w-4', watchedSettlementId === settlement.id ? 'opacity-100' : 'opacity-0')} />
-                                <div>
-                                  <div>{settlement.name}</div>
+                                <div className='flex-1'>
+                                  <div className='flex items-center justify-between'>
+                                    <span>{settlement.name}</span>
+                                    {settlement.total_postal_codes > 1 && (
+                                      <span className='text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded ml-2'>
+                                        {settlement.total_postal_codes} CPs
+                                      </span>
+                                    )}
+                                  </div>
                                   {settlement.settlement_type && (
                                     <div className='text-xs text-muted-foreground'>{settlement.settlement_type}</div>
                                   )}

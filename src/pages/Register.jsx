@@ -18,6 +18,13 @@ import {
 } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Eye,
   EyeOff,
   Loader2,
@@ -39,7 +46,6 @@ import {
   getMunicipalitiesByState,
   lookupByPostalCode,
   getSettlementsByMunicipality,
-  getPostalCodesBySettlementName,
   createCustomSettlement,
 } from '@/api/catalogs';
 
@@ -263,7 +269,7 @@ const Register = () => {
     setPostalCodeSearch('');
   };
 
-  const handleSettlementChange = async (settlementId) => {
+  const handleSettlementChange = (settlementId) => {
     const settlement = settlements.find(s => s.id === settlementId);
     if (!settlement) return;
 
@@ -276,40 +282,32 @@ const Register = () => {
     setSettlementSearch('');
     
     // Autocompletar código postal basado en la colonia seleccionada (solo en Flujo 2)
+    // NOTA: En Flujo 2, los settlements ahora vienen con postal_codes incluidos
     if (locationMode === 'state_municipality') {
-      try {
-        const data = await getPostalCodesBySettlementName(
-          formData.branch_municipality_id,
-          settlement.name,
-          settlement.settlement_type
-        );
-        
-        console.log('=== DEBUG: Respuesta del API ===');
-        console.log('Colonia:', settlement.name);
-        console.log('Data completa:', data);
-        console.log('Total CPs:', data.total_postal_codes);
-        console.log('CPs:', data.postal_codes);
-        console.log('===============================');
-        
-        if (data.total_postal_codes === 1) {
-          // Un solo CP, autocompletar
-          setFormData((prev) => ({
-            ...prev,
-            branch_postal_code: data.postal_codes[0],
-          }));
-          setAvailablePostalCodes([]); // Limpiar lista
-        } else if (data.total_postal_codes > 1) {
-          // Múltiples CPs, guardar lista para que usuario seleccione
-          setAvailablePostalCodes(data.postal_codes);
-          // Preseleccionar el primero
-          setFormData((prev) => ({
-            ...prev,
-            branch_postal_code: data.postal_codes[0],
-          }));
-        }
-      } catch (err) {
-        console.error('Error obteniendo código postal:', err);
-        // Si falla, no es crítico, el usuario puede continuar
+      // Los asentamientos agrupados tienen postal_codes como array
+      const postalCodes = settlement.postal_codes || [];
+      
+      console.log('=== DEBUG: Colonia seleccionada ===');
+      console.log('Colonia:', settlement.name);
+      console.log('CPs disponibles:', postalCodes);
+      console.log('Total CPs:', postalCodes.length);
+      console.log('===================================');
+      
+      if (postalCodes.length === 1) {
+        // Un solo CP, autocompletar
+        setFormData((prev) => ({
+          ...prev,
+          branch_postal_code: postalCodes[0],
+        }));
+        setAvailablePostalCodes([]); // Limpiar lista
+      } else if (postalCodes.length > 1) {
+        // Múltiples CPs, guardar lista para que usuario seleccione
+        setAvailablePostalCodes(postalCodes);
+        // Preseleccionar el primero
+        setFormData((prev) => ({
+          ...prev,
+          branch_postal_code: postalCodes[0],
+        }));
       }
     }
   };
@@ -956,8 +954,15 @@ const Register = () => {
                                     : 'opacity-0'
                                 )}
                               />
-                              <div className='flex flex-col'>
-                                <span>{settlement.name}</span>
+                              <div className='flex flex-col flex-1'>
+                                <div className='flex items-center justify-between'>
+                                  <span>{settlement.name}</span>
+                                  {settlement.total_postal_codes > 1 && (
+                                    <span className='text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded ml-2'>
+                                      {settlement.total_postal_codes} CPs
+                                    </span>
+                                  )}
+                                </div>
                                 {settlement.settlement_type && (
                                   <span className='text-xs text-muted-foreground'>
                                     {settlement.settlement_type}

@@ -29,19 +29,28 @@ import { Loader2, Sparkles, User, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { inferGender } from '@/api/users';
 
-// Mapeo de valores del backend a valores del frontend
-const GENDER_MAP = {
-  'male': 'MALE',
-  'female': 'FEMALE',
+// Valores del enum del backend (GenderEnum)
+// El backend usa los valores en español directamente
+const GENDER_VALUES = {
+  MALE: 'Masculino',
+  FEMALE: 'Femenino',
+  NON_BINARY: 'No Binario',
+  PREFER_NOT_TO_SAY: 'Prefiero no decir',
+};
+
+// Mapeo de respuesta de inferencia a valores del enum
+const INFERENCE_TO_ENUM = {
+  'male': 'Masculino',
+  'female': 'Femenino',
   'unknown': null,
 };
 
-// Mapeo de valores del frontend a etiquetas en español
+// Mapeo de valores del enum a etiquetas para mostrar
 const GENDER_LABELS = {
-  'MALE': 'Masculino',
-  'FEMALE': 'Femenino',
-  'NON_BINARY': 'No Binario',
-  'PREFER_NOT_TO_SAY': 'Prefiero no decir',
+  'Masculino': 'Masculino',
+  'Femenino': 'Femenino',
+  'No Binario': 'No Binario',
+  'Prefiero no decir': 'Prefiero no decir',
 };
 
 // Colores para los badges de confianza
@@ -98,8 +107,8 @@ const GenderSelector = ({
         setMethod(result.method);
         setNameUsed(result.name_used);
 
-        // Mapear el género inferido al valor del enum
-        const mappedGender = GENDER_MAP[result.gender];
+        // Mapear el género inferido al valor del enum del backend
+        const mappedGender = INFERENCE_TO_ENUM[result.gender];
         
         // Solo actualizar si se obtuvo un género válido
         if (mappedGender) {
@@ -167,7 +176,7 @@ const GenderSelector = ({
           >
             <Sparkles className="h-3 w-3" />
             <span>
-              Detectado: {GENDER_LABELS[GENDER_MAP[inferredGender]] || 'Desconocido'}
+              Detectado: {GENDER_LABELS[INFERENCE_TO_ENUM[inferredGender]] || 'Desconocido'}
             </span>
             <span className="text-xs opacity-75">
               ({Math.round(confidence * 100)}%)
@@ -207,12 +216,12 @@ const GenderSelector = ({
         className="flex flex-wrap gap-4"
       >
         <div className="flex items-center space-x-2">
-          <RadioGroupItem value="MALE" id="gender-male" />
+          <RadioGroupItem value={GENDER_VALUES.MALE} id="gender-male" />
           <Label 
             htmlFor="gender-male" 
             className={cn(
               'cursor-pointer',
-              value === 'MALE' && !isManuallySet && inferredGender === 'male' && 'font-medium'
+              value === GENDER_VALUES.MALE && !isManuallySet && inferredGender === 'male' && 'font-medium'
             )}
           >
             Masculino
@@ -220,12 +229,12 @@ const GenderSelector = ({
         </div>
         
         <div className="flex items-center space-x-2">
-          <RadioGroupItem value="FEMALE" id="gender-female" />
+          <RadioGroupItem value={GENDER_VALUES.FEMALE} id="gender-female" />
           <Label 
             htmlFor="gender-female"
             className={cn(
               'cursor-pointer',
-              value === 'FEMALE' && !isManuallySet && inferredGender === 'female' && 'font-medium'
+              value === GENDER_VALUES.FEMALE && !isManuallySet && inferredGender === 'female' && 'font-medium'
             )}
           >
             Femenino
@@ -235,14 +244,14 @@ const GenderSelector = ({
         {showOtherOption && (
           <>
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="NON_BINARY" id="gender-non-binary" />
+              <RadioGroupItem value={GENDER_VALUES.NON_BINARY} id="gender-non-binary" />
               <Label htmlFor="gender-non-binary" className="cursor-pointer">
                 No Binario
               </Label>
             </div>
 
             <div className="flex items-center space-x-2">
-              <RadioGroupItem value="PREFER_NOT_TO_SAY" id="gender-prefer-not" />
+              <RadioGroupItem value={GENDER_VALUES.PREFER_NOT_TO_SAY} id="gender-prefer-not" />
               <Label htmlFor="gender-prefer-not" className="cursor-pointer">
                 Prefiero no decir
               </Label>

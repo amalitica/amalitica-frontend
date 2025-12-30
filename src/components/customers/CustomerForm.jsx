@@ -138,10 +138,22 @@ const CustomerForm = ({ mode = 'create' }) => {
       navigate('/customers');
     } catch (err) {
       console.error('Error al guardar cliente:', err);
-      setError(
-        err.response?.data?.detail ||
-        `Error al ${mode === 'create' ? 'crear' : 'actualizar'} el cliente`
-      );
+      // Manejar diferentes formatos de error del backend
+      let errorMessage = `Error al ${mode === 'create' ? 'crear' : 'actualizar'} el cliente`;
+      
+      if (err.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        // Si detail es un array (errores de validación de Pydantic)
+        if (Array.isArray(detail)) {
+          errorMessage = detail.map(e => e.msg || e.message || JSON.stringify(e)).join(', ');
+        } else if (typeof detail === 'string') {
+          errorMessage = detail;
+        } else if (typeof detail === 'object') {
+          errorMessage = detail.msg || detail.message || JSON.stringify(detail);
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -411,10 +423,19 @@ const CustomerForm = ({ mode = 'create' }) => {
                     <SelectValue placeholder='Selecciona...' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='Recomendacion'>Recomendación</SelectItem>
-                    <SelectItem value='RedesSociales'>Redes Sociales</SelectItem>
-                    <SelectItem value='PublicidadExterior'>Publicidad Exterior</SelectItem>
-                    <SelectItem value='BuscadorInternet'>Buscador de Internet</SelectItem>
+                    {/* Boca a boca */}
+                    <SelectItem value='Referido'>Referido (amigo/familiar)</SelectItem>
+                    <SelectItem value='Recomendación Médica'>Recomendación Médica</SelectItem>
+                    {/* Digital */}
+                    <SelectItem value='Facebook'>Facebook</SelectItem>
+                    <SelectItem value='Instagram'>Instagram</SelectItem>
+                    <SelectItem value='Google'>Google (búsqueda/anuncios)</SelectItem>
+                    <SelectItem value='Google Maps'>Google Maps</SelectItem>
+                    <SelectItem value='TikTok'>TikTok</SelectItem>
+                    {/* Tradicional */}
+                    <SelectItem value='Publicidad Exterior'>Publicidad Exterior</SelectItem>
+                    <SelectItem value='Ubicación'>Pasó por la zona</SelectItem>
+                    {/* Otro */}
                     <SelectItem value='Otro'>Otro</SelectItem>
                   </SelectContent>
                 </Select>

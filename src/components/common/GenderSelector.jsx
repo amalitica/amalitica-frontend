@@ -156,7 +156,7 @@ const GenderSelector = ({
       )}
 
       {/* Badge de género inferido */}
-      {!inferring && inferredGender && confidence && !isManuallySet && (
+      {!inferring && inferredGender && confidence > 0 && !isManuallySet && (
         <div className="flex items-center gap-2 flex-wrap">
           <Badge 
             variant="outline" 
@@ -178,6 +178,16 @@ const GenderSelector = ({
               basado en "{nameUsed}"
             </span>
           )}
+        </div>
+      )}
+
+      {/* Mensaje cuando no se puede inferir el género */}
+      {!inferring && inferredGender === 'unknown' && !isManuallySet && nameUsed && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <AlertCircle className="h-4 w-4" />
+          <span>
+            No se pudo detectar el género para "{nameUsed}". Por favor, selecciónalo manualmente.
+          </span>
         </div>
       )}
 

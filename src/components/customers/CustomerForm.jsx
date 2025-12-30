@@ -1,24 +1,25 @@
+// src/components/customers/CustomerForm.jsx
+/**
+ * Formulario de creación/edición de clientes (pacientes).
+ * 
+ * Refactorizado para usar componentes reutilizables:
+ * - PersonNameFields: Captura nombre, apellidos y género con inferencia automática
+ * - GeographicSelector: Captura datos geográficos basados en SEPOMEX
+ */
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { ArrowLeft, Save, ChevronsUpDown, Check, Search, AlertCircle, MapPin } from 'lucide-react';
+import { ArrowLeft, Save, MapPin } from 'lucide-react';
 import {
   createCustomer,
   updateCustomer,
   getCustomerById,
 } from '@/api/customers';
-import {
-  getStates,
-  getMunicipalitiesByState,
-  lookupByPostalCode,
-  getSettlementsByMunicipality,
-  createCustomSettlement,
-} from '@/api/catalogs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Card,
   CardContent,
@@ -33,12 +34,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import PersonNameFields from '@/components/common/PersonNameFields';
+import GeographicSelector from '@/components/common/GeographicSelector';
 
 const CustomerForm = ({ mode = 'create' }) => {
   const navigate = useNavigate();
@@ -46,39 +43,6 @@ const CustomerForm = ({ mode = 'create' }) => {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(mode === 'edit');
   const [error, setError] = useState(null);
-
-  // Modo de entrada de ubicación: 'postal_code' o 'state_municipality'
-  const [locationMode, setLocationMode] = useState('postal_code');
-
-  // Estados para catálogos geográficos
-  const [states, setStates] = useState([]);
-  const [municipalities, setMunicipalities] = useState([]);
-  const [postalCodes, setPostalCodes] = useState([]);
-  const [settlements, setSettlements] = useState([]);
-  const [loadingStates, setLoadingStates] = useState(true);
-  const [loadingMunicipalities, setLoadingMunicipalities] = useState(false);
-  const [loadingPostalCodes, setLoadingPostalCodes] = useState(false);
-  const [loadingSettlements, setLoadingSettlements] = useState(false);
-  const [postalCodeError, setPostalCodeError] = useState('');
-  const [customSettlement, setCustomSettlement] = useState(false);
-  const [manualPostalCode, setManualPostalCode] = useState(''); // Para colonia personalizada en Flujo 2
-  const [availablePostalCodes, setAvailablePostalCodes] = useState([]); // Lista de CPs cuando hay múltiples
-
-  // Nombres de estado y municipio para modo CP (vienen de la respuesta del backend)
-  const [cpStateName, setCpStateName] = useState('');
-  const [cpMunicipalityName, setCpMunicipalityName] = useState('');
-
-  // Popover states
-  const [stateOpen, setStateOpen] = useState(false);
-  const [municipalityOpen, setMunicipalityOpen] = useState(false);
-  const [postalCodeOpen, setPostalCodeOpen] = useState(false);
-  const [settlementOpen, setSettlementOpen] = useState(false);
-
-  // Search filters para los popovers
-  const [stateSearch, setStateSearch] = useState('');
-  const [municipalitySearch, setMunicipalitySearch] = useState('');
-  const [postalCodeSearch, setPostalCodeSearch] = useState('');
-  const [settlementSearch, setSettlementSearch] = useState('');
 
   const {
     register,
@@ -89,9 +53,14 @@ const CustomerForm = ({ mode = 'create' }) => {
     getValues,
   } = useForm({
     defaultValues: {
+      // Datos personales
       name: '',
       paternal_surname: '',
       maternal_surname: '',
+      gender: null,
+      gender_inferred: false,
+      gender_confidence: null,
+      gender_inference_method: null,
       phone: '',
       email: '',
       birth_date: '',
@@ -104,27 +73,20 @@ const CustomerForm = ({ mode = 'create' }) => {
       street: '',
       exterior_number: '',
       interior_number: '',
-      // Otros
+      // Otros datos personales
       marital_status: '',
       occupation: '',
+      // Marketing
       marketing_source: '',
+      hobbies: '',
+      // Salud
       diabetes: false,
       hypertension: false,
-      hobbies: '',
       medical_conditions: '',
+      // Notas
       additional_notes: '',
     },
   });
-
-  const watchedStateId = watch('state_id');
-  const watchedMunicipalityId = watch('municipality_id');
-  const watchedPostalCode = watch('postal_code');
-  const watchedSettlementId = watch('settlement_id');
-
-  // Cargar estados al montar
-  useEffect(() => {
-    loadStates();
-  }, []);
 
   // Cargar datos del cliente si estamos en modo edición
   useEffect(() => {
@@ -132,104 +94,6 @@ const CustomerForm = ({ mode = 'create' }) => {
       loadCustomerData();
     }
   }, [mode, id]);
-
-  // Cargar municipios cuando cambia el estado (modo state_municipality)
-  useEffect(() => {
-    if (locationMode === 'state_municipality' && watchedStateId) {
-      loadMunicipalities(watchedStateId);
-    }
-  }, [watchedStateId, locationMode]);
-
-  // Cargar asentamientos cuando cambia el municipio o el término de búsqueda (modo state_municipality)
-  useEffect(() => {
-    if (locationMode === 'state_municipality' && watchedMunicipalityId) {
-      loadSettlementsByMunicipality(watchedMunicipalityId, settlementSearch);
-    }
-  }, [watchedMunicipalityId, settlementSearch, locationMode]);
-
-  const loadStates = async () => {
-    try {
-      setLoadingStates(true);
-      const data = await getStates();
-      setStates(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Error al cargar estados:', err);
-    } finally {
-      setLoadingStates(false);
-    }
-  };
-
-  const loadMunicipalities = async (stateId) => {
-    try {
-      setLoadingMunicipalities(true);
-      const data = await getMunicipalitiesByState(stateId);
-      setMunicipalities(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Error al cargar municipios:', err);
-    } finally {
-      setLoadingMunicipalities(false);
-    }
-  };
-
-  const loadPostalCodes = async (municipalityId) => {
-    try {
-      setLoadingPostalCodes(true);
-      const data = await getPostalCodesByMunicipality(municipalityId);
-      setPostalCodes(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Error al cargar códigos postales:', err);
-    } finally {
-      setLoadingPostalCodes(false);
-    }
-  };
-
-  const loadSettlementsByMunicipality = async (municipalityId, searchQuery = null) => {
-    try {
-      setLoadingSettlements(true);
-      const data = await getSettlementsByMunicipality(municipalityId, searchQuery);
-      setSettlements(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Error al cargar asentamientos:', err);
-    } finally {
-      setLoadingSettlements(false);
-    }
-  };
-
-  const loadSettlementsByPostalCode = async (postalCode) => {
-    try {
-      setLoadingSettlements(true);
-      setPostalCodeError('');
-      const data = await lookupByPostalCode(postalCode);
-      
-      if (data && data.settlements && data.settlements.length > 0) {
-        const settlements = data.settlements;
-        setSettlements(settlements);
-        
-        // En modo postal_code, autocompletar estado y municipio
-        if (locationMode === 'postal_code') {
-          setValue('state_id', data.state?.id || null);
-          setValue('municipality_id', data.municipality?.id || null);
-          // Guardar nombres para mostrar en modo CP
-          setCpStateName(data.state?.name || '');
-          setCpMunicipalityName(data.municipality?.name || '');
-          
-          // Si solo hay una colonia, autoseleccionarla
-          if (settlements.length === 1) {
-            setValue('settlement_id', settlements[0].id);
-          }
-        }
-      } else {
-        setPostalCodeError('Código postal no encontrado');
-        setSettlements([]);
-      }
-    } catch (err) {
-      console.error('Error al buscar código postal:', err);
-      setPostalCodeError('Error al buscar código postal');
-      setSettlements([]);
-    } finally {
-      setLoadingSettlements(false);
-    }
-  };
 
   const loadCustomerData = async () => {
     try {
@@ -245,14 +109,6 @@ const CustomerForm = ({ mode = 'create' }) => {
           setValue(key, customer[key] || '');
         }
       });
-
-      // Si tiene datos geográficos, cargar los catálogos correspondientes
-      if (customer.state_id) {
-        await loadMunicipalities(customer.state_id);
-      }
-      if (customer.postal_code) {
-        await loadSettlementsByPostalCode(customer.postal_code);
-      }
     } catch (err) {
       console.error('Error al cargar cliente:', err);
       setError('Error al cargar los datos del cliente');
@@ -261,92 +117,14 @@ const CustomerForm = ({ mode = 'create' }) => {
     }
   };
 
-  // Handler para cambio de código postal (modo postal_code)
-  const handlePostalCodeChange = async (value) => {
-    setValue('postal_code', value);
-    if (value.length === 5) {
-      await loadSettlementsByPostalCode(value);
-    } else {
-      setSettlements([]);
-      setValue('state_id', null);
-      setValue('municipality_id', null);
-      setValue('settlement_id', null);
-    }
-  };
-
-  // Handler para cambio de asentamiento en modo state_municipality
-  const handleSettlementSelect = (settlementId) => {
-    const settlement = settlements.find(s => s.id === settlementId);
-    if (!settlement) return;
-
-    setValue('settlement_id', settlementId);
-    setValue('settlement_custom', '');
-    setSettlementOpen(false);
-    setSettlementSearch('');
-    
-    // Autocompletar código postal basado en la colonia seleccionada (solo en Flujo 2)
-    // NOTA: En Flujo 2, los settlements ahora vienen con postal_codes incluidos
-    if (locationMode === 'state_municipality') {
-      // Los asentamientos agrupados tienen postal_codes como array
-      const postalCodes = settlement.postal_codes || [];
-      
-      console.log('=== DEBUG: Colonia seleccionada ===');
-      console.log('Colonia:', settlement.name);
-      console.log('CPs disponibles:', postalCodes);
-      console.log('Total CPs:', postalCodes.length);
-      console.log('===================================');
-      
-      if (postalCodes.length === 1) {
-        // Un solo CP, autocompletar
-        setValue('postal_code', postalCodes[0]);
-        setAvailablePostalCodes([]); // Limpiar lista
-      } else if (postalCodes.length > 1) {
-        // Múltiples CPs, guardar lista para que usuario seleccione
-        setAvailablePostalCodes(postalCodes);
-        // Preseleccionar el primero
-        setValue('postal_code', postalCodes[0]);
-      }
-    }
-  };
-
-  // Handler para cambio de modo de ubicación
-  const handleLocationModeChange = (newMode) => {
-    setLocationMode(newMode);
-    // Limpiar datos geográficos al cambiar de modo
-    setValue('postal_code', '');
-    setValue('state_id', null);
-    setValue('municipality_id', null);
-    setValue('settlement_id', null);
-    setValue('settlement_custom', '');
-    setSettlements([]);
-    setMunicipalities([]);
-    setPostalCodes([]);
-    setPostalCodeError('');
-    setCustomSettlement(false);
-    setManualPostalCode('');
-    setAvailablePostalCodes([]);
-    setCpStateName('');
-    setCpMunicipalityName('');
-  };
-
   const onSubmit = async (data) => {
+    setLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
-      setError(null);
-
-      // Preparar datos para enviar
-      const submitData = { ...data };
-      
-      // Si usa colonia personalizada, enviar settlement_custom
-      if (customSettlement && data.settlement_custom) {
-        submitData.settlement_id = null;
-      } else {
-        delete submitData.settlement_custom;
-      }
-
-      // Limpiar campos vacíos opcionales
+      // Limpiar datos antes de enviar
       const cleanedData = Object.fromEntries(
-        Object.entries(submitData).filter(
+        Object.entries(data).filter(
           ([_, value]) => value !== '' && value !== null && value !== undefined
         )
       );
@@ -368,27 +146,6 @@ const CustomerForm = ({ mode = 'create' }) => {
       setLoading(false);
     }
   };
-
-  // Filtrar opciones para los popovers
-  const filteredStates = states.filter(state =>
-    state.name.toLowerCase().includes(stateSearch.toLowerCase())
-  );
-  const filteredMunicipalities = municipalities.filter(muni =>
-    muni.name.toLowerCase().includes(municipalitySearch.toLowerCase())
-  );
-  const filteredPostalCodes = postalCodes.filter(pc =>
-    pc.postal_code.includes(postalCodeSearch)
-  );
-  // Para settlements en modo state_municipality, el filtrado se hace en el backend
-  // En modo postal_code, usamos filtrado local ya que la lista es pequeña
-  const filteredSettlements = locationMode === 'postal_code' 
-    ? settlements.filter(s => s.name.toLowerCase().includes(settlementSearch.toLowerCase()))
-    : settlements;
-
-  // Obtener nombres para mostrar
-  const selectedStateName = states.find(s => s.id === watchedStateId)?.name || '';
-  const selectedMunicipalityName = municipalities.find(m => m.id === watchedMunicipalityId)?.name || '';
-  const selectedSettlementName = settlements.find(s => s.id === watchedSettlementId)?.name || '';
 
   if (loadingData) {
     return (
@@ -437,58 +194,36 @@ const CustomerForm = ({ mode = 'create' }) => {
             <CardDescription>Información básica del cliente</CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
+            {/* Campos de nombre con inferencia de género */}
+            <PersonNameFields
+              register={register}
+              errors={errors}
+              watch={watch}
+              setValue={setValue}
+              disabled={loading}
+              showGender={true}
+              showMaternalSurname={true}
+              requiredFields={{
+                name: true,
+                paternal_surname: true,
+                maternal_surname: false,
+                gender: false,
+              }}
+              labels={{
+                name: 'Nombre(s)',
+                paternal_surname: 'Apellido Paterno',
+                maternal_surname: 'Apellido Materno',
+                gender: 'Género',
+              }}
+              placeholders={{
+                name: 'Juan',
+                paternal_surname: 'Pérez',
+                maternal_surname: 'García',
+              }}
+            />
+
+            {/* Otros datos personales */}
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='name'>
-                  Nombre(s) <span className='text-destructive'>*</span>
-                </Label>
-                <Input
-                  id='name'
-                  {...register('name', {
-                    required: 'El nombre es obligatorio',
-                    minLength: { value: 2, message: 'Mínimo 2 caracteres' },
-                    maxLength: { value: 200, message: 'Máximo 200 caracteres' },
-                  })}
-                  placeholder='Juan'
-                />
-                {errors.name && (
-                  <p className='text-sm text-destructive'>{errors.name.message}</p>
-                )}
-              </div>
-
-              <div className='space-y-2'>
-                <Label htmlFor='paternal_surname'>
-                  Apellido Paterno <span className='text-destructive'>*</span>
-                </Label>
-                <Input
-                  id='paternal_surname'
-                  {...register('paternal_surname', {
-                    required: 'El apellido paterno es obligatorio',
-                    minLength: { value: 2, message: 'Mínimo 2 caracteres' },
-                    maxLength: { value: 200, message: 'Máximo 200 caracteres' },
-                  })}
-                  placeholder='Pérez'
-                />
-                {errors.paternal_surname && (
-                  <p className='text-sm text-destructive'>{errors.paternal_surname.message}</p>
-                )}
-              </div>
-
-              <div className='space-y-2'>
-                <Label htmlFor='maternal_surname'>Apellido Materno</Label>
-                <Input
-                  id='maternal_surname'
-                  {...register('maternal_surname', {
-                    minLength: { value: 2, message: 'Mínimo 2 caracteres' },
-                    maxLength: { value: 200, message: 'Máximo 200 caracteres' },
-                  })}
-                  placeholder='García'
-                />
-                {errors.maternal_surname && (
-                  <p className='text-sm text-destructive'>{errors.maternal_surname.message}</p>
-                )}
-              </div>
-
               <div className='space-y-2'>
                 <Label htmlFor='birth_date'>Fecha de Nacimiento</Label>
                 <Input
@@ -602,554 +337,16 @@ const CustomerForm = ({ mode = 'create' }) => {
             </CardTitle>
             <CardDescription>Ubicación del cliente (opcional pero recomendado para análisis)</CardDescription>
           </CardHeader>
-          <CardContent className='space-y-6'>
-            {/* Selector de modo de ubicación */}
-            <div className='space-y-3'>
-              <Label>¿Cómo prefieres ingresar la ubicación?</Label>
-              <RadioGroup
-                value={locationMode}
-                onValueChange={handleLocationModeChange}
-                className='flex flex-col sm:flex-row gap-4'
-              >
-                <div className='flex items-center space-x-2'>
-                  <RadioGroupItem value='postal_code' id='mode_cp' />
-                  <Label htmlFor='mode_cp' className='cursor-pointer font-normal'>
-                    Conozco el Código Postal
-                  </Label>
-                </div>
-                <div className='flex items-center space-x-2'>
-                  <RadioGroupItem value='state_municipality' id='mode_state' />
-                  <Label htmlFor='mode_state' className='cursor-pointer font-normal'>
-                    Seleccionar Estado y Municipio
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Modo: Código Postal primero */}
-            {locationMode === 'postal_code' && (
-              <div className='space-y-4'>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  <div className='space-y-2'>
-                    <Label htmlFor='postal_code'>Código Postal</Label>
-                    <Input
-                      id='postal_code'
-                      value={watchedPostalCode || ''}
-                      onChange={(e) => handlePostalCodeChange(e.target.value.replace(/\D/g, '').slice(0, 5))}
-                      placeholder='Ej: 06600'
-                      maxLength={5}
-                    />
-                    {postalCodeError && (
-                      <p className='text-sm text-destructive flex items-center gap-1'>
-                        <AlertCircle className='h-3 w-3' />
-                        {postalCodeError}
-                      </p>
-                    )}
-                    <p className='text-xs text-muted-foreground'>
-                      El estado y municipio se completarán automáticamente
-                    </p>
-                  </div>
-                </div>
-
-                {/* Estado y Municipio (solo lectura) */}
-                {(cpStateName || cpMunicipalityName) && (
-                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                    <div className='space-y-2'>
-                      <Label>Estado</Label>
-                      <Input value={cpStateName} disabled className='bg-muted' />
-                    </div>
-                    <div className='space-y-2'>
-                      <Label>Municipio</Label>
-                      <Input value={cpMunicipalityName} disabled className='bg-muted' />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Modo: Estado/Municipio primero */}
-            {locationMode === 'state_municipality' && (
-              <div className='space-y-4'>
-                <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-                  {/* Estado */}
-                  <div className='space-y-2'>
-                    <Label>Estado</Label>
-                    <Popover open={stateOpen} onOpenChange={setStateOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant='outline'
-                          role='combobox'
-                          className='w-full justify-between font-normal'
-                          disabled={loadingStates}
-                        >
-                          {watchedStateId ? selectedStateName : 'Selecciona un estado...'}
-                          <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent 
-                      className='w-full p-0' 
-                      align='start'
-                      onInteractOutside={(e) => {
-                        // Evitar que se cierre al hacer clic en el input de búsqueda
-                        const target = e.target;
-                        if (target.closest('[role="combobox"]')) {
-                          e.preventDefault();
-                        }
-                      }}
-                    >
-                        <div className='p-2'>
-                          <div className='flex items-center border-b px-2 pb-2'>
-                            <Search className='h-4 w-4 mr-2 opacity-50' />
-                            <input
-                              className='flex-1 bg-transparent outline-none text-sm'
-                              placeholder='Buscar estado...'
-                              value={stateSearch}
-                              onChange={(e) => setStateSearch(e.target.value)}
-                              autoFocus
-                              onKeyDown={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                          <div className='max-h-60 overflow-y-auto mt-2'>
-                            {filteredStates.map((state) => (
-                              <div
-                                key={state.id}
-                                className={cn(
-                                  'flex items-center px-2 py-2 cursor-pointer rounded hover:bg-accent',
-                                  watchedStateId === state.id && 'bg-accent'
-                                )}
-                                onClick={() => {
-                                  setValue('state_id', state.id);
-                                  setValue('municipality_id', null);
-                                  setValue('postal_code', '');
-                                  setValue('settlement_id', null);
-                                  setMunicipalities([]);
-                                  setPostalCodes([]);
-                                  setSettlements([]);
-                                  setStateOpen(false);
-                                }}
-                              >
-                                <Check className={cn('mr-2 h-4 w-4', watchedStateId === state.id ? 'opacity-100' : 'opacity-0')} />
-                                {state.name}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  {/* Municipio */}
-                  <div className='space-y-2'>
-                    <Label>Municipio</Label>
-                    <Popover open={municipalityOpen} onOpenChange={setMunicipalityOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant='outline'
-                          role='combobox'
-                          className='w-full justify-between font-normal'
-                          disabled={!watchedStateId || loadingMunicipalities}
-                        >
-                          {watchedMunicipalityId ? selectedMunicipalityName : 'Selecciona un municipio...'}
-                          <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent 
-                      className='w-full p-0' 
-                      align='start'
-                      onInteractOutside={(e) => {
-                        // Evitar que se cierre al hacer clic en el input de búsqueda
-                        const target = e.target;
-                        if (target.closest('[role="combobox"]')) {
-                          e.preventDefault();
-                        }
-                      }}
-                    >
-                        <div className='p-2'>
-                          <div className='flex items-center border-b px-2 pb-2'>
-                            <Search className='h-4 w-4 mr-2 opacity-50' />
-                            <input
-                              className='flex-1 bg-transparent outline-none text-sm'
-                              placeholder='Buscar municipio...'
-                              value={municipalitySearch}
-                              onChange={(e) => setMunicipalitySearch(e.target.value)}
-                              autoFocus
-                              onKeyDown={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                          <div className='max-h-60 overflow-y-auto mt-2'>
-                            {filteredMunicipalities.map((muni) => (
-                              <div
-                                key={muni.id}
-                                className={cn(
-                                  'flex items-center px-2 py-2 cursor-pointer rounded hover:bg-accent',
-                                  watchedMunicipalityId === muni.id && 'bg-accent'
-                                )}
-                                onClick={() => {
-                                  setValue('municipality_id', muni.id);
-                                  setValue('settlement_id', null);
-                                  setValue('postal_code', '');
-                                  setSettlements([]);
-                                  setMunicipalityOpen(false);
-                                }}
-                              >
-                                <Check className={cn('mr-2 h-4 w-4', watchedMunicipalityId === muni.id ? 'opacity-100' : 'opacity-0')} />
-                                {muni.name}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-
-              </div>
-            )}
-
-            {/* Colonia en Flujo 2 (Estado/Municipio primero) */}
-            {locationMode === 'state_municipality' && watchedMunicipalityId && (
-              <div className='space-y-4'>
-                <div className='space-y-2'>
-                  <Label>Colonia</Label>
-                  {settlements.length > 0 && !customSettlement ? (
-                    <Popover open={settlementOpen} onOpenChange={setSettlementOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant='outline'
-                          role='combobox'
-                          className='w-full justify-between font-normal'
-                        >
-                          {watchedSettlementId ? selectedSettlementName : 'Selecciona una colonia...'}
-                          <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent 
-                        className='w-full p-0' 
-                        align='start'
-                        onInteractOutside={(e) => {
-                          const target = e.target;
-                          if (target.closest('[role="combobox"]')) {
-                            e.preventDefault();
-                          }
-                        }}
-                      >
-                        <div className='p-2'>
-                          <div className='flex items-center border-b px-2 pb-2'>
-                            <Search className='h-4 w-4 mr-2 opacity-50' />
-                            <input
-                              className='flex-1 bg-transparent outline-none text-sm'
-                              placeholder='Buscar colonia...'
-                              value={settlementSearch}
-                              onChange={(e) => setSettlementSearch(e.target.value)}
-                              autoFocus
-                              onKeyDown={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                          <div className='max-h-60 overflow-y-auto mt-2'>
-                            {filteredSettlements.map((settlement) => (
-                              <div
-                                key={settlement.id}
-                                className={cn(
-                                  'flex items-center px-2 py-2 cursor-pointer rounded hover:bg-accent',
-                                  watchedSettlementId === settlement.id && 'bg-accent'
-                                )}
-                                onClick={() => handleSettlementSelect(settlement.id)}
-                              >
-                                <Check className={cn('mr-2 h-4 w-4', watchedSettlementId === settlement.id ? 'opacity-100' : 'opacity-0')} />
-                                <div className='flex-1'>
-                                  <div className='flex items-center justify-between'>
-                                    <span>{settlement.name}</span>
-                                    {settlement.total_postal_codes > 1 && (
-                                      <span className='text-xs bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded ml-2'>
-                                        {settlement.total_postal_codes} CPs
-                                      </span>
-                                    )}
-                                  </div>
-                                  {settlement.settlement_type && (
-                                    <div className='text-xs text-muted-foreground'>{settlement.settlement_type}</div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  ) : (
-                    <Input
-                      id='settlement_custom'
-                      {...register('settlement_custom', {
-                        minLength: { value: 2, message: 'Mínimo 2 caracteres' },
-                        maxLength: { value: 200, message: 'Máximo 200 caracteres' },
-                      })}
-                      placeholder='Nombre de tu colonia'
-                    />
-                  )}
-                  {settlements.length === 0 && !loadingSettlements && (
-                    <p className='text-xs text-muted-foreground flex items-center gap-1'>
-                      <AlertCircle className='w-3 h-3' />
-                      No hay colonias registradas en este municipio. Ingresa el nombre de tu colonia.
-                    </p>
-                  )}
-                </div>
-
-                {/* Checkbox para colonia personalizada (solo si hay settlements) */}
-                {settlements.length > 0 && (
-                  <div className='flex items-center space-x-2'>
-                    <Checkbox
-                      id='custom_settlement'
-                      checked={customSettlement}
-                      onCheckedChange={(checked) => {
-                        setCustomSettlement(checked);
-                        if (checked) {
-                          setValue('settlement_id', null);
-                          // En Flujo 2, limpiar el CP para que el usuario lo ingrese manualmente
-                          if (locationMode === 'state_municipality') {
-                            setValue('postal_code', '');
-                            setManualPostalCode('');
-                          }
-                        } else {
-                          setValue('settlement_custom', '');
-                          setManualPostalCode('');
-                        }
-                      }}
-                    />
-                    <Label htmlFor='custom_settlement' className='cursor-pointer font-normal text-sm'>
-                      Mi colonia no aparece en la lista
-                    </Label>
-                  </div>
-                )}
-
-                {customSettlement && (
-                  <div className='space-y-2'>
-                    <Label htmlFor='settlement_custom'>Nombre de tu colonia</Label>
-                    <Input
-                      id='settlement_custom'
-                      {...register('settlement_custom', {
-                        minLength: { value: 2, message: 'Mínimo 2 caracteres' },
-                        maxLength: { value: 200, message: 'Máximo 200 caracteres' },
-                      })}
-                      placeholder='Escribe el nombre de tu colonia'
-                    />
-                    {errors.settlement_custom && (
-                      <p className='text-sm text-destructive'>{errors.settlement_custom.message}</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Colonia en Flujo 1 (CP primero) */}
-            {locationMode === 'postal_code' && settlements.length > 0 && (
-              <div className='space-y-4'>
-                <div className='space-y-2'>
-                  <Label>Colonia</Label>
-                  <Popover open={settlementOpen} onOpenChange={setSettlementOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant='outline'
-                        role='combobox'
-                        className='w-full justify-between font-normal'
-                        disabled={customSettlement}
-                      >
-                        {watchedSettlementId ? selectedSettlementName : 'Selecciona una colonia...'}
-                        <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent 
-                      className='w-full p-0' 
-                      align='start'
-                      onInteractOutside={(e) => {
-                        // Evitar que se cierre al hacer clic en el input de búsqueda
-                        const target = e.target;
-                        if (target.closest('[role="combobox"]')) {
-                          e.preventDefault();
-                        }
-                      }}
-                    >
-                      <div className='p-2'>
-                        <div className='flex items-center border-b px-2 pb-2'>
-                          <Search className='h-4 w-4 mr-2 opacity-50' />
-                          <input
-                            className='flex-1 bg-transparent outline-none text-sm'
-                            placeholder='Buscar colonia...'
-                            value={settlementSearch}
-                            onChange={(e) => setSettlementSearch(e.target.value)}
-                            autoFocus
-                            onKeyDown={(e) => e.stopPropagation()}
-                          />
-                        </div>
-                        <div className='max-h-60 overflow-y-auto mt-2'>
-                          {filteredSettlements.map((settlement) => (
-                            <div
-                              key={settlement.id}
-                              className={cn(
-                                'flex items-center px-2 py-2 cursor-pointer rounded hover:bg-accent',
-                                watchedSettlementId === settlement.id && 'bg-accent'
-                              )}
-                              onClick={() => handleSettlementChange(settlement.id)}
-                            >
-                              <Check className={cn('mr-2 h-4 w-4', watchedSettlementId === settlement.id ? 'opacity-100' : 'opacity-0')} />
-                              <div>
-                                <div>{settlement.name}</div>
-                                {settlement.settlement_type && (
-                                  <div className='text-xs text-muted-foreground'>{settlement.settlement_type}</div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* Checkbox para colonia personalizada */}
-                <div className='flex items-center space-x-2'>
-                  <Checkbox
-                    id='custom_settlement'
-                    checked={customSettlement}
-                    onCheckedChange={(checked) => {
-                      setCustomSettlement(checked);
-                      if (checked) {
-                        setValue('settlement_id', null);
-                        // En Flujo 2, limpiar el CP para que el usuario lo ingrese manualmente
-                        if (locationMode === 'state_municipality') {
-                          setValue('postal_code', '');
-                          setManualPostalCode('');
-                          setAvailablePostalCodes([]);
-                        }
-                      } else {
-                        setValue('settlement_custom', '');
-                        setManualPostalCode('');
-                        setAvailablePostalCodes([]);
-                      }
-                    }}
-                  />
-                  <Label htmlFor='custom_settlement' className='cursor-pointer font-normal text-sm'>
-                    Mi colonia no aparece en la lista
-                  </Label>
-                </div>
-
-                {customSettlement && (
-                  <div className='space-y-2'>
-                    <Label htmlFor='settlement_custom'>Nombre de tu colonia</Label>
-                    <Input
-                      id='settlement_custom'
-                      {...register('settlement_custom', {
-                        minLength: { value: 2, message: 'Mínimo 2 caracteres' },
-                        maxLength: { value: 200, message: 'Máximo 200 caracteres' },
-                      })}
-                      placeholder='Escribe el nombre de tu colonia'
-                    />
-                    {errors.settlement_custom && (
-                      <p className='text-sm text-destructive'>{errors.settlement_custom.message}</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Código Postal en modo state_municipality */}
-            {locationMode === 'state_municipality' && (
-              <div className='space-y-2'>
-                <Label>
-                  Código Postal <span className='text-destructive'>*</span>
-                </Label>
-                {customSettlement ? (
-                  // Campo manual para colonia personalizada
-                  <>
-                    <Input
-                      value={manualPostalCode}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/\D/g, '').slice(0, 5);
-                        setManualPostalCode(value);
-                        if (value.length === 5) {
-                          setValue('postal_code', value);
-                        }
-                      }}
-                      placeholder='06600'
-                      maxLength={5}
-                    />
-                    <p className='text-xs text-muted-foreground'>
-                      Ingresa el código postal de tu domicilio
-                    </p>
-                  </>
-                ) : availablePostalCodes.length > 1 ? (
-                  // Selector cuando hay múltiples CPs
-                  <>
-                    <Select
-                      value={watchedPostalCode}
-                      onValueChange={(value) => {
-                        setValue('postal_code', value);
-                      }}
-                    >
-                      <SelectTrigger className='w-full'>
-                        <SelectValue placeholder='Selecciona tu código postal' />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availablePostalCodes.map((cp) => (
-                          <SelectItem key={cp} value={cp}>
-                            {cp}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className='text-xs text-muted-foreground'>
-                      ⚠️ Esta colonia tiene {availablePostalCodes.length} códigos postales. Selecciona el tuyo.
-                    </p>
-                  </>
-                ) : (
-                  // Campo de solo lectura para colonia con un solo CP
-                  watchedPostalCode && (
-                    <>
-                      <Input
-                        value={watchedPostalCode}
-                        disabled
-                        className='bg-muted'
-                      />
-                      <p className='text-xs text-muted-foreground'>
-                        Autocompletado según la colonia seleccionada
-                      </p>
-                    </>
-                  )
-                )}
-              </div>
-            )}
-
-            {/* Calle y Número */}
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-              <div className='space-y-2 md:col-span-1'>
-                <Label htmlFor='street'>Calle</Label>
-                <Input
-                  id='street'
-                  {...register('street', {
-                    maxLength: { value: 300, message: 'Máximo 300 caracteres' },
-                  })}
-                  placeholder='Av. Insurgentes Sur'
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='exterior_number'>Número Ext.</Label>
-                <Input
-                  id='exterior_number'
-                  {...register('exterior_number', {
-                    maxLength: { value: 20, message: 'Máximo 20 caracteres' },
-                  })}
-                  placeholder='1234'
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='interior_number'>Número Int.</Label>
-                <Input
-                  id='interior_number'
-                  {...register('interior_number', {
-                    maxLength: { value: 20, message: 'Máximo 20 caracteres' },
-                  })}
-                  placeholder='Local 5'
-                />
-              </div>
-            </div>
+          <CardContent>
+            <GeographicSelector
+              register={register}
+              errors={errors}
+              watch={watch}
+              setValue={setValue}
+              disabled={loading}
+              showStreetFields={true}
+              required={false}
+            />
           </CardContent>
         </Card>
 
@@ -1164,7 +361,7 @@ const CustomerForm = ({ mode = 'create' }) => {
               <div className='flex items-center space-x-2'>
                 <Checkbox
                   id='diabetes'
-                  {...register('diabetes')}
+                  checked={watch('diabetes')}
                   onCheckedChange={(checked) => setValue('diabetes', checked)}
                 />
                 <Label htmlFor='diabetes' className='cursor-pointer'>
@@ -1175,7 +372,7 @@ const CustomerForm = ({ mode = 'create' }) => {
               <div className='flex items-center space-x-2'>
                 <Checkbox
                   id='hypertension'
-                  {...register('hypertension')}
+                  checked={watch('hypertension')}
                   onCheckedChange={(checked) => setValue('hypertension', checked)}
                 />
                 <Label htmlFor='hypertension' className='cursor-pointer'>

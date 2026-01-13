@@ -14,6 +14,9 @@ import CreateConsultation from './pages/consultations/CreateConsultation';
 import EditConsultation from './pages/consultations/EditConsultation';
 import ConsultationDetails from './pages/consultations/ConsultationDetails';
 
+// Compliance (LFPDPPP)
+import { PrivacyNotice } from './pages/compliance';
+
 import PrivateRoute from './components/common/PrivateRoute';
 import useFavicon from './hooks/useFavicon';
 import logoAmalitica from './assets/images/amalitica_logo.png';
@@ -43,6 +46,9 @@ function App() {
         <Routes>
           <Route path='/login' element={<Login />} />
           <Route path='/register' element={<Register />} />
+          
+          {/* Rutas Públicas - Compliance */}
+          <Route path='/aviso-de-privacidad' element={<PrivacyNotice />} />
 
           {/* Rutas Protegidas */}
           <Route element={<PrivateRoute />}>

@@ -5,6 +5,7 @@
  * Refactorizado para usar componentes reutilizables:
  * - PersonNameFields: Captura nombre, apellidos y género con inferencia automática
  * - GeographicSelector: Captura datos geográficos basados en SEPOMEX
+ * - ConsentModal: Modal de consentimiento LFPDPPP (solo en modo creación)
  */
 
 import { useState, useEffect } from 'react';
@@ -16,6 +17,7 @@ import {
   updateCustomer,
   getCustomerById,
 } from '@/api/customers';
+import { createConsent } from '@/api/compliance';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,6 +38,7 @@ import {
 } from '@/components/ui/select';
 import PersonNameFields from '@/components/common/PersonNameFields';
 import GeographicSelector from '@/components/common/GeographicSelector';
+import { ConsentModal } from '@/components/compliance';
 
 const CustomerForm = ({ mode = 'create' }) => {
   const navigate = useNavigate();
@@ -43,6 +46,10 @@ const CustomerForm = ({ mode = 'create' }) => {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(mode === 'edit');
   const [error, setError] = useState(null);
+  
+  // Estados para el modal de consentimiento
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [pendingCustomerData, setPendingCustomerData] = useState(null);
 
   const {
     register,
@@ -117,45 +124,112 @@ const CustomerForm = ({ mode = 'create' }) => {
     }
   };
 
+  /**
+   * Maneja el envío del formulario.
+   * En modo creación, abre el modal de consentimiento.
+   * En modo edición, actualiza directamente.
+   */
   const onSubmit = async (data) => {
+    // Limpiar datos antes de enviar
+    const cleanedData = Object.fromEntries(
+      Object.entries(data).filter(
+        ([_, value]) => value !== '' && value !== null && value !== undefined
+      )
+    );
+
+    if (mode === 'create') {
+      // Guardar los datos y abrir el modal de consentimiento
+      setPendingCustomerData(cleanedData);
+      setShowConsentModal(true);
+    } else {
+      // Modo edición: actualizar directamente
+      await updateCustomerData(cleanedData);
+    }
+  };
+
+  /**
+   * Actualiza los datos del cliente (modo edición).
+   */
+  const updateCustomerData = async (data) => {
     setLoading(true);
     setError(null);
 
     try {
-      // Limpiar datos antes de enviar
-      const cleanedData = Object.fromEntries(
-        Object.entries(data).filter(
-          ([_, value]) => value !== '' && value !== null && value !== undefined
-        )
-      );
-
-      if (mode === 'create') {
-        await createCustomer(cleanedData);
-      } else {
-        await updateCustomer(id, cleanedData);
-      }
-
+      await updateCustomer(id, data);
       navigate('/customers');
     } catch (err) {
-      console.error('Error al guardar cliente:', err);
-      // Manejar diferentes formatos de error del backend
-      let errorMessage = `Error al ${mode === 'create' ? 'crear' : 'actualizar'} el cliente`;
-      
-      if (err.response?.data?.detail) {
-        const detail = err.response.data.detail;
-        // Si detail es un array (errores de validación de Pydantic)
-        if (Array.isArray(detail)) {
-          errorMessage = detail.map(e => e.msg || e.message || JSON.stringify(e)).join(', ');
-        } else if (typeof detail === 'string') {
-          errorMessage = detail;
-        } else if (typeof detail === 'object') {
-          errorMessage = detail.msg || detail.message || JSON.stringify(detail);
-        }
-      }
-      
-      setError(errorMessage);
+      console.error('Error al actualizar cliente:', err);
+      handleApiError(err, 'actualizar');
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * Maneja la aceptación del consentimiento.
+   * Crea el cliente y luego registra el consentimiento.
+   */
+  const handleConsent = async (consentData) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 1. Crear el cliente
+      const customerResponse = await createCustomer(pendingCustomerData);
+      const newCustomer = customerResponse.data || customerResponse;
+      const customerId = newCustomer.id;
+
+      // 2. Registrar el consentimiento
+      const consentPayload = {
+        primary_consent: consentData.primaryConsent,
+        secondary_consent: consentData.secondaryConsent,
+        consent_method: consentData.consentMethod,
+        // El backend capturará automáticamente la IP y user_agent
+      };
+
+      await createConsent(customerId, consentPayload);
+
+      // 3. Cerrar el modal y navegar a la lista de clientes
+      setShowConsentModal(false);
+      navigate('/customers');
+    } catch (err) {
+      console.error('Error al crear cliente o consentimiento:', err);
+      handleApiError(err, 'crear');
+      // Mantener el modal abierto para que el usuario pueda reintentar
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Maneja errores de la API de forma consistente.
+   */
+  const handleApiError = (err, action) => {
+    let errorMessage = `Error al ${action} el cliente`;
+    
+    if (err.response?.data?.detail) {
+      const detail = err.response.data.detail;
+      // Si detail es un array (errores de validación de Pydantic)
+      if (Array.isArray(detail)) {
+        errorMessage = detail.map(e => e.msg || e.message || JSON.stringify(e)).join(', ');
+      } else if (typeof detail === 'string') {
+        errorMessage = detail;
+      } else if (typeof detail === 'object') {
+        errorMessage = detail.msg || detail.message || JSON.stringify(detail);
+      }
+    }
+    
+    setError(errorMessage);
+  };
+
+  /**
+   * Maneja el cierre del modal de consentimiento.
+   */
+  const handleConsentModalClose = (open) => {
+    setShowConsentModal(open);
+    if (!open) {
+      // Si se cierra el modal sin completar, limpiar los datos pendientes
+      setPendingCustomerData(null);
     }
   };
 
@@ -309,7 +383,7 @@ const CustomerForm = ({ mode = 'create' }) => {
                     required: 'El teléfono es obligatorio',
                     pattern: {
                       value: /^\d{10,15}$/,
-                      message: 'Debe tener entre 10 y 15 dígitos',
+                      message: 'Debe ser un número de 10 a 15 dígitos',
                     },
                   })}
                   placeholder='5512345678'
@@ -320,14 +394,14 @@ const CustomerForm = ({ mode = 'create' }) => {
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='email'>Email</Label>
+                <Label htmlFor='email'>Correo Electrónico</Label>
                 <Input
                   id='email'
                   type='email'
                   {...register('email', {
                     pattern: {
-                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                      message: 'Email inválido',
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: 'Correo electrónico inválido',
                     },
                   })}
                   placeholder='cliente@ejemplo.com'
@@ -340,14 +414,14 @@ const CustomerForm = ({ mode = 'create' }) => {
           </CardContent>
         </Card>
 
-        {/* Dirección */}
+        {/* Domicilio */}
         <Card>
           <CardHeader>
             <CardTitle className='flex items-center gap-2'>
               <MapPin className='h-5 w-5' />
-              Dirección
+              Domicilio
             </CardTitle>
-            <CardDescription>Ubicación del cliente (opcional pero recomendado para análisis)</CardDescription>
+            <CardDescription>Dirección del cliente basada en SEPOMEX</CardDescription>
           </CardHeader>
           <CardContent>
             <GeographicSelector
@@ -356,20 +430,68 @@ const CustomerForm = ({ mode = 'create' }) => {
               watch={watch}
               setValue={setValue}
               disabled={loading}
-              showStreetFields={true}
-              required={false}
+              requiredFields={{
+                postal_code: false,
+                state: false,
+                municipality: false,
+                settlement: false,
+                street: false,
+                exterior_number: false,
+              }}
             />
           </CardContent>
         </Card>
 
-        {/* Datos de Salud */}
+        {/* Marketing */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Marketing</CardTitle>
+            <CardDescription>Información sobre cómo llegó el cliente</CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            <div className='space-y-2'>
+              <Label htmlFor='marketing_source'>¿Cómo nos conoció?</Label>
+              <Select
+                onValueChange={(value) => setValue('marketing_source', value)}
+                defaultValue={watch('marketing_source')}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='Selecciona...' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='Redes Sociales'>Redes Sociales</SelectItem>
+                  <SelectItem value='Recomendación'>Recomendación</SelectItem>
+                  <SelectItem value='Búsqueda en Internet'>Búsqueda en Internet</SelectItem>
+                  <SelectItem value='Publicidad'>Publicidad</SelectItem>
+                  <SelectItem value='Otro'>Otro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className='space-y-2'>
+              <Label htmlFor='hobbies'>Pasatiempos e Intereses</Label>
+              <Input
+                id='hobbies'
+                {...register('hobbies', {
+                  maxLength: { value: 200, message: 'Máximo 200 caracteres' },
+                })}
+                placeholder='Lectura, deportes, música...'
+              />
+              {errors.hobbies && (
+                <p className='text-sm text-destructive'>{errors.hobbies.message}</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Salud */}
         <Card>
           <CardHeader>
             <CardTitle>Información de Salud</CardTitle>
             <CardDescription>Condiciones médicas relevantes</CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
-            <div className='flex flex-col sm:flex-row gap-4'>
+            <div className='flex items-center space-x-4'>
               <div className='flex items-center space-x-2'>
                 <Checkbox
                   id='diabetes'
@@ -395,70 +517,39 @@ const CustomerForm = ({ mode = 'create' }) => {
 
             <div className='space-y-2'>
               <Label htmlFor='medical_conditions'>Otras Condiciones Médicas</Label>
-              <textarea
+              <Input
                 id='medical_conditions'
-                {...register('medical_conditions')}
-                className='w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-                placeholder='Describe otras condiciones médicas relevantes...'
+                {...register('medical_conditions', {
+                  maxLength: { value: 500, message: 'Máximo 500 caracteres' },
+                })}
+                placeholder='Alergias, medicamentos, cirugías previas...'
               />
+              {errors.medical_conditions && (
+                <p className='text-sm text-destructive'>{errors.medical_conditions.message}</p>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Marketing y Notas */}
+        {/* Notas Adicionales */}
         <Card>
           <CardHeader>
-            <CardTitle>Información Adicional</CardTitle>
-            <CardDescription>Marketing y notas del cliente</CardDescription>
+            <CardTitle>Notas Adicionales</CardTitle>
+            <CardDescription>Información adicional relevante</CardDescription>
           </CardHeader>
-          <CardContent className='space-y-4'>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-              <div className='space-y-2'>
-                <Label htmlFor='marketing_source'>¿Cómo nos conoció?</Label>
-                <Select
-                  onValueChange={(value) => setValue('marketing_source', value)}
-                  defaultValue={watch('marketing_source')}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Selecciona...' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {/* Boca a boca */}
-                    <SelectItem value='Referido'>Referido (amigo/familiar)</SelectItem>
-                    <SelectItem value='Recomendación Médica'>Recomendación Médica</SelectItem>
-                    {/* Digital */}
-                    <SelectItem value='Facebook'>Facebook</SelectItem>
-                    <SelectItem value='Instagram'>Instagram</SelectItem>
-                    <SelectItem value='Google'>Google (búsqueda/anuncios)</SelectItem>
-                    <SelectItem value='Google Maps'>Google Maps</SelectItem>
-                    <SelectItem value='TikTok'>TikTok</SelectItem>
-                    {/* Tradicional */}
-                    <SelectItem value='Publicidad Exterior'>Publicidad Exterior</SelectItem>
-                    <SelectItem value='Ubicación'>Pasó por la zona</SelectItem>
-                    {/* Otro */}
-                    <SelectItem value='Otro'>Otro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className='space-y-2'>
-                <Label htmlFor='hobbies'>Pasatiempos</Label>
-                <Input
-                  id='hobbies'
-                  {...register('hobbies')}
-                  placeholder='Lectura, deportes, etc.'
-                />
-              </div>
-            </div>
-
+          <CardContent>
             <div className='space-y-2'>
-              <Label htmlFor='additional_notes'>Notas Adicionales</Label>
-              <textarea
+              <Label htmlFor='additional_notes'>Notas</Label>
+              <Input
                 id='additional_notes'
-                {...register('additional_notes')}
-                className='w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-                placeholder='Notas adicionales sobre el cliente...'
+                {...register('additional_notes', {
+                  maxLength: { value: 1000, message: 'Máximo 1000 caracteres' },
+                })}
+                placeholder='Información adicional sobre el cliente...'
               />
+              {errors.additional_notes && (
+                <p className='text-sm text-destructive'>{errors.additional_notes.message}</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -469,6 +560,7 @@ const CustomerForm = ({ mode = 'create' }) => {
             type='button'
             variant='outline'
             onClick={() => navigate('/customers')}
+            disabled={loading}
           >
             Cancelar
           </Button>
@@ -481,12 +573,27 @@ const CustomerForm = ({ mode = 'create' }) => {
             ) : (
               <>
                 <Save className='h-4 w-4 mr-2' />
-                {mode === 'create' ? 'Crear Cliente' : 'Guardar Cambios'}
+                {mode === 'create' ? 'Continuar' : 'Guardar Cambios'}
               </>
             )}
           </Button>
         </div>
       </form>
+
+      {/* Modal de Consentimiento (solo en modo creación) */}
+      {mode === 'create' && (
+        <ConsentModal
+          open={showConsentModal}
+          onOpenChange={handleConsentModalClose}
+          onConsent={handleConsent}
+          customerName={
+            pendingCustomerData
+              ? `${pendingCustomerData.name || ''} ${pendingCustomerData.paternal_surname || ''}`.trim()
+              : ''
+          }
+          isLoading={loading}
+        />
+      )}
     </div>
   );
 };

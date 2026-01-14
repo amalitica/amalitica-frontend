@@ -17,7 +17,7 @@ import api from './axios';
  * @returns {Promise} Respuesta del servidor con el consentimiento creado
  */
 export const createConsent = (customerId, consentData) => {
-  return api.post(`/api/v1/compliance/customers/${customerId}/consent`, consentData);
+  return api.post(`/compliance/customers/${customerId}/consent`, consentData);
 };
 
 /**
@@ -26,7 +26,7 @@ export const createConsent = (customerId, consentData) => {
  * @returns {Promise} Respuesta del servidor con el consentimiento
  */
 export const getConsent = (customerId) => {
-  return api.get(`/api/v1/compliance/customers/${customerId}/consent`);
+  return api.get(`/compliance/customers/${customerId}/consent`);
 };
 
 /**
@@ -37,7 +37,7 @@ export const getConsent = (customerId) => {
  * @returns {Promise} Respuesta del servidor con el consentimiento actualizado
  */
 export const updateSecondaryConsent = (customerId, updateData) => {
-  return api.put(`/api/v1/compliance/customers/${customerId}/consent`, updateData);
+  return api.put(`/compliance/customers/${customerId}/consent`, updateData);
 };
 
 /**
@@ -48,7 +48,7 @@ export const updateSecondaryConsent = (customerId, updateData) => {
  */
 export const revokeConsent = (customerId, reason = null) => {
   const params = reason ? { reason } : {};
-  return api.delete(`/api/v1/compliance/customers/${customerId}/consent`, { params });
+  return api.delete(`/compliance/customers/${customerId}/consent`, { params });
 };
 
 /**
@@ -56,7 +56,7 @@ export const revokeConsent = (customerId, reason = null) => {
  * @returns {Promise} Respuesta del servidor con las estadísticas
  */
 export const getConsentStatistics = () => {
-  return api.get('/api/v1/compliance/statistics');
+  return api.get('/compliance/statistics');
 };
 
 /**
@@ -64,5 +64,5 @@ export const getConsentStatistics = () => {
  * @returns {Promise} Respuesta del servidor con la versión
  */
 export const getPrivacyPolicyVersion = () => {
-  return api.get('/api/v1/compliance/privacy-policy/version');
+  return api.get('/compliance/privacy-policy/version');
 };

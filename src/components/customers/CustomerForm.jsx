@@ -1,7 +1,7 @@
 // src/components/customers/CustomerForm.jsx
 /**
  * Formulario de creación/edición de clientes (pacientes).
- * 
+ *
  * Refactorizado para usar componentes reutilizables:
  * - PersonNameFields: Captura nombre, apellidos y género con inferencia automática
  * - GeographicSelector: Captura datos geográficos basados en SEPOMEX
@@ -16,6 +16,7 @@ import {
   createCustomer,
   updateCustomer,
   getCustomerById,
+  getCustomerEnums,
 } from '@/api/customers';
 import { createConsent } from '@/api/compliance';
 import { Button } from '@/components/ui/button';
@@ -46,7 +47,7 @@ const CustomerForm = ({ mode = 'create' }) => {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(mode === 'edit');
   const [error, setError] = useState(null);
-  
+
   // Estados para el modal de consentimiento
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [pendingCustomerData, setPendingCustomerData] = useState(null);
@@ -94,6 +95,16 @@ const CustomerForm = ({ mode = 'create' }) => {
       additional_notes: '',
     },
   });
+
+  // Estado para los enums
+  const [enums, setEnums] = useState(null);
+
+  // Cargar enums al montar el componente
+  useEffect(() => {
+    getCustomerEnums()
+      .then((response) => setEnums(response.data))
+      .catch((error) => console.error('Error al cargar enums:', error));
+  }, []);
 
   // Cargar datos del cliente si estamos en modo edición
   useEffect(() => {
@@ -206,19 +217,21 @@ const CustomerForm = ({ mode = 'create' }) => {
    */
   const handleApiError = (err, action) => {
     let errorMessage = `Error al ${action} el cliente`;
-    
+
     if (err.response?.data?.detail) {
       const detail = err.response.data.detail;
       // Si detail es un array (errores de validación de Pydantic)
       if (Array.isArray(detail)) {
-        errorMessage = detail.map(e => e.msg || e.message || JSON.stringify(e)).join(', ');
+        errorMessage = detail
+          .map((e) => e.msg || e.message || JSON.stringify(e))
+          .join(', ');
       } else if (typeof detail === 'string') {
         errorMessage = detail;
       } else if (typeof detail === 'object') {
         errorMessage = detail.msg || detail.message || JSON.stringify(detail);
       }
     }
-    
+
     setError(errorMessage);
   };
 
@@ -242,7 +255,7 @@ const CustomerForm = ({ mode = 'create' }) => {
   }
 
   return (
-    <div className='space-y-6 max-w-4xl mx-auto'>
+    <div className='space-y-6 max-w-4xl mx-auto pb-8'>
       {/* Header */}
       <div className='flex items-center gap-4'>
         <Button
@@ -320,12 +333,16 @@ const CustomerForm = ({ mode = 'create' }) => {
                       if (!value) return true;
                       const selectedDate = new Date(value);
                       const today = new Date();
-                      return selectedDate <= today || 'La fecha no puede ser futura';
+                      return (
+                        selectedDate <= today || 'La fecha no puede ser futura'
+                      );
                     },
                   })}
                 />
                 {errors.birth_date && (
-                  <p className='text-sm text-destructive'>{errors.birth_date.message}</p>
+                  <p className='text-sm text-destructive'>
+                    {errors.birth_date.message}
+                  </p>
                 )}
               </div>
 
@@ -340,7 +357,9 @@ const CustomerForm = ({ mode = 'create' }) => {
                   placeholder='Ingeniero'
                 />
                 {errors.occupation && (
-                  <p className='text-sm text-destructive'>{errors.occupation.message}</p>
+                  <p className='text-sm text-destructive'>
+                    {errors.occupation.message}
+                  </p>
                 )}
               </div>
 
@@ -353,11 +372,12 @@ const CustomerForm = ({ mode = 'create' }) => {
                   <SelectTrigger>
                     <SelectValue placeholder='Selecciona...' />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='Soltero'>Soltero</SelectItem>
-                    <SelectItem value='Casado'>Casado</SelectItem>
-                    <SelectItem value='Divorciado'>Divorciado</SelectItem>
-                    <SelectItem value='Viudo'>Viudo</SelectItem>
+                  <SelectContent position='popper'>
+                    {enums?.marital_status.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -369,7 +389,9 @@ const CustomerForm = ({ mode = 'create' }) => {
         <Card>
           <CardHeader>
             <CardTitle>Datos de Contacto</CardTitle>
-            <CardDescription>Información para comunicarse con el cliente</CardDescription>
+            <CardDescription>
+              Información para comunicarse con el cliente
+            </CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
@@ -389,7 +411,9 @@ const CustomerForm = ({ mode = 'create' }) => {
                   placeholder='5512345678'
                 />
                 {errors.phone && (
-                  <p className='text-sm text-destructive'>{errors.phone.message}</p>
+                  <p className='text-sm text-destructive'>
+                    {errors.phone.message}
+                  </p>
                 )}
               </div>
 
@@ -407,7 +431,9 @@ const CustomerForm = ({ mode = 'create' }) => {
                   placeholder='cliente@ejemplo.com'
                 />
                 {errors.email && (
-                  <p className='text-sm text-destructive'>{errors.email.message}</p>
+                  <p className='text-sm text-destructive'>
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
             </div>
@@ -421,7 +447,9 @@ const CustomerForm = ({ mode = 'create' }) => {
               <MapPin className='h-5 w-5' />
               Domicilio
             </CardTitle>
-            <CardDescription>Dirección del cliente basada en SEPOMEX</CardDescription>
+            <CardDescription>
+              Dirección del cliente basada en SEPOMEX
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <GeographicSelector
@@ -446,7 +474,9 @@ const CustomerForm = ({ mode = 'create' }) => {
         <Card>
           <CardHeader>
             <CardTitle>Marketing</CardTitle>
-            <CardDescription>Información sobre cómo llegó el cliente</CardDescription>
+            <CardDescription>
+              Información sobre cómo llegó el cliente
+            </CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
             <div className='space-y-2'>
@@ -458,12 +488,12 @@ const CustomerForm = ({ mode = 'create' }) => {
                 <SelectTrigger>
                   <SelectValue placeholder='Selecciona...' />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='Redes Sociales'>Redes Sociales</SelectItem>
-                  <SelectItem value='Recomendación'>Recomendación</SelectItem>
-                  <SelectItem value='Búsqueda en Internet'>Búsqueda en Internet</SelectItem>
-                  <SelectItem value='Publicidad'>Publicidad</SelectItem>
-                  <SelectItem value='Otro'>Otro</SelectItem>
+                <SelectContent position='popper'>
+                  {enums?.marketing_source?.map((source) => (
+                    <SelectItem key={source} value={source}>
+                      {source}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -478,7 +508,9 @@ const CustomerForm = ({ mode = 'create' }) => {
                 placeholder='Lectura, deportes, música...'
               />
               {errors.hobbies && (
-                <p className='text-sm text-destructive'>{errors.hobbies.message}</p>
+                <p className='text-sm text-destructive'>
+                  {errors.hobbies.message}
+                </p>
               )}
             </div>
           </CardContent>
@@ -507,7 +539,9 @@ const CustomerForm = ({ mode = 'create' }) => {
                 <Checkbox
                   id='hypertension'
                   checked={watch('hypertension')}
-                  onCheckedChange={(checked) => setValue('hypertension', checked)}
+                  onCheckedChange={(checked) =>
+                    setValue('hypertension', checked)
+                  }
                 />
                 <Label htmlFor='hypertension' className='cursor-pointer'>
                   Hipertensión
@@ -516,7 +550,9 @@ const CustomerForm = ({ mode = 'create' }) => {
             </div>
 
             <div className='space-y-2'>
-              <Label htmlFor='medical_conditions'>Otras Condiciones Médicas</Label>
+              <Label htmlFor='medical_conditions'>
+                Otras Condiciones Médicas
+              </Label>
               <Input
                 id='medical_conditions'
                 {...register('medical_conditions', {
@@ -525,7 +561,9 @@ const CustomerForm = ({ mode = 'create' }) => {
                 placeholder='Alergias, medicamentos, cirugías previas...'
               />
               {errors.medical_conditions && (
-                <p className='text-sm text-destructive'>{errors.medical_conditions.message}</p>
+                <p className='text-sm text-destructive'>
+                  {errors.medical_conditions.message}
+                </p>
               )}
             </div>
           </CardContent>
@@ -548,7 +586,9 @@ const CustomerForm = ({ mode = 'create' }) => {
                 placeholder='Información adicional sobre el cliente...'
               />
               {errors.additional_notes && (
-                <p className='text-sm text-destructive'>{errors.additional_notes.message}</p>
+                <p className='text-sm text-destructive'>
+                  {errors.additional_notes.message}
+                </p>
               )}
             </div>
           </CardContent>

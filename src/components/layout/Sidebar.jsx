@@ -11,8 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import useAuth from '@/hooks/useAuth';
 
-// ✅ NUEVO: Importar los logos
-import logoAmalitica from '@/assets/images/amalitica_logo.png'; // Tu logo
+import logoAmalitica from '@/assets/images/amalitica_logo.png';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
@@ -32,15 +31,13 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Users, label: 'Clientes', path: '/customers' },
     { icon: FileText, label: 'Consultas', path: '/consultations' },
-    // { icon: ShoppingCart, label: 'Pedidos', path: '/orders' },
   ];
 
   const SidebarContent = () => (
     <div className='flex flex-col h-full'>
-      {/* ✅ CAMBIO: Header con logos duales */}
+      {/* Header con logo */}
       <div className='p-2 border-b border-gray-200 flex items-center justify-between'>
         <div className='flex items-center gap-3'>
-          {/* Logo de la Plataforma (Amalitica) */}
           <img src={logoAmalitica} alt='Logo de Amalitica' className='h-16' />
         </div>
 
@@ -56,7 +53,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       </div>
 
       {/* Navegación */}
-      <nav className='flex-1 p-4 space-y-1'>
+      <nav className='flex-1 p-4 space-y-1 overflow-y-auto'>
+        {' '}
+        {/* ✅ Agregué overflow-y-auto aquí */}
         {menuItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
@@ -109,7 +108,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   return (
     <>
       {/* Sidebar para pantallas grandes */}
-      <aside className='w-64 bg-white border-r border-gray-200 flex-col hidden lg:flex'>
+      <aside className='w-64 h-full bg-white border-r border-gray-200 flex-col hidden lg:flex'>
+        {' '}
+        {/* ✅ Agregué h-full */}
         <SidebarContent />
       </aside>
 
@@ -120,7 +121,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             className='absolute inset-0 bg-black/60'
             onClick={() => setIsOpen(false)}
           ></div>
-          <aside className='fixed top-0 left-0 h-full w-64 bg-white z-50 flex flex-col animate-in slide-in-from-left duration-300'>
+          <aside className='fixed top-0 left-0 h-screen w-64 bg-white z-50 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300'>
+            {' '}
+            {/* ✅ Agregué overflow-y-auto */}
             <SidebarContent />
           </aside>
         </div>

@@ -12,6 +12,14 @@ export const searchCustomers = async (query) => {
   return response.data.items;
 };
 
+/**
+ *  Obtener los enums disponibles para clientes
+ *  @return {Promise}
+ */
+export const getCustomerEnums = () => {
+  return apiClient.get('/customers/enums');
+};
+
 export const getCustomerById = (id) => {
   return apiClient.get(`/customers/${id}`);
 };

@@ -23,6 +23,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Combobox } from '@/components/ui/combobox';
+import { MultiSelect } from '@/components/ui/multi-select';
 import {
   Card,
   CardContent,
@@ -85,12 +88,13 @@ const CustomerForm = ({ mode = 'create' }) => {
       // Otros datos personales
       marital_status: '',
       occupation: '',
+      education_level: '',
       // Marketing
       marketing_source: '',
-      hobbies: '',
+      hobbies: [],
       // Salud
-      diabetes: false,
-      hypertension: false,
+      diabetes: null,
+      hypertension: null,
       medical_conditions: '',
       // Notas
       additional_notes: '',
@@ -140,6 +144,12 @@ const CustomerForm = ({ mode = 'create' }) => {
       Object.keys(customer).forEach((key) => {
         if (key === 'birth_date' && customer[key]) {
           setValue(key, customer[key].split('T')[0]);
+        } else if (key === 'hobbies') {
+          // Hobbies es un array
+          setValue(key, customer[key] || []);
+        } else if (key === 'diabetes' || key === 'hypertension') {
+          // Campos booleanos nullable: mantener null si es null
+          setValue(key, customer[key]);
         } else {
           setValue(key, customer[key] || '');
         }
@@ -379,19 +389,20 @@ const CustomerForm = ({ mode = 'create' }) => {
 
               <div className='space-y-2'>
                 <Label htmlFor='occupation'>Ocupación</Label>
-                <Input
-                  id='occupation'
-                  {...register('occupation', {
-                    minLength: { value: 2, message: 'Mínimo 2 caracteres' },
-                    maxLength: { value: 100, message: 'Máximo 100 caracteres' },
-                  })}
-                  placeholder='Ingeniero'
+                <Combobox
+                  options={
+                    enums?.occupation?.map((occ) => ({
+                      value: occ,
+                      label: occ,
+                    })) || []
+                  }
+                  value={watch('occupation')}
+                  onValueChange={(value) => setValue('occupation', value)}
+                  placeholder='Selecciona una ocupación...'
+                  searchPlaceholder='Buscar ocupación...'
+                  emptyText='No se encontró la ocupación.'
+                  disabled={loading}
                 />
-                {errors.occupation && (
-                  <p className='text-sm text-destructive'>
-                    {errors.occupation.message}
-                  </p>
-                )}
               </div>
 
               <div className='space-y-2'>
@@ -404,9 +415,28 @@ const CustomerForm = ({ mode = 'create' }) => {
                     <SelectValue placeholder='Selecciona...' />
                   </SelectTrigger>
                   <SelectContent position='popper'>
-                    {enums?.marital_status.map((status) => (
+                    {enums?.marital_status?.map((status) => (
                       <SelectItem key={status} value={status}>
                         {status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className='space-y-2'>
+                <Label htmlFor='education_level'>Nivel de Educación</Label>
+                <Select
+                  onValueChange={(value) => setValue('education_level', value)}
+                  defaultValue={watch('education_level')}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Selecciona...' />
+                  </SelectTrigger>
+                  <SelectContent position='popper'>
+                    {enums?.education_level?.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {level}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -532,18 +562,20 @@ const CustomerForm = ({ mode = 'create' }) => {
 
             <div className='space-y-2'>
               <Label htmlFor='hobbies'>Pasatiempos e Intereses</Label>
-              <Input
-                id='hobbies'
-                {...register('hobbies', {
-                  maxLength: { value: 200, message: 'Máximo 200 caracteres' },
-                })}
-                placeholder='Lectura, deportes, música...'
+              <MultiSelect
+                options={
+                  enums?.hobbies?.map((hobby) => ({
+                    value: hobby,
+                    label: hobby,
+                  })) || []
+                }
+                value={watch('hobbies') || []}
+                onValueChange={(value) => setValue('hobbies', value)}
+                placeholder='Selecciona pasatiempos...'
+                searchPlaceholder='Buscar pasatiempo...'
+                emptyText='No se encontró el pasatiempo.'
+                disabled={loading}
               />
-              {errors.hobbies && (
-                <p className='text-sm text-destructive'>
-                  {errors.hobbies.message}
-                </p>
-              )}
             </div>
           </CardContent>
         </Card>
@@ -555,29 +587,79 @@ const CustomerForm = ({ mode = 'create' }) => {
             <CardDescription>Condiciones médicas relevantes</CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
-            <div className='flex items-center space-x-4'>
-              <div className='flex items-center space-x-2'>
-                <Checkbox
-                  id='diabetes'
-                  checked={watch('diabetes')}
-                  onCheckedChange={(checked) => setValue('diabetes', checked)}
-                />
-                <Label htmlFor='diabetes' className='cursor-pointer'>
-                  Diabetes
-                </Label>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+              <div className='space-y-3'>
+                <Label>¿Tiene Diabetes?</Label>
+                <RadioGroup
+                  value={
+                    watch('diabetes') === true
+                      ? 'true'
+                      : watch('diabetes') === false
+                      ? 'false'
+                      : 'null'
+                  }
+                  onValueChange={(value) => {
+                    if (value === 'true') setValue('diabetes', true);
+                    else if (value === 'false') setValue('diabetes', false);
+                    else setValue('diabetes', null);
+                  }}
+                >
+                  <div className='flex items-center space-x-2'>
+                    <RadioGroupItem value='true' id='diabetes-yes' />
+                    <Label htmlFor='diabetes-yes' className='cursor-pointer font-normal'>
+                      Sí
+                    </Label>
+                  </div>
+                  <div className='flex items-center space-x-2'>
+                    <RadioGroupItem value='false' id='diabetes-no' />
+                    <Label htmlFor='diabetes-no' className='cursor-pointer font-normal'>
+                      No
+                    </Label>
+                  </div>
+                  <div className='flex items-center space-x-2'>
+                    <RadioGroupItem value='null' id='diabetes-prefer-not' />
+                    <Label htmlFor='diabetes-prefer-not' className='cursor-pointer font-normal'>
+                      Prefiero no decir
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
 
-              <div className='flex items-center space-x-2'>
-                <Checkbox
-                  id='hypertension'
-                  checked={watch('hypertension')}
-                  onCheckedChange={(checked) =>
-                    setValue('hypertension', checked)
+              <div className='space-y-3'>
+                <Label>¿Tiene Hipertensión?</Label>
+                <RadioGroup
+                  value={
+                    watch('hypertension') === true
+                      ? 'true'
+                      : watch('hypertension') === false
+                      ? 'false'
+                      : 'null'
                   }
-                />
-                <Label htmlFor='hypertension' className='cursor-pointer'>
-                  Hipertensión
-                </Label>
+                  onValueChange={(value) => {
+                    if (value === 'true') setValue('hypertension', true);
+                    else if (value === 'false') setValue('hypertension', false);
+                    else setValue('hypertension', null);
+                  }}
+                >
+                  <div className='flex items-center space-x-2'>
+                    <RadioGroupItem value='true' id='hypertension-yes' />
+                    <Label htmlFor='hypertension-yes' className='cursor-pointer font-normal'>
+                      Sí
+                    </Label>
+                  </div>
+                  <div className='flex items-center space-x-2'>
+                    <RadioGroupItem value='false' id='hypertension-no' />
+                    <Label htmlFor='hypertension-no' className='cursor-pointer font-normal'>
+                      No
+                    </Label>
+                  </div>
+                  <div className='flex items-center space-x-2'>
+                    <RadioGroupItem value='null' id='hypertension-prefer-not' />
+                    <Label htmlFor='hypertension-prefer-not' className='cursor-pointer font-normal'>
+                      Prefiero no decir
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
             </div>
 

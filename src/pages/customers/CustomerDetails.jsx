@@ -11,6 +11,9 @@ import {
   Heart,
   Tag,
   FileText,
+  Briefcase,
+  GraduationCap,
+  Gamepad2,
 } from 'lucide-react';
 import { getCustomerById, deleteCustomer } from '@/api/customers';
 import { Button } from '@/components/ui/button';
@@ -22,6 +25,111 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+
+// Mapeo de claves de enum a valores en español
+const ENUM_LABELS = {
+  // Género
+  gender: {
+    MALE: 'Masculino',
+    FEMALE: 'Femenino',
+    NON_BINARY: 'No Binario',
+    PREFER_NOT_TO_SAY: 'Prefiero no decir',
+  },
+  // Estado Civil
+  marital_status: {
+    SINGLE: 'Soltero/a',
+    MARRIED: 'Casado/a',
+    DIVORCED: 'Divorciado/a',
+    WIDOWED: 'Viudo/a',
+  },
+  // Ocupación
+  occupation: {
+    DOCTOR: 'Médico/a',
+    ENGINEER: 'Ingeniero/a',
+    LAWYER: 'Abogado/a',
+    ARCHITECT: 'Arquitecto/a',
+    ACCOUNTANT: 'Contador/a',
+    ECONOMIST: 'Economista',
+    ADMINISTRATOR: 'Administrador/a',
+    PSYCHOLOGIST: 'Psicólogo/a',
+    DENTIST: 'Dentista',
+    VETERINARIAN: 'Veterinario/a',
+    OFFICE_WORKER: 'Oficinista',
+    MANAGER: 'Gerente',
+    EXECUTIVE: 'Ejecutivo/a',
+    SECRETARY: 'Secretario/a',
+    ASSISTANT: 'Asistente',
+    ANALYST: 'Analista',
+    TEACHER: 'Maestro/a',
+    PROFESSOR: 'Profesor/a',
+    STUDENT: 'Estudiante',
+    RESEARCHER: 'Investigador/a',
+    MERCHANT: 'Comerciante',
+    SALESPERSON: 'Vendedor/a',
+    CASHIER: 'Cajero/a',
+    ENTREPRENEUR: 'Empresario/a',
+    DRIVER: 'Chofer',
+    WAITER: 'Mesero/a',
+    CHEF: 'Cocinero/a',
+    HAIRDRESSER: 'Estilista',
+    SECURITY: 'Guardia de Seguridad',
+    CLEANER: 'Personal de Limpieza',
+    TECHNICIAN: 'Técnico/a',
+    MECHANIC: 'Mecánico/a',
+    ELECTRICIAN: 'Electricista',
+    PLUMBER: 'Plomero/a',
+    CARPENTER: 'Carpintero/a',
+    NURSE: 'Enfermero/a',
+    THERAPIST: 'Terapeuta',
+    PHARMACIST: 'Farmacéutico/a',
+    PARAMEDIC: 'Paramédico/a',
+    ARTIST: 'Artista',
+    DESIGNER: 'Diseñador/a',
+    PHOTOGRAPHER: 'Fotógrafo/a',
+    MUSICIAN: 'Músico/a',
+    WRITER: 'Escritor/a',
+    HOMEMAKER: 'Ama/o de Casa',
+    RETIRED: 'Jubilado/a',
+    UNEMPLOYED: 'Desempleado/a',
+    OTHER: 'Otro',
+  },
+  // Nivel de Educación
+  education_level: {
+    PRIMARY: 'Primaria',
+    SECONDARY: 'Secundaria',
+    HIGH_SCHOOL: 'Preparatoria',
+    TECHNICAL: 'Carrera Técnica',
+    BACHELOR: 'Licenciatura',
+    MASTER: 'Maestría',
+    DOCTORATE: 'Doctorado',
+    NO_FORMAL_EDUCATION: 'Sin Educación Formal',
+  },
+  // Fuente de Marketing
+  marketing_source: {
+    REFERRAL: 'Referido',
+    MEDICAL_REFERRAL: 'Recomendación Médica',
+    FACEBOOK: 'Facebook',
+    INSTAGRAM: 'Instagram',
+    GOOGLE: 'Google',
+    GOOGLE_MAPS: 'Google Maps',
+    TIKTOK: 'TikTok',
+    OUTDOOR_ADVERTISING: 'Publicidad Exterior',
+    WALK_BY: 'Ubicación',
+    OTHER: 'Otro',
+  },
+};
+
+// Función helper para obtener el label de un enum
+const getEnumLabel = (enumType, value) => {
+  if (!value) return 'No especificado';
+  return ENUM_LABELS[enumType]?.[value] || value;
+};
+
+// Función helper para formatear diabetes/hipertensión con valor nullable
+const formatMedicalCondition = (value) => {
+  if (value === null || value === undefined) return 'Prefiere no decir';
+  return value ? 'Sí' : 'No';
+};
 
 const CustomerDetails = () => {
   const navigate = useNavigate();
@@ -91,6 +199,17 @@ const CustomerDetails = () => {
     return age;
   };
 
+  // Formatear hobbies (ahora es un array)
+  const formatHobbies = (hobbies) => {
+    if (!hobbies || hobbies.length === 0) return null;
+    // Si es un array, unirlo con comas
+    if (Array.isArray(hobbies)) {
+      return hobbies.join(', ');
+    }
+    // Si es string (legacy), devolverlo tal cual
+    return hobbies;
+  };
+
   if (loading) {
     return (
       <div className='flex justify-center items-center min-h-screen'>
@@ -124,6 +243,7 @@ const CustomerDetails = () => {
   }
 
   const age = calculateAge(customer.birth_date);
+  const hobbiesFormatted = formatHobbies(customer.hobbies);
 
   return (
     <div className='space-y-6 max-w-5xl mx-auto'>
@@ -171,7 +291,7 @@ const CustomerDetails = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
             <div>
               <p className='text-sm font-medium text-muted-foreground'>
                 Nombre Completo
@@ -179,6 +299,14 @@ const CustomerDetails = () => {
               <p className='text-base mt-1'>
                 {customer.name} {customer.paternal_surname}{' '}
                 {customer.maternal_surname || ''}
+              </p>
+            </div>
+            <div>
+              <p className='text-sm font-medium text-muted-foreground'>
+                Género
+              </p>
+              <p className='text-base mt-1'>
+                {getEnumLabel('gender', customer.gender)}
               </p>
             </div>
             <div>
@@ -202,18 +330,41 @@ const CustomerDetails = () => {
             </div>
             <div>
               <p className='text-sm font-medium text-muted-foreground'>
+                Estado Civil
+              </p>
+              <p className='text-base mt-1'>
+                {getEnumLabel('marital_status', customer.marital_status)}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Información Profesional y Educativa */}
+      <Card>
+        <CardHeader>
+          <div className='flex items-center gap-2'>
+            <Briefcase className='h-5 w-5' />
+            <CardTitle>Información Profesional</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div>
+              <p className='text-sm font-medium text-muted-foreground'>
                 Ocupación
               </p>
               <p className='text-base mt-1'>
-                {customer.occupation || 'No especificado'}
+                {getEnumLabel('occupation', customer.occupation)}
               </p>
             </div>
             <div>
               <p className='text-sm font-medium text-muted-foreground'>
-                Estado Civil
+                <GraduationCap className='inline h-4 w-4 mr-1' />
+                Nivel de Educación
               </p>
               <p className='text-base mt-1'>
-                {customer.marital_status || 'No especificado'}
+                {getEnumLabel('education_level', customer.education_level)}
               </p>
             </div>
           </div>
@@ -237,7 +388,10 @@ const CustomerDetails = () => {
               <p className='text-base mt-1 font-mono'>{customer.phone}</p>
             </div>
             <div>
-              <p className='text-sm font-medium text-muted-foreground'>Email</p>
+              <p className='text-sm font-medium text-muted-foreground'>
+                <Mail className='inline h-4 w-4 mr-1' />
+                Email
+              </p>
               <p className='text-base mt-1'>
                 {customer.email || 'No especificado'}
               </p>
@@ -248,15 +402,24 @@ const CustomerDetails = () => {
                 Dirección
               </p>
               <div className='space-y-1'>
-                {customer.colony && (
-                  <p className='text-base'>Colonia: {customer.colony}</p>
-                )}
-                {customer.postal_code && (
+                {customer.street && (
                   <p className='text-base'>
-                    Código Postal: {customer.postal_code}
+                    {customer.street} {customer.exterior_number}
+                    {customer.interior_number && `, Int. ${customer.interior_number}`}
                   </p>
                 )}
-                {!customer.colony && !customer.postal_code && (
+                {customer.settlement_name && (
+                  <p className='text-base'>Col. {customer.settlement_name}</p>
+                )}
+                {customer.postal_code && (
+                  <p className='text-base'>C.P. {customer.postal_code}</p>
+                )}
+                {customer.municipality_name && customer.state_name && (
+                  <p className='text-base'>
+                    {customer.municipality_name}, {customer.state_name}
+                  </p>
+                )}
+                {!customer.street && !customer.postal_code && (
                   <p className='text-base text-muted-foreground'>
                     No especificado
                   </p>
@@ -277,22 +440,34 @@ const CustomerDetails = () => {
         </CardHeader>
         <CardContent>
           <div className='space-y-4'>
-            <div>
-              <p className='text-sm font-medium text-muted-foreground mb-2'>
-                Condiciones
-              </p>
-              <div className='flex flex-wrap gap-2'>
-                {customer.diabetes && (
-                  <Badge variant='secondary'>Diabetes</Badge>
-                )}
-                {customer.hypertension && (
-                  <Badge variant='secondary'>Hipertensión</Badge>
-                )}
-                {!customer.diabetes && !customer.hypertension && (
-                  <p className='text-sm text-muted-foreground'>
-                    Sin condiciones registradas
-                  </p>
-                )}
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+              <div>
+                <p className='text-sm font-medium text-muted-foreground mb-2'>
+                  Diabetes
+                </p>
+                <Badge 
+                  variant={
+                    customer.diabetes === true ? 'destructive' : 
+                    customer.diabetes === false ? 'secondary' : 
+                    'outline'
+                  }
+                >
+                  {formatMedicalCondition(customer.diabetes)}
+                </Badge>
+              </div>
+              <div>
+                <p className='text-sm font-medium text-muted-foreground mb-2'>
+                  Hipertensión
+                </p>
+                <Badge 
+                  variant={
+                    customer.hypertension === true ? 'destructive' : 
+                    customer.hypertension === false ? 'secondary' : 
+                    'outline'
+                  }
+                >
+                  {formatMedicalCondition(customer.hypertension)}
+                </Badge>
               </div>
             </div>
             {customer.medical_conditions && (
@@ -309,6 +484,31 @@ const CustomerDetails = () => {
         </CardContent>
       </Card>
 
+      {/* Pasatiempos e Intereses */}
+      {hobbiesFormatted && (
+        <Card>
+          <CardHeader>
+            <div className='flex items-center gap-2'>
+              <Gamepad2 className='h-5 w-5' />
+              <CardTitle>Pasatiempos e Intereses</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className='flex flex-wrap gap-2'>
+              {Array.isArray(customer.hobbies) ? (
+                customer.hobbies.map((hobby, index) => (
+                  <Badge key={index} variant='secondary'>
+                    {hobby}
+                  </Badge>
+                ))
+              ) : (
+                <p className='text-base'>{customer.hobbies}</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Marketing y Notas */}
       <Card>
         <CardHeader>
@@ -324,19 +524,9 @@ const CustomerDetails = () => {
                 ¿Cómo nos conoció?
               </p>
               <p className='text-base mt-1'>
-                {customer.marketing_source || 'No especificado'}
+                {getEnumLabel('marketing_source', customer.marketing_source)}
               </p>
             </div>
-            {customer.hobbies && (
-              <div>
-                <p className='text-sm font-medium text-muted-foreground'>
-                  Pasatiempos e Intereses
-                </p>
-                <p className='text-base mt-1 whitespace-pre-wrap'>
-                  {customer.hobbies}
-                </p>
-              </div>
-            )}
             {customer.additional_notes && (
               <div>
                 <p className='text-sm font-medium text-muted-foreground'>
@@ -369,7 +559,7 @@ const CustomerDetails = () => {
             </div>
             <div>
               <p className='text-muted-foreground'>Última Modificación</p>
-              <p className='mt-1'>{formatDate(customer.modification_date)}</p>
+              <p className='mt-1'>{formatDate(customer.update_date)}</p>
             </div>
           </div>
         </CardContent>

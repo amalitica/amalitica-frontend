@@ -74,6 +74,13 @@ export function Combobox({
     );
   }, [options, search]);
 
+  // Handler para selección
+  const handleSelect = React.useCallback((selectedValue) => {
+    onValueChange(selectedValue === value ? '' : selectedValue);
+    setOpen(false);
+    setSearch('');
+  }, [value, onValueChange]);
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -106,11 +113,15 @@ export function Combobox({
                 <CommandItem
                   key={option.value}
                   value={option.value}
-                  keywords={[normalizeText(option.label)]}
-                  onSelect={() => {
-                    onValueChange(option.value === value ? '' : option.value);
-                    setOpen(false);
-                    setSearch('');
+                  onSelect={handleSelect}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSelect(option.value);
                   }}
                 >
                   <Check

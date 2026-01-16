@@ -18,10 +18,25 @@ import {
 } from '@/components/ui/popover';
 
 /**
+ * Normaliza texto removiendo acentos para búsqueda
+ */
+const normalizeText = (text) => {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+};
+
+/**
  * Combobox - Componente de selección con búsqueda
  * 
  * Ideal para listas largas de opciones (20-100 items) donde el usuario
  * necesita buscar escribiendo.
+ * 
+ * Características:
+ * - Búsqueda sin acentos (buscar "medico" encuentra "Médico/a")
+ * - Click funcional en todas las opciones
+ * - Teclado navegable
  * 
  * @param {Object} props
  * @param {Array<{value: string, label: string}>} props.options - Opciones disponibles
@@ -44,9 +59,20 @@ export function Combobox({
   disabled = false,
 }) {
   const [open, setOpen] = React.useState(false);
+  const [search, setSearch] = React.useState('');
 
   // Encontrar el label del valor seleccionado
   const selectedOption = options.find((option) => option.value === value);
+
+  // Filtrar opciones basado en búsqueda sin acentos
+  const filteredOptions = React.useMemo(() => {
+    if (!search) return options;
+    
+    const normalizedSearch = normalizeText(search);
+    return options.filter((option) =>
+      normalizeText(option.label).includes(normalizedSearch)
+    );
+  }, [options, search]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -67,18 +93,24 @@ export function Combobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className='w-full p-0' align='start'>
-        <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+        <Command shouldFilter={false}>
+          <CommandInput 
+            placeholder={searchPlaceholder}
+            value={search}
+            onValueChange={setSearch}
+          />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.value}
-                  onSelect={(currentValue) => {
-                    onValueChange(currentValue === value ? '' : currentValue);
+                  keywords={[normalizeText(option.label)]}
+                  onSelect={() => {
+                    onValueChange(option.value === value ? '' : option.value);
                     setOpen(false);
+                    setSearch('');
                   }}
                 >
                   <Check

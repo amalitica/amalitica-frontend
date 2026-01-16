@@ -40,6 +40,7 @@ import {
 import PersonNameFields from '@/components/common/PersonNameFields';
 import GeographicSelector from '@/components/common/GeographicSelector';
 import { ConsentModal } from '@/components/compliance';
+import useAuth from '@/hooks/useAuth';
 
 const CustomerForm = ({ mode = 'create' }) => {
   const navigate = useNavigate();
@@ -99,12 +100,28 @@ const CustomerForm = ({ mode = 'create' }) => {
   // Estado para los enums
   const [enums, setEnums] = useState(null);
 
+  // Obtener información del usuario autenticado
+  const { user } = useAuth();
+
   // Cargar enums al montar el componente
   useEffect(() => {
     getCustomerEnums()
       .then((response) => setEnums(response.data))
       .catch((error) => console.error('Error al cargar enums:', error));
   }, []);
+
+  // Pre-llenar campos geográficos con datos del branch del usuario (solo en modo creación)
+  useEffect(() => {
+    if (mode === 'create' && user?.branch) {
+      // Pre-llenar estado y municipio con los datos de la sucursal del usuario
+      setValue('state_id', user.branch.state_id);
+      setValue('municipality_id', user.branch.municipality_id);
+      setValue('postal_code', user.branch.postal_code);
+      
+      // Nota: settlement_id se llenará automáticamente cuando el usuario
+      // seleccione el código postal en el GeographicSelector
+    }
+  }, [mode, user, setValue]);
 
   // Cargar datos del cliente si estamos en modo edición
   useEffect(() => {

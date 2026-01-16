@@ -255,7 +255,7 @@ const CustomerForm = ({ mode = 'create' }) => {
   }
 
   return (
-    <div className='space-y-6 max-w-4xl mx-auto pb-8'>
+    <div className='space-y-6 mx-auto pb-8'>
       {/* Header */}
       <div className='flex items-center gap-4'>
         <Button

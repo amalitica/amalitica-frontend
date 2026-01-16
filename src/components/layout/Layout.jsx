@@ -29,7 +29,7 @@ const Layout = () => {
         <main className='flex-1 overflow-y-scroll'>
           {' '}
           {/* ✅ overflow-y-scroll en lugar de auto */}
-          <div className='p-4 sm:p-6 lg:p-8 min-h-full'>
+          <div className='p-4 sm:p-6 lg:p-8'>
             {' '}
             {/* ✅ min-h-full en lugar de nada */}
             <Outlet />

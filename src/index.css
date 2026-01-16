@@ -45,7 +45,18 @@
     @apply border-border;
   }
 
+  /* ✅ AGREGAR ESTO */
+  html,
+  body,
+  #root {
+    @apply h-full;
+  }
+
+  html {
+    @apply overflow-hidden;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-hidden;
   }
 }

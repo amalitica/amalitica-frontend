@@ -1,17 +1,9 @@
 import * as React from 'react';
-import { X } from 'lucide-react';
+import { X, Search } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
 import {
   Popover,
   PopoverContent,
@@ -19,10 +11,27 @@ import {
 } from '@/components/ui/popover';
 
 /**
+ * Normaliza texto removiendo acentos para búsqueda
+ */
+const normalizeText = (text) => {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+};
+
+/**
  * MultiSelect - Componente de selección múltiple con búsqueda
  * 
- * Permite seleccionar múltiples opciones de una lista con búsqueda.
- * Los items seleccionados se muestran como badges.
+ * Implementación basada en Popover + input personalizado (como Combobox y GeographicSelector)
+ * para garantizar que los clicks funcionen correctamente.
+ * 
+ * Características:
+ * - Selección múltiple con checkboxes visuales
+ * - Búsqueda sin acentos
+ * - Badges removibles para items seleccionados
+ * - Click funcional
+ * - Límite máximo de selecciones (opcional)
  * 
  * @param {Object} props
  * @param {Array<{value: string, label: string}>} props.options - Opciones disponibles
@@ -47,28 +56,46 @@ export function MultiSelect({
   disabled = false,
 }) {
   const [open, setOpen] = React.useState(false);
+  const [search, setSearch] = React.useState('');
 
   // Encontrar las opciones seleccionadas
   const selectedOptions = options.filter((option) =>
     value.includes(option.value)
   );
 
+  // Filtrar opciones basado en búsqueda sin acentos
+  const filteredOptions = React.useMemo(() => {
+    if (!search) return options;
+    
+    const normalizedSearch = normalizeText(search);
+    return options.filter((option) =>
+      normalizeText(option.label).includes(normalizedSearch)
+    );
+  }, [options, search]);
+
   // Manejar selección/deselección
   const handleSelect = (optionValue) => {
-    const newValue = value.includes(optionValue)
-      ? value.filter((v) => v !== optionValue)
-      : [...value, optionValue];
-
-    onValueChange(newValue);
+    const isSelected = value.includes(optionValue);
+    const isMaxReached = maxItems && value.length >= maxItems;
+    
+    // Si ya está seleccionado, siempre permitir deseleccionar
+    if (isSelected) {
+      onValueChange(value.filter((v) => v !== optionValue));
+      return;
+    }
+    
+    // Si no está seleccionado, verificar límite
+    if (!isMaxReached) {
+      onValueChange([...value, optionValue]);
+    }
   };
 
-  // Remover un item
-  const handleRemove = (optionValue) => {
+  // Remover un item desde el badge
+  const handleRemove = (e, optionValue) => {
+    e.preventDefault();
+    e.stopPropagation();
     onValueChange(value.filter((v) => v !== optionValue));
   };
-
-  // Verificar si se alcanzó el máximo
-  const isMaxReached = maxItems && value.length >= maxItems;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -96,16 +123,8 @@ export function MultiSelect({
                   {option.label}
                   <button
                     className='ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2'
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleRemove(option.value);
-                      }
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onClick={() => handleRemove(option.value)}
+                    onClick={(e) => handleRemove(e, option.value)}
+                    type='button'
                   >
                     <X className='h-3 w-3 text-muted-foreground hover:text-foreground' />
                   </button>
@@ -116,54 +135,68 @@ export function MultiSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className='w-full p-0' align='start'>
-        <Command>
-          <CommandInput placeholder={searchPlaceholder} />
-          <CommandList>
-            <CommandEmpty>{emptyText}</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => {
+        <div className='p-2'>
+          {/* Campo de búsqueda */}
+          <div className='flex items-center border-b px-2 pb-2'>
+            <Search className='h-4 w-4 mr-2 opacity-50' />
+            <input
+              className='flex-1 bg-transparent outline-none text-sm'
+              placeholder={searchPlaceholder}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoFocus
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          </div>
+          
+          {/* Lista de opciones */}
+          <div className='max-h-60 overflow-y-auto mt-2'>
+            {filteredOptions.length === 0 ? (
+              <div className='px-2 py-6 text-center text-sm text-muted-foreground'>
+                {emptyText}
+              </div>
+            ) : (
+              filteredOptions.map((option) => {
                 const isSelected = value.includes(option.value);
+                const isMaxReached = maxItems && value.length >= maxItems;
                 const isDisabled = !isSelected && isMaxReached;
 
                 return (
-                  <CommandItem
+                  <div
                     key={option.value}
-                    value={option.value}
-                    onSelect={() => {
-                      if (!isDisabled) {
-                        handleSelect(option.value);
-                      }
-                    }}
-                    disabled={isDisabled}
                     className={cn(
+                      'flex items-center px-2 py-2 cursor-pointer rounded hover:bg-accent',
                       isDisabled && 'opacity-50 cursor-not-allowed'
                     )}
+                    onClick={() => !isDisabled && handleSelect(option.value)}
                   >
                     <div
                       className={cn(
                         'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
                         isSelected
                           ? 'bg-primary text-primary-foreground'
-                          : 'opacity-50 [&_svg]:invisible'
+                          : 'opacity-50'
                       )}
                     >
-                      <svg
-                        className='h-4 w-4'
-                        fill='none'
-                        stroke='currentColor'
-                        strokeWidth='2'
-                        viewBox='0 0 24 24'
-                      >
-                        <polyline points='20 6 9 17 4 12' />
-                      </svg>
+                      {isSelected && (
+                        <svg
+                          className='h-4 w-4'
+                          fill='none'
+                          stroke='currentColor'
+                          strokeWidth='2'
+                          viewBox='0 0 24 24'
+                        >
+                          <polyline points='20 6 9 17 4 12' />
+                        </svg>
+                      )}
                     </div>
                     {option.label}
-                  </CommandItem>
+                  </div>
                 );
-              })}
-            </CommandGroup>
-          </CommandList>
-        </Command>
+              })
+            )}
+          </div>
+        </div>
       </PopoverContent>
     </Popover>
   );

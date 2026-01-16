@@ -149,8 +149,8 @@ const CustomerDetails = () => {
       const response = await getCustomerById(id);
       setCustomer(response.data);
     } catch (err) {
-      console.error('Error al cargar cliente:', err);
-      setError('Error al cargar los datos del cliente');
+      console.error('Error al cargar paciente:', err);
+      setError('Error al cargar los datos del paciente');
     } finally {
       setLoading(false);
     }
@@ -169,8 +169,8 @@ const CustomerDetails = () => {
       await deleteCustomer(id);
       navigate('/customers');
     } catch (err) {
-      console.error('Error al eliminar cliente:', err);
-      alert('Error al eliminar el cliente. Verifica tus permisos.');
+      console.error('Error al eliminar paciente:', err);
+      alert('Error al eliminar el paciente. Verifica tus permisos.');
     }
   };
 
@@ -213,7 +213,7 @@ const CustomerDetails = () => {
   if (loading) {
     return (
       <div className='flex justify-center items-center min-h-screen'>
-        <p className='text-muted-foreground'>Cargando datos del cliente...</p>
+        <p className='text-muted-foreground'>Cargando datos del paciente...</p>
       </div>
     );
   }
@@ -234,7 +234,7 @@ const CustomerDetails = () => {
         <Card className='border-destructive'>
           <CardContent className='pt-6'>
             <p className='text-destructive'>
-              {error || 'Cliente no encontrado'}
+              {error || 'Paciente no encontrado'}
             </p>
           </CardContent>
         </Card>
@@ -263,7 +263,7 @@ const CustomerDetails = () => {
               {customer.maternal_surname || ''}
             </h1>
             <p className='text-sm text-muted-foreground mt-1'>
-              Cliente desde {formatDate(customer.creation_date)}
+              Paciente desde {formatDate(customer.creation_date)}
             </p>
           </div>
         </div>

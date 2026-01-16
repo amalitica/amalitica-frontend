@@ -13,7 +13,7 @@ export const searchCustomers = async (query) => {
 };
 
 /**
- *  Obtener los enums disponibles para clientes
+ *  Obtener los enums disponibles para pacientes
  *  @return {Promise}
  */
 export const getCustomerEnums = () => {
@@ -41,9 +41,9 @@ export const getCustomerStats = () => {
 };
 
 /**
- * Obtener los clientes más recientes de la sucursal
- * @param {number} limit - Número de clientes a obtener (por defecto 10)
- * @returns {Promise} - Lista de clientes recientes
+ * Obtener los pacientes más recientes de la sucursal
+ * @param {number} limit - Número de pacientes a obtener (por defecto 10)
+ * @returns {Promise} - Lista de pacientes recientes
  */
 export const getRecentCustomers = async (limit = 10) => {
   const response = await getCustomers({

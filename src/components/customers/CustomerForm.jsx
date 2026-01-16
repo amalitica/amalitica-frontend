@@ -1,6 +1,6 @@
 // src/components/customers/CustomerForm.jsx
 /**
- * Formulario de creación/edición de clientes (pacientes).
+ * Formulario de creación/edición de pacientes (pacientes).
  *
  * Refactorizado para usar componentes reutilizables:
  * - PersonNameFields: Captura nombre, apellidos y género con inferencia automática
@@ -127,7 +127,7 @@ const CustomerForm = ({ mode = 'create' }) => {
     }
   }, [mode, user, setValue]);
 
-  // Cargar datos del cliente si estamos en modo edición
+  // Cargar datos del paciente si estamos en modo edición
   useEffect(() => {
     if (mode === 'edit' && id) {
       loadCustomerData();
@@ -140,7 +140,7 @@ const CustomerForm = ({ mode = 'create' }) => {
       const response = await getCustomerById(id);
       const customer = response.data || response;
 
-      // Llenar el formulario con los datos del cliente
+      // Llenar el formulario con los datos del paciente
       Object.keys(customer).forEach((key) => {
         if (key === 'birth_date' && customer[key]) {
           setValue(key, customer[key].split('T')[0]);
@@ -155,8 +155,8 @@ const CustomerForm = ({ mode = 'create' }) => {
         }
       });
     } catch (err) {
-      console.error('Error al cargar cliente:', err);
-      setError('Error al cargar los datos del cliente');
+      console.error('Error al cargar paciente:', err);
+      setError('Error al cargar los datos del paciente');
     } finally {
       setLoadingData(false);
     }
@@ -200,7 +200,7 @@ const CustomerForm = ({ mode = 'create' }) => {
   };
 
   /**
-   * Actualiza los datos del cliente (modo edición).
+   * Actualiza los datos del paciente (modo edición).
    */
   const updateCustomerData = async (data) => {
     setLoading(true);
@@ -210,7 +210,7 @@ const CustomerForm = ({ mode = 'create' }) => {
       await updateCustomer(id, data);
       navigate('/customers');
     } catch (err) {
-      console.error('Error al actualizar cliente:', err);
+      console.error('Error al actualizar paciente:', err);
       handleApiError(err, 'actualizar');
     } finally {
       setLoading(false);
@@ -219,14 +219,14 @@ const CustomerForm = ({ mode = 'create' }) => {
 
   /**
    * Maneja la aceptación del consentimiento.
-   * Crea el cliente y luego registra el consentimiento.
+   * Crea el paciente y luego registra el consentimiento.
    */
   const handleConsent = async (consentData) => {
     setLoading(true);
     setError(null);
 
     try {
-      // 1. Crear el cliente
+      // 1. Crear el paciente
       const customerResponse = await createCustomer(pendingCustomerData);
       const newCustomer = customerResponse.data || customerResponse;
       const customerId = newCustomer.id;
@@ -241,11 +241,11 @@ const CustomerForm = ({ mode = 'create' }) => {
 
       await createConsent(customerId, consentPayload);
 
-      // 3. Cerrar el modal y navegar a la lista de clientes
+      // 3. Cerrar el modal y navegar a la lista de pacientes
       setShowConsentModal(false);
       navigate('/customers');
     } catch (err) {
-      console.error('Error al crear cliente o consentimiento:', err);
+      console.error('Error al crear paciente o consentimiento:', err);
       handleApiError(err, 'crear');
       // Mantener el modal abierto para que el usuario pueda reintentar
     } finally {
@@ -257,7 +257,7 @@ const CustomerForm = ({ mode = 'create' }) => {
    * Maneja errores de la API de forma consistente.
    */
   const handleApiError = (err, action) => {
-    let errorMessage = `Error al ${action} el cliente`;
+    let errorMessage = `Error al ${action} el paciente`;
 
     if (err.response?.data?.detail) {
       const detail = err.response.data.detail;
@@ -290,7 +290,7 @@ const CustomerForm = ({ mode = 'create' }) => {
   if (loadingData) {
     return (
       <div className='flex justify-center items-center min-h-screen'>
-        <p className='text-muted-foreground'>Cargando datos del cliente...</p>
+        <p className='text-muted-foreground'>Cargando datos del paciente...</p>
       </div>
     );
   }
@@ -308,12 +308,12 @@ const CustomerForm = ({ mode = 'create' }) => {
         </Button>
         <div>
           <h1 className='text-2xl sm:text-3xl font-bold'>
-            {mode === 'create' ? 'Nuevo Cliente' : 'Editar Cliente'}
+            {mode === 'create' ? 'Nuevo Paciente' : 'Editar Paciente'}
           </h1>
           <p className='text-sm text-muted-foreground mt-1'>
             {mode === 'create'
-              ? 'Completa la información del nuevo cliente'
-              : 'Actualiza la información del cliente'}
+              ? 'Completa la información del nuevo paciente'
+              : 'Actualiza la información del paciente'}
           </p>
         </div>
       </div>
@@ -331,7 +331,7 @@ const CustomerForm = ({ mode = 'create' }) => {
         <Card>
           <CardHeader>
             <CardTitle>Datos Personales</CardTitle>
-            <CardDescription>Información básica del cliente</CardDescription>
+            <CardDescription>Información básica del paciente</CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
             {/* Campos de nombre con inferencia de género */}
@@ -451,7 +451,7 @@ const CustomerForm = ({ mode = 'create' }) => {
           <CardHeader>
             <CardTitle>Datos de Contacto</CardTitle>
             <CardDescription>
-              Información para comunicarse con el cliente
+              Información para comunicarse con el paciente
             </CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
@@ -489,7 +489,7 @@ const CustomerForm = ({ mode = 'create' }) => {
                       message: 'Correo electrónico inválido',
                     },
                   })}
-                  placeholder='cliente@ejemplo.com'
+                  placeholder='paciente@ejemplo.com'
                 />
                 {errors.email && (
                   <p className='text-sm text-destructive'>
@@ -509,7 +509,7 @@ const CustomerForm = ({ mode = 'create' }) => {
               Domicilio
             </CardTitle>
             <CardDescription>
-              Dirección del cliente basada en SEPOMEX
+              Dirección del paciente basada en SEPOMEX
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -537,7 +537,7 @@ const CustomerForm = ({ mode = 'create' }) => {
           <CardHeader>
             <CardTitle>Marketing</CardTitle>
             <CardDescription>
-              Información sobre cómo llegó el cliente
+              Información sobre cómo llegó el paciente
             </CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
@@ -697,7 +697,7 @@ const CustomerForm = ({ mode = 'create' }) => {
                 {...register('additional_notes', {
                   maxLength: { value: 1000, message: 'Máximo 1000 caracteres' },
                 })}
-                placeholder='Información adicional sobre el cliente...'
+                placeholder='Información adicional sobre el paciente...'
               />
               {errors.additional_notes && (
                 <p className='text-sm text-destructive'>

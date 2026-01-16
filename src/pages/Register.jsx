@@ -403,7 +403,7 @@ const Register = () => {
                       disabled={loading}
                     />
                     <p className='text-xs text-muted-foreground'>
-                      Este será el nombre que verán tus clientes
+                      Este será el nombre que verán tus pacientes
                     </p>
                   </div>
                   <div className='space-y-2'>

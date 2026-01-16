@@ -6,13 +6,13 @@
 import api from './axios';
 
 /**
- * Crea un registro de consentimiento para un cliente.
- * @param {number} customerId - ID del cliente
+ * Crea un registro de consentimiento para un paciente.
+ * @param {number} customerId - ID del paciente
  * @param {Object} consentData - Datos del consentimiento
  * @param {boolean} consentData.primary_consent - Consentimiento primario (obligatorio)
  * @param {boolean} consentData.secondary_consent - Consentimiento secundario (opcional)
  * @param {string} consentData.consent_method - Método de obtención del consentimiento
- * @param {string} [consentData.ip_address] - Dirección IP del cliente
+ * @param {string} [consentData.ip_address] - Dirección IP del paciente
  * @param {string} [consentData.user_agent] - User-Agent del navegador
  * @returns {Promise} Respuesta del servidor con el consentimiento creado
  */
@@ -21,8 +21,8 @@ export const createConsent = (customerId, consentData) => {
 };
 
 /**
- * Obtiene el consentimiento activo de un cliente.
- * @param {number} customerId - ID del cliente
+ * Obtiene el consentimiento activo de un paciente.
+ * @param {number} customerId - ID del paciente
  * @returns {Promise} Respuesta del servidor con el consentimiento
  */
 export const getConsent = (customerId) => {
@@ -30,8 +30,8 @@ export const getConsent = (customerId) => {
 };
 
 /**
- * Actualiza el consentimiento secundario de un cliente.
- * @param {number} customerId - ID del cliente
+ * Actualiza el consentimiento secundario de un paciente.
+ * @param {number} customerId - ID del paciente
  * @param {Object} updateData - Datos a actualizar
  * @param {boolean} updateData.secondary_consent - Nuevo valor del consentimiento secundario
  * @returns {Promise} Respuesta del servidor con el consentimiento actualizado
@@ -41,8 +41,8 @@ export const updateSecondaryConsent = (customerId, updateData) => {
 };
 
 /**
- * Revoca el consentimiento de un cliente.
- * @param {number} customerId - ID del cliente
+ * Revoca el consentimiento de un paciente.
+ * @param {number} customerId - ID del paciente
  * @param {string} [reason] - Motivo de la revocación
  * @returns {Promise} Respuesta del servidor
  */

@@ -7,7 +7,7 @@ export default function CreateConsultation() {
   // 1. Usamos el hook para leer los parámetros de la URL
   const [searchParams] = useSearchParams();
 
-  // 2. Extraemos el ID y el nombre del cliente
+  // 2. Extraemos el ID y el nombre del paciente
   const customerId = searchParams.get('customerId');
   const customerName = searchParams.get('customerName');
 

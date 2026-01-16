@@ -23,19 +23,19 @@ export default function CustomerSearchBox({ mode }) {
 
   // Obtenemos el nombre y el ID iniciales del formulario
   const initialCustomerId = getValues('customer_id');
-  const customerData = getValues('customer'); // Obtenemos el objeto completo del cliente
+  const customerData = getValues('customer'); // Obtenemos el objeto completo del paciente
 
-  // Construir el nombre completo del cliente desde el objeto customer
+  // Construir el nombre completo del paciente desde el objeto customer
   const initialCustomerName = customerData
     ? `${customerData.name} ${customerData.paternal_surname}`.trim()
     : '';
 
-  // Estado para mostrar el nombre del cliente seleccionado
+  // Estado para mostrar el nombre del paciente seleccionado
   const [selectedCustomerName, setSelectedCustomerName] = useState(
     initialCustomerName || ''
   );
 
-  // Cargar clientes recientes cuando se abre el popover
+  // Cargar pacientes recientes cuando se abre el popover
   useEffect(() => {
     if (open && mode === 'create' && recentCustomers.length === 0) {
       fetchRecentCustomers();
@@ -105,12 +105,12 @@ export default function CustomerSearchBox({ mode }) {
   if (mode === 'edit') {
     return (
       <p className='flex h-10 w-full items-center rounded-md border border-input bg-slate-100 px-3 py-2 text-sm'>
-        {selectedCustomerName || 'Cargando cliente...'}
+        {selectedCustomerName || 'Cargando paciente...'}
       </p>
     );
   }
 
-  // En modo creación, si ya hay un cliente seleccionado, mostramos su nombre con opción de cambiar
+  // En modo creación, si ya hay un paciente seleccionado, mostramos su nombre con opción de cambiar
   if (selectedCustomerName) {
     return (
       <div className='flex items-center gap-2'>
@@ -122,7 +122,7 @@ export default function CustomerSearchBox({ mode }) {
           variant='outline'
           size='icon'
           onClick={handleClearSelection}
-          title='Cambiar cliente'
+          title='Cambiar paciente'
         >
           <X className='h-4 w-4' />
         </Button>
@@ -134,7 +134,7 @@ export default function CustomerSearchBox({ mode }) {
   const displayList = searchQuery.length >= 2 ? searchResults : recentCustomers;
   const isShowingRecent = searchQuery.length < 2 && recentCustomers.length > 0;
 
-  // En modo creación sin cliente seleccionado, mostramos el combobox de búsqueda
+  // En modo creación sin paciente seleccionado, mostramos el combobox de búsqueda
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -144,7 +144,7 @@ export default function CustomerSearchBox({ mode }) {
           aria-expanded={open}
           className='w-full justify-between font-normal'
         >
-          Seleccionar un cliente...
+          Seleccionar un paciente...
           <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
         </Button>
       </PopoverTrigger>
@@ -166,11 +166,11 @@ export default function CustomerSearchBox({ mode }) {
 
           {/* Lista de resultados */}
           <div className='max-h-[300px] overflow-y-auto overflow-x-hidden'>
-            {/* Encabezado si mostramos clientes recientes */}
+            {/* Encabezado si mostramos pacientes recientes */}
             {isShowingRecent && (
               <div className='flex items-center gap-2 px-3 py-2 text-xs text-gray-500'>
                 <Clock className='h-3 w-3' />
-                <span>Clientes recientes</span>
+                <span>Pacientes recientes</span>
               </div>
             )}
 
@@ -185,7 +185,7 @@ export default function CustomerSearchBox({ mode }) {
               </div>
             )}
 
-            {/* Lista de clientes */}
+            {/* Lista de pacientes */}
             {displayList.length > 0 && (
               <div className='p-1'>
                 {displayList.map((customer) => {

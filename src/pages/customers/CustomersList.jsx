@@ -59,7 +59,7 @@ const CustomersList = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Cargar clientes
+  // Cargar pacientes
   useEffect(() => {
     fetchCustomers();
   }, [page, debouncedSearch]);
@@ -84,8 +84,8 @@ const CustomersList = () => {
       setCustomers(response.data.items);
       setTotalCount(response.data.total_count);
     } catch (err) {
-      console.error('Error al cargar clientes:', err);
-      setError('Error al cargar los clientes. Por favor, intenta de nuevo.');
+      console.error('Error al cargar pacientes:', err);
+      setError('Error al cargar los pacientes. Por favor, intenta de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -102,8 +102,8 @@ const CustomersList = () => {
       await deleteCustomer(customerId);
       fetchCustomers(); // Recargar la lista
     } catch (err) {
-      console.error('Error al eliminar cliente:', err);
-      alert('Error al eliminar el cliente. Verifica tus permisos.');
+      console.error('Error al eliminar paciente:', err);
+      alert('Error al eliminar el paciente. Verifica tus permisos.');
     }
   };
 
@@ -122,9 +122,9 @@ const CustomersList = () => {
       {/* Header */}
       <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
         <div>
-          <h1 className='text-2xl sm:text-3xl font-bold'>Clientes</h1>
+          <h1 className='text-2xl sm:text-3xl font-bold'>Pacientes</h1>
           <p className='text-sm text-muted-foreground mt-1'>
-            Gestiona la información de tus clientes
+            Gestiona la información de tus pacientes
           </p>
         </div>
         <Button
@@ -132,14 +132,14 @@ const CustomersList = () => {
           className='w-full sm:w-auto'
         >
           <Plus className='mr-2 h-4 w-4' />
-          Nuevo Cliente
+          Nuevo Paciente
         </Button>
       </div>
 
       {/* Search and Filters Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Buscar Clientes</CardTitle>
+          <CardTitle>Buscar Pacientes</CardTitle>
           <CardDescription>
             Busca por nombre, apellido o teléfono
           </CardDescription>
@@ -148,7 +148,7 @@ const CustomersList = () => {
           <div className='relative'>
             <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
             <Input
-              placeholder='Buscar cliente...'
+              placeholder='Buscar paciente...'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className='pl-10'
@@ -161,10 +161,10 @@ const CustomersList = () => {
       <Card>
         <CardHeader>
           <CardTitle>
-            Lista de Clientes
+            Lista de Pacientes
             {totalCount > 0 && (
               <span className='ml-2 text-sm font-normal text-muted-foreground'>
-                ({totalCount} {totalCount === 1 ? 'cliente' : 'clientes'})
+                ({totalCount} {totalCount === 1 ? 'paciente' : 'pacientes'})
               </span>
             )}
           </CardTitle>
@@ -172,7 +172,7 @@ const CustomersList = () => {
         <CardContent>
           {loading ? (
             <div className='flex justify-center items-center py-8'>
-              <p className='text-muted-foreground'>Cargando clientes...</p>
+              <p className='text-muted-foreground'>Cargando pacientes...</p>
             </div>
           ) : error ? (
             <div className='flex justify-center items-center py-8'>
@@ -182,8 +182,8 @@ const CustomersList = () => {
             <div className='flex flex-col items-center justify-center py-8 text-center'>
               <p className='text-muted-foreground mb-2'>
                 {searchQuery
-                  ? 'No se encontraron clientes'
-                  : 'No hay clientes registrados'}
+                  ? 'No se encontraron pacientes'
+                  : 'No hay pacientes registrados'}
               </p>
               {!searchQuery && (
                 <Button
@@ -192,7 +192,7 @@ const CustomersList = () => {
                   size='sm'
                 >
                   <Plus className='mr-2 h-4 w-4' />
-                  Crear primer cliente
+                  Crear primer paciente
                 </Button>
               )}
             </div>

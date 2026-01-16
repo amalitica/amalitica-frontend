@@ -269,7 +269,7 @@ export default function ConsultationDetails() {
         </CardHeader>
         <CardContent className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
           <DetailItem
-            label='Cliente'
+            label='Paciente'
             value={
               consultation.customer
                 ? `${consultation.customer.name} ${consultation.customer.paternal_surname}`

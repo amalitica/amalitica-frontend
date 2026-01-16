@@ -85,15 +85,15 @@ const Dashboard = () => {
     return diffDays;
   };
 
-  // Función para formatear el nombre completo del cliente
+  // Función para formatear el nombre completo del paciente
   const formatCustomerName = (customer) => {
-    if (!customer) return 'Cliente sin nombre';
+    if (!customer) return 'Paciente sin nombre';
     const parts = [
       customer.name,
       customer.paternal_surname,
       customer.maternal_surname,
     ].filter(Boolean);
-    return parts.join(' ') || 'Cliente sin nombre';
+    return parts.join(' ') || 'Paciente sin nombre';
   };
 
   // Función para obtener el color del badge según días restantes
@@ -115,9 +115,9 @@ const Dashboard = () => {
 
   const statsCards = [
     {
-      title: 'Total Clientes',
+      title: 'Total Pacientes',
       value: stats.totalCustomers,
-      description: 'Clientes registrados',
+      description: 'Pacientes registrados',
       icon: Users,
       color: 'text-blue-600',
     },
@@ -275,7 +275,7 @@ const Dashboard = () => {
               onClick={() => navigate('/customers/new')}
             >
               <Users className='mr-2 h-4 w-4' />
-              Registrar Cliente
+              Registrar Paciente
             </Button>
             <Button
               className='w-full justify-start'
@@ -291,7 +291,7 @@ const Dashboard = () => {
               onClick={() => navigate('/customers')}
             >
               <Users className='mr-2 h-4 w-4' />
-              Ver Clientes
+              Ver Pacientes
             </Button>
             <Button
               className='w-full justify-start'

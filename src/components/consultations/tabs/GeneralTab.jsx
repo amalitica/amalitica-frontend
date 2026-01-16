@@ -66,13 +66,13 @@ export default function GeneralTab() {
         {/* --- CAMPO DE CLIENTE CON EL NUEVO COMPONENTE --- */}
         <div className='space-y-2'>
           <Label>
-            Cliente <span className='text-red-500'>*</span>
+            Paciente <span className='text-red-500'>*</span>
           </Label>
           <CustomerSearchBox mode={mode} />
           <input
             type='hidden'
             {...register('customer_id', {
-              required: 'El cliente es obligatorio',
+              required: 'El paciente es obligatorio',
             })}
           />
           {errors.customer_id && (

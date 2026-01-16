@@ -154,7 +154,7 @@ export default function ConsultationsList() {
         <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400' />
         <Input
           type='text'
-          placeholder='Buscar por folio, cliente o teléfono...'
+          placeholder='Buscar por folio, paciente o teléfono...'
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className='pl-10'
@@ -180,7 +180,7 @@ export default function ConsultationsList() {
                       Folio
                     </th>
                     <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
-                      Cliente
+                      Paciente
                     </th>
                     <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
                       Fecha
@@ -348,7 +348,7 @@ export default function ConsultationsList() {
               </CardHeader>
               <CardContent className='space-y-2'>
                 <div className='flex justify-between text-sm'>
-                  <span className='text-gray-600'>Cliente:</span>
+                  <span className='text-gray-600'>Paciente:</span>
                   <span className='font-medium'>
                     {consultation.customer
                       ? `${consultation.customer.first_name} ${consultation.customer.last_name}`

@@ -3,7 +3,7 @@
  * Modal de Consentimiento para cumplimiento LFPDPPP.
  * 
  * Este componente muestra el modal de consentimiento que debe presentarse
- * al registrar un nuevo cliente. Implementa el sistema de dos checkboxes:
+ * al registrar un nuevo paciente. Implementa el sistema de dos checkboxes:
  * - Consentimiento primario (obligatorio): Para finalidades primarias del servicio
  * - Consentimiento secundario (opt-out): Para finalidades secundarias (ML, estudios)
  * 
@@ -45,7 +45,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
  * @param {boolean} props.open - Si el modal está abierto
  * @param {function} props.onOpenChange - Callback para cambiar el estado del modal
  * @param {function} props.onConsent - Callback cuando se acepta el consentimiento
- * @param {string} [props.customerName] - Nombre del cliente (opcional)
+ * @param {string} [props.customerName] - Nombre del paciente (opcional)
  * @param {boolean} [props.isLoading] - Si está procesando
  */
 export function ConsentModal({

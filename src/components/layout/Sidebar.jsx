@@ -29,7 +29,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
-    { icon: Users, label: 'Clientes', path: '/customers' },
+    { icon: Users, label: 'Pacientes', path: '/customers' },
     { icon: FileText, label: 'Consultas', path: '/consultations' },
   ];
 

@@ -475,6 +475,7 @@ const CustomerForm = ({ mode = 'create' }) => {
               watch={watch}
               setValue={setValue}
               disabled={loading}
+              defaultMode="state_municipality"
               requiredFields={{
                 postal_code: false,
                 state: false,

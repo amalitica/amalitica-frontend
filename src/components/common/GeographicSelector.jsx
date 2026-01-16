@@ -74,6 +74,7 @@ const GeographicSelector = ({
   className = '',
   title = 'Dirección',
   description = 'Ubicación basada en catálogo SEPOMEX',
+  defaultMode = 'postal_code', // Modo por defecto: 'postal_code' o 'state_municipality'
 }) => {
   // Determinar si estamos usando react-hook-form o estado controlado
   const isControlled = values !== undefined && onChange !== undefined;
@@ -91,7 +92,7 @@ const GeographicSelector = ({
   };
 
   // Estado interno del componente
-  const [locationMode, setLocationMode] = useState('postal_code');
+  const [locationMode, setLocationMode] = useState(defaultMode);
   const [states, setStates] = useState([]);
   const [municipalities, setMunicipalities] = useState([]);
   const [settlements, setSettlements] = useState([]);

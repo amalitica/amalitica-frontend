@@ -1,16 +1,8 @@
 import * as React from 'react';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check, ChevronsUpDown, Search } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
 import {
   Popover,
   PopoverContent,
@@ -30,8 +22,8 @@ const normalizeText = (text) => {
 /**
  * Combobox - Componente de selección con búsqueda
  * 
- * Ideal para listas largas de opciones (20-100 items) donde el usuario
- * necesita buscar escribiendo.
+ * Implementación basada en Popover + input personalizado (como GeographicSelector)
+ * en lugar de Command, para garantizar que los clicks funcionen correctamente.
  * 
  * Características:
  * - Búsqueda sin acentos (buscar "medico" encuentra "Médico/a")
@@ -75,11 +67,11 @@ export function Combobox({
   }, [options, search]);
 
   // Handler para selección
-  const handleSelect = React.useCallback((selectedValue) => {
+  const handleSelect = (selectedValue) => {
     onValueChange(selectedValue === value ? '' : selectedValue);
     setOpen(false);
     setSearch('');
-  }, [value, onValueChange]);
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -89,7 +81,7 @@ export function Combobox({
           role='combobox'
           aria-expanded={open}
           className={cn(
-            'w-full justify-between',
+            'w-full justify-between font-normal',
             !value && 'text-muted-foreground',
             className
           )}
@@ -100,29 +92,35 @@ export function Combobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className='w-full p-0' align='start'>
-        <Command shouldFilter={false}>
-          <CommandInput 
-            placeholder={searchPlaceholder}
-            value={search}
-            onValueChange={setSearch}
-          />
-          <CommandList>
-            <CommandEmpty>{emptyText}</CommandEmpty>
-            <CommandGroup>
-              {filteredOptions.map((option) => (
-                <CommandItem
+        <div className='p-2'>
+          {/* Campo de búsqueda */}
+          <div className='flex items-center border-b px-2 pb-2'>
+            <Search className='h-4 w-4 mr-2 opacity-50' />
+            <input
+              className='flex-1 bg-transparent outline-none text-sm'
+              placeholder={searchPlaceholder}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              autoFocus
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          </div>
+          
+          {/* Lista de opciones */}
+          <div className='max-h-60 overflow-y-auto mt-2'>
+            {filteredOptions.length === 0 ? (
+              <div className='px-2 py-6 text-center text-sm text-muted-foreground'>
+                {emptyText}
+              </div>
+            ) : (
+              filteredOptions.map((option) => (
+                <div
                   key={option.value}
-                  value={option.value}
-                  onSelect={handleSelect}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleSelect(option.value);
-                  }}
+                  className={cn(
+                    'flex items-center px-2 py-2 cursor-pointer rounded hover:bg-accent',
+                    value === option.value && 'bg-accent'
+                  )}
+                  onClick={() => handleSelect(option.value)}
                 >
                   <Check
                     className={cn(
@@ -131,11 +129,11 @@ export function Combobox({
                     )}
                   />
                   {option.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </PopoverContent>
     </Popover>
   );

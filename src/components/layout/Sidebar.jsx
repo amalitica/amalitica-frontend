@@ -3,6 +3,8 @@ import {
   LayoutDashboard,
   Users,
   FileText,
+  Store,
+  UserCog,
   LogOut,
   X,
   ShoppingCart,
@@ -31,6 +33,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Users, label: 'Pacientes', path: '/customers' },
     { icon: FileText, label: 'Consultas', path: '/consultations' },
+  ];
+
+  const adminItems = [
+    { icon: Store, label: 'Sucursales', path: '/branches' },
+    { icon: UserCog, label: 'Usuarios', path: '/users' },
   ];
 
   const SidebarContent = () => (
@@ -74,6 +81,33 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             </Link>
           );
         })}
+
+        {/* Sección de Administración (Solo para ADMIN y SUPERADMIN) */}
+        {(user?.role === 'Admin' || user?.role === 'SuperAdmin') && (
+          <div className='pt-4'>
+            <p className='px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider'>
+              Administración
+            </p>
+            {adminItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${active
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                >
+                  <Icon className='h-5 w-5' />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </nav>
 
       {/* Sección de Usuario */}

@@ -8,6 +8,12 @@ import CustomersList from './pages/customers/CustomersList';
 import CreateCustomer from './pages/customers/CreateCustomer';
 import EditCustomer from './pages/customers/EditCustomer';
 import CustomerDetails from './pages/customers/CustomerDetails';
+import BranchesList from './pages/branches/BranchesList';
+import CreateBranch from './pages/branches/CreateBranch';
+import EditBranch from './pages/branches/EditBranch';
+import UsersList from './pages/users/UsersList';
+import CreateUser from './pages/users/CreateUser';
+import EditUser from './pages/users/EditUser';
 // import useAuth from './hooks/useAuth';
 import ConsultationsList from './pages/consultations/ConsultationsList';
 import CreateConsultation from './pages/consultations/CreateConsultation';
@@ -67,6 +73,17 @@ function App() {
             <Route path='/customers/new' element={<CreateCustomer />} />
             <Route path='/customers/:id/edit' element={<EditCustomer />} />
             <Route path='/customers/:id' element={<CustomerDetails />} />
+            
+            {/* Sucursales */}
+            <Route path='/branches' element={<BranchesList />} />
+            <Route path='/branches/new' element={<CreateBranch />} />
+            <Route path='/branches/:id/edit' element={<EditBranch />} />
+
+            {/* Usuarios */}
+            <Route path='/users' element={<UsersList />} />
+            <Route path='/users/new' element={<CreateUser />} />
+            <Route path='/users/:id/edit' element={<EditUser />} />
+
             {/* Aquí irán las demás rutas protegidas */}
           </Route>
 

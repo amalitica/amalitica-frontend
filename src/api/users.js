@@ -11,6 +11,11 @@ export const getUserById = async (id) => {
   return response.data;
 };
 
+export const createUser = async (data) => {
+  const response = await api.post('/users/', data);
+  return response.data;
+};
+
 export const getCurrentUser = async () => {
   const response = await api.get('/users/me');
   return response.data;

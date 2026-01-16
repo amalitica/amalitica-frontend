@@ -165,6 +165,20 @@ const CustomerForm = ({ mode = 'create' }) => {
       )
     );
 
+    // Validar datos geográficos: si no hay settlement_id, eliminar todos los campos de ubicación
+    // Esto evita enviar datos parciales o genéricos que ensuciarían la base de datos
+    if (!cleanedData.settlement_id && !cleanedData.settlement_custom) {
+      // Eliminar todos los campos geográficos si no se seleccionó una colonia
+      delete cleanedData.state_id;
+      delete cleanedData.municipality_id;
+      delete cleanedData.settlement_id;
+      delete cleanedData.settlement_custom;
+      delete cleanedData.postal_code;
+      delete cleanedData.street;
+      delete cleanedData.exterior_number;
+      delete cleanedData.interior_number;
+    }
+
     if (mode === 'create') {
       // Guardar los datos y abrir el modal de consentimiento
       setPendingCustomerData(cleanedData);

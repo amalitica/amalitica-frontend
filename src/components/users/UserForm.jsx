@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Calendar } from 'lucide-react';
 import { createUser, updateUser, getUserById } from '@/api/users';
 import { getAllBranches } from '@/api/branches';
 import { Button } from '@/components/ui/button';
@@ -90,16 +90,21 @@ const UserForm = ({ mode = 'create' }) => {
     setError(null);
 
     try {
+      // Limpiar campos vacíos
+      const payload = { ...data };
+      if (!payload.birth_date) delete payload.birth_date;
+      if (!payload.gender) delete payload.gender;
+      if (!payload.branch_id) delete payload.branch_id;
+
       if (mode === 'create') {
-        await createUser(data);
+        await createUser(payload);
       } else {
         // En edición, si el password está vacío, no lo enviamos
-        const updateData = { ...data };
-        if (!updateData.password) {
-          delete updateData.password;
-          delete updateData.password_confirmation;
+        if (!payload.password) {
+          delete payload.password;
+          delete payload.password_confirmation;
         }
-        await updateUser(id, updateData);
+        await updateUser(id, payload);
       }
       navigate('/users');
     } catch (err) {
@@ -156,6 +161,35 @@ const UserForm = ({ mode = 'create' }) => {
                   {...register('phone', { required: 'El teléfono es obligatorio' })}
                 />
                 {errors.phone && <p className='text-xs text-destructive'>{errors.phone.message}</p>}
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='birth_date'>Fecha de Nacimiento</Label>
+                <div className="relative">
+                  <Input
+                    id='birth_date'
+                    type='date'
+                    className="pl-10"
+                    {...register('birth_date')}
+                  />
+                  <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                </div>
+                {errors.birth_date && <p className='text-xs text-destructive'>{errors.birth_date.message}</p>}
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='gender'>Género</Label>
+                <Select
+                  value={watch('gender')}
+                  onValueChange={(val) => setValue('gender', val)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Seleccionar género' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Masculino">Masculino</SelectItem>
+                    <SelectItem value="Femenino">Femenino</SelectItem>
+                    <SelectItem value="Otro">Otro</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardContent>

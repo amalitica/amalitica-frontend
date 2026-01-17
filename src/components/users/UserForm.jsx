@@ -67,7 +67,7 @@ const UserForm = ({ mode = 'create' }) => {
     try {
       setLoadingData(true);
       const user = await getUserById(id);
-      
+
       Object.keys(user).forEach((key) => {
         if (key in watch()) {
           if (key === 'birth_date' && user[key]) {
@@ -116,7 +116,7 @@ const UserForm = ({ mode = 'create' }) => {
   };
 
   if (loadingData) {
-    return <div className="p-8 text-center">Cargando datos...</div>;
+    return <div className='p-8 text-center'>Cargando datos...</div>;
   }
 
   return (
@@ -146,50 +146,54 @@ const UserForm = ({ mode = 'create' }) => {
             />
             <div className='grid gap-4 sm:grid-cols-2'>
               <div className='space-y-2'>
-                <Label htmlFor='email'>Email *</Label>
+                <Label htmlFor='email'>
+                  Email <span className='text-destructive'>*</span>
+                </Label>
                 <Input
                   id='email'
                   type='email'
-                  {...register('email', { required: 'El email es obligatorio' })}
+                  {...register('email', {
+                    required: 'El email es obligatorio',
+                  })}
                 />
-                {errors.email && <p className='text-xs text-destructive'>{errors.email.message}</p>}
+                {errors.email && (
+                  <p className='text-xs text-destructive'>
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='phone'>Teléfono *</Label>
+                <Label htmlFor='phone'>
+                  Teléfono <span className='text-destructive'>*</span>
+                </Label>
                 <Input
                   id='phone'
-                  {...register('phone', { required: 'El teléfono es obligatorio' })}
+                  {...register('phone', {
+                    required: 'El teléfono es obligatorio',
+                  })}
                 />
-                {errors.phone && <p className='text-xs text-destructive'>{errors.phone.message}</p>}
+                {errors.phone && (
+                  <p className='text-xs text-destructive'>
+                    {errors.phone.message}
+                  </p>
+                )}
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='birth_date'>Fecha de Nacimiento</Label>
-                <div className="relative">
+                <div className='relative'>
                   <Input
                     id='birth_date'
                     type='date'
-                    className="pl-10"
+                    className='pl-10'
                     {...register('birth_date')}
                   />
-                  <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Calendar className='absolute left-3 top-2.5 h-4 w-4 text-muted-foreground' />
                 </div>
-                {errors.birth_date && <p className='text-xs text-destructive'>{errors.birth_date.message}</p>}
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='gender'>Género</Label>
-                <Select
-                  value={watch('gender')}
-                  onValueChange={(val) => setValue('gender', val)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Seleccionar género' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Masculino">Masculino</SelectItem>
-                    <SelectItem value="Femenino">Femenino</SelectItem>
-                    <SelectItem value="Otro">Otro</SelectItem>
-                  </SelectContent>
-                </Select>
+                {errors.birth_date && (
+                  <p className='text-xs text-destructive'>
+                    {errors.birth_date.message}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -201,7 +205,9 @@ const UserForm = ({ mode = 'create' }) => {
           </CardHeader>
           <CardContent className='grid gap-4 sm:grid-cols-2'>
             <div className='space-y-2'>
-              <Label htmlFor='role'>Rol *</Label>
+              <Label htmlFor='role'>
+                Rol <span className='text-destructive'>*</span>
+              </Label>
               <Select
                 value={watch('role')}
                 onValueChange={(val) => setValue('role', val)}
@@ -210,9 +216,9 @@ const UserForm = ({ mode = 'create' }) => {
                   <SelectValue placeholder='Seleccionar rol' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Admin">Administrador</SelectItem>
-                  <SelectItem value="Manager">Gerente</SelectItem>
-                  <SelectItem value="Empleado">Empleado</SelectItem>
+                  <SelectItem value='Admin'>Administrador</SelectItem>
+                  <SelectItem value='Manager'>Gerente</SelectItem>
+                  <SelectItem value='Empleado'>Empleado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -235,15 +241,32 @@ const UserForm = ({ mode = 'create' }) => {
               </Select>
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='password'>Contraseña {mode === 'create' ? '*' : '(dejar en blanco para no cambiar)'}</Label>
+              <Label htmlFor='password'>
+                Contraseña{' '}
+                {mode === 'create' ? (
+                  <span className='text-destructive'>*</span>
+                ) : (
+                  '(dejar en blanco para no cambiar)'
+                )}
+              </Label>
               <Input
                 id='password'
                 type='password'
-                {...register('password', { required: mode === 'create' ? 'La contraseña es obligatoria' : false })}
+                {...register('password', {
+                  required:
+                    mode === 'create' ? 'La contraseña es obligatoria' : false,
+                })}
               />
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='password_confirmation'>Confirmar Contraseña</Label>
+              <Label htmlFor='password_confirmation'>
+                Confirmar Contraseña{' '}
+                {mode === 'create' ? (
+                  <span className='text-destructive'>*</span>
+                ) : (
+                  '(rellenar si cambias de contraseña)'
+                )}
+              </Label>
               <Input
                 id='password_confirmation'
                 type='password'
@@ -255,7 +278,11 @@ const UserForm = ({ mode = 'create' }) => {
                   },
                 })}
               />
-              {errors.password_confirmation && <p className='text-xs text-destructive'>{errors.password_confirmation.message}</p>}
+              {errors.password_confirmation && (
+                <p className='text-xs text-destructive'>
+                  {errors.password_confirmation.message}
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -263,7 +290,11 @@ const UserForm = ({ mode = 'create' }) => {
         {error && <p className='text-sm text-destructive'>{error}</p>}
 
         <div className='flex justify-end gap-4'>
-          <Button type='button' variant='outline' onClick={() => navigate('/users')}>
+          <Button
+            type='button'
+            variant='outline'
+            onClick={() => navigate('/users')}
+          >
             Cancelar
           </Button>
           <Button type='submit' disabled={loading}>

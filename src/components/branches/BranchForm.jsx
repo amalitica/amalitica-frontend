@@ -61,7 +61,7 @@ const BranchForm = ({ mode = 'create' }) => {
 
   useEffect(() => {
     // Cargar usuarios para el selector de manager
-    getUsers({ size: 100 })
+    getUsers({ size: 100, management_roles: true })
       .then((response) => setUsers(response.items || []))
       .catch((err) => console.error('Error al cargar usuarios:', err));
 
@@ -78,7 +78,10 @@ const BranchForm = ({ mode = 'create' }) => {
 
       Object.keys(branch).forEach((key) => {
         if (key in watch()) {
-          setValue(key, branch[key] || (key === 'is_main' || key === 'has_lab' ? false : ''));
+          setValue(
+            key,
+            branch[key] || (key === 'is_main' || key === 'has_lab' ? false : '')
+          );
         }
       });
     } catch (err) {
@@ -109,7 +112,7 @@ const BranchForm = ({ mode = 'create' }) => {
   };
 
   if (loadingData) {
-    return <div className="p-8 text-center">Cargando datos...</div>;
+    return <div className='p-8 text-center'>Cargando datos...</div>;
   }
 
   return (
@@ -132,13 +135,20 @@ const BranchForm = ({ mode = 'create' }) => {
           </CardHeader>
           <CardContent className='grid gap-4 sm:grid-cols-2'>
             <div className='space-y-2'>
-              <Label htmlFor='name'>Nombre de la Sucursal *</Label>
+              <Label htmlFor='name'>
+                Nombre de la Sucursal{' '}
+                <span className='text-destructive'>*</span>
+              </Label>
               <Input
                 id='name'
                 {...register('name', { required: 'El nombre es obligatorio' })}
                 placeholder='Ej. Sucursal Centro'
               />
-              {errors.name && <p className='text-xs text-destructive'>{errors.name.message}</p>}
+              {errors.name && (
+                <p className='text-xs text-destructive'>
+                  {errors.name.message}
+                </p>
+              )}
             </div>
             <div className='space-y-2'>
               <Label htmlFor='code'>Código</Label>
@@ -175,22 +185,12 @@ const BranchForm = ({ mode = 'create' }) => {
               errors={errors}
               required={true}
             />
-            <div className='grid gap-4 sm:grid-cols-3 mt-4'>
-              <div className='sm:col-span-2 space-y-2'>
-                <Label htmlFor='street'>Calle *</Label>
-                <Input id='street' {...register('street', { required: 'La calle es obligatoria' })} />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='exterior_number'>Núm. Ext *</Label>
-                <Input id='exterior_number' {...register('exterior_number', { required: 'El número es obligatorio' })} />
-              </div>
-            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Contacto y Operación</CardTitle>
+            <CardTitle>Contacto y Operación de la Sucursal</CardTitle>
           </CardHeader>
           <CardContent className='grid gap-4 sm:grid-cols-2'>
             <div className='space-y-2'>
@@ -225,7 +225,11 @@ const BranchForm = ({ mode = 'create' }) => {
         {error && <p className='text-sm text-destructive'>{error}</p>}
 
         <div className='flex justify-end gap-4'>
-          <Button type='button' variant='outline' onClick={() => navigate('/branches')}>
+          <Button
+            type='button'
+            variant='outline'
+            onClick={() => navigate('/branches')}
+          >
             Cancelar
           </Button>
           <Button type='submit' disabled={loading}>

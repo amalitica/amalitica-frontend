@@ -1,7 +1,9 @@
+// src/components/users/UserForm.jsx
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { ArrowLeft, Save, Calendar } from 'lucide-react';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { ArrowLeft, Save, Calendar, Plus, Trash2 } from 'lucide-react';
 import { createUser, updateUser, getUserById } from '@/api/users';
 import { getAllBranches } from '@/api/branches';
 import { Button } from '@/components/ui/button';
@@ -21,7 +23,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import PersonNameFields from '@/components/common/PersonNameFields';
+
+const ASSIGNMENT_ROLES = [
+  { value: 'EMPLOYEE', label: 'Empleado' },
+  { value: 'MANAGER', label: 'Gerente' },
+];
 
 const UserForm = ({ mode = 'create' }) => {
   const navigate = useNavigate();
@@ -34,6 +42,7 @@ const UserForm = ({ mode = 'create' }) => {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     setValue,
     watch,
@@ -45,17 +54,22 @@ const UserForm = ({ mode = 'create' }) => {
       email: '',
       phone: '',
       role: 'Empleado',
-      branch_id: null,
       password: '',
       password_confirmation: '',
       gender: null,
       birth_date: '',
+      assignments: [],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'assignments',
   });
 
   useEffect(() => {
     getAllBranches()
-      .then(setBranches)
+      .then((data) => setBranches(data.items || data))
       .catch((err) => console.error('Error al cargar sucursales:', err));
 
     if (mode === 'edit' && id) {
@@ -69,12 +83,12 @@ const UserForm = ({ mode = 'create' }) => {
       const user = await getUserById(id);
 
       Object.keys(user).forEach((key) => {
-        if (key in watch()) {
-          if (key === 'birth_date' && user[key]) {
-            setValue(key, user[key].split('T')[0]);
-          } else {
-            setValue(key, user[key] || '');
-          }
+        if (key === 'birth_date' && user[key]) {
+          setValue(key, user[key].split('T')[0]);
+        } else if (key === 'assignments') {
+          setValue(key, user[key] || []);
+        } else {
+          setValue(key, user[key] || '');
         }
       });
     } catch (err) {
@@ -90,16 +104,13 @@ const UserForm = ({ mode = 'create' }) => {
     setError(null);
 
     try {
-      // Limpiar campos vacíos
       const payload = { ...data };
       if (!payload.birth_date) delete payload.birth_date;
       if (!payload.gender) delete payload.gender;
-      if (!payload.branch_id) delete payload.branch_id;
 
       if (mode === 'create') {
         await createUser(payload);
       } else {
-        // En edición, si el password está vacío, no lo enviamos
         if (!payload.password) {
           delete payload.password;
           delete payload.password_confirmation;
@@ -113,6 +124,16 @@ const UserForm = ({ mode = 'create' }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const addAssignment = () => {
+    append({
+      branch_id: null,
+      assignment_role: 'EMPLOYEE',
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: null,
+      is_primary: fields.length === 0,
+    });
   };
 
   if (loadingData) {
@@ -133,6 +154,7 @@ const UserForm = ({ mode = 'create' }) => {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+        {/* Card de Información Personal */}
         <Card>
           <CardHeader>
             <CardTitle>Información Personal</CardTitle>
@@ -152,14 +174,10 @@ const UserForm = ({ mode = 'create' }) => {
                 <Input
                   id='email'
                   type='email'
-                  {...register('email', {
-                    required: 'El email es obligatorio',
-                  })}
+                  {...register('email', { required: 'El email es obligatorio' })}
                 />
                 {errors.email && (
-                  <p className='text-xs text-destructive'>
-                    {errors.email.message}
-                  </p>
+                  <p className='text-xs text-destructive'>{errors.email.message}</p>
                 )}
               </div>
               <div className='space-y-2'>
@@ -168,14 +186,10 @@ const UserForm = ({ mode = 'create' }) => {
                 </Label>
                 <Input
                   id='phone'
-                  {...register('phone', {
-                    required: 'El teléfono es obligatorio',
-                  })}
+                  {...register('phone', { required: 'El teléfono es obligatorio' })}
                 />
                 {errors.phone && (
-                  <p className='text-xs text-destructive'>
-                    {errors.phone.message}
-                  </p>
+                  <p className='text-xs text-destructive'>{errors.phone.message}</p>
                 )}
               </div>
               <div className='space-y-2'>
@@ -189,24 +203,23 @@ const UserForm = ({ mode = 'create' }) => {
                   />
                   <Calendar className='absolute left-3 top-2.5 h-4 w-4 text-muted-foreground' />
                 </div>
-                {errors.birth_date && (
-                  <p className='text-xs text-destructive'>
-                    {errors.birth_date.message}
-                  </p>
-                )}
               </div>
             </div>
           </CardContent>
         </Card>
 
+        {/* Card de Acceso y Rol del Sistema */}
         <Card>
           <CardHeader>
-            <CardTitle>Acceso y Rol</CardTitle>
+            <CardTitle>Acceso y Rol del Sistema</CardTitle>
+            <CardDescription>
+              El rol del sistema define los permisos globales del usuario.
+            </CardDescription>
           </CardHeader>
           <CardContent className='grid gap-4 sm:grid-cols-2'>
             <div className='space-y-2'>
               <Label htmlFor='role'>
-                Rol <span className='text-destructive'>*</span>
+                Rol del Sistema <span className='text-destructive'>*</span>
               </Label>
               <Select
                 value={watch('role')}
@@ -223,24 +236,6 @@ const UserForm = ({ mode = 'create' }) => {
               </Select>
             </div>
             <div className='space-y-2'>
-              <Label htmlFor='branch_id'>Sucursal Asignada</Label>
-              <Select
-                value={watch('branch_id')?.toString()}
-                onValueChange={(val) => setValue('branch_id', parseInt(val))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Seleccionar sucursal' />
-                </SelectTrigger>
-                <SelectContent>
-                  {branches.map((b) => (
-                    <SelectItem key={b.id} value={b.id.toString()}>
-                      {b.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className='space-y-2'>
               <Label htmlFor='password'>
                 Contraseña{' '}
                 {mode === 'create' ? (
@@ -253,8 +248,7 @@ const UserForm = ({ mode = 'create' }) => {
                 id='password'
                 type='password'
                 {...register('password', {
-                  required:
-                    mode === 'create' ? 'La contraseña es obligatoria' : false,
+                  required: mode === 'create' ? 'La contraseña es obligatoria' : false,
                 })}
               />
             </div>
@@ -287,14 +281,93 @@ const UserForm = ({ mode = 'create' }) => {
           </CardContent>
         </Card>
 
+        {/* Card de Asignaciones a Sucursales */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Asignaciones a Sucursales</CardTitle>
+            <CardDescription>
+              Un usuario puede estar asignado a múltiples sucursales con diferentes roles.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className='space-y-4'>
+            {fields.map((field, index) => (
+              <div
+                key={field.id}
+                className='grid gap-4 p-4 border rounded-lg sm:grid-cols-5 items-end'
+              >
+                <div className='space-y-2 sm:col-span-2'>
+                  <Label>Sucursal</Label>
+                  <Select
+                    value={watch(`assignments.${index}.branch_id`)?.toString()}
+                    onValueChange={(val) =>
+                      setValue(`assignments.${index}.branch_id`, parseInt(val))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder='Seleccionar sucursal' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {branches.map((b) => (
+                        <SelectItem key={b.id} value={b.id.toString()}>
+                          {b.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className='space-y-2'>
+                  <Label>Rol en Sucursal</Label>
+                  <Select
+                    value={watch(`assignments.${index}.assignment_role`)}
+                    onValueChange={(val) =>
+                      setValue(`assignments.${index}.assignment_role`, val)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder='Seleccionar rol' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ASSIGNMENT_ROLES.map((r) => (
+                        <SelectItem key={r.value} value={r.value}>
+                          {r.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className='flex items-center space-x-2'>
+                  <Checkbox
+                    id={`is_primary_${index}`}
+                    checked={watch(`assignments.${index}.is_primary`)}
+                    onCheckedChange={(checked) =>
+                      setValue(`assignments.${index}.is_primary`, checked)
+                    }
+                  />
+                  <Label htmlFor={`is_primary_${index}`} className='text-sm'>
+                    Principal
+                  </Label>
+                </div>
+                <Button
+                  type='button'
+                  variant='destructive'
+                  size='icon'
+                  onClick={() => remove(index)}
+                >
+                  <Trash2 className='h-4 w-4' />
+                </Button>
+              </div>
+            ))}
+            <Button type='button' variant='outline' onClick={addAssignment}>
+              <Plus className='mr-2 h-4 w-4' />
+              Añadir Asignación
+            </Button>
+          </CardContent>
+        </Card>
+
         {error && <p className='text-sm text-destructive'>{error}</p>}
 
         <div className='flex justify-end gap-4'>
-          <Button
-            type='button'
-            variant='outline'
-            onClick={() => navigate('/users')}
-          >
+          <Button type='button' variant='outline' onClick={() => navigate('/users')}>
             Cancelar
           </Button>
           <Button type='submit' disabled={loading}>

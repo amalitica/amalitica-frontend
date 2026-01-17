@@ -1,8 +1,8 @@
 // src/api/assignments.js
 
-import api from './config';
+import api from './axios';
 
-const ASSIGNMENTS_URL = '/api/v1/assignments';
+const ASSIGNMENTS_URL = '/assignments';
 
 export const createAssignment = async (assignmentData) => {
   const response = await api.post(ASSIGNMENTS_URL, assignmentData);

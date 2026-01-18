@@ -45,7 +45,6 @@
     @apply border-border;
   }
 
-  /* ✅ AGREGAR ESTO */
   html,
   body,
   #root {
@@ -54,5 +53,12 @@
 
   body {
     @apply bg-background text-foreground;
+    /* Prevenir scroll en body cuando hay modales/portals */
+    overflow: hidden;
+  }
+
+  /* Asegurar que los portals de Radix UI tengan z-index adecuado */
+  [data-radix-popper-content-wrapper] {
+    z-index: 50 !important;
   }
 }

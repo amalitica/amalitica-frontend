@@ -24,6 +24,7 @@ import ConsultationDetails from './pages/consultations/ConsultationDetails';
 import { PrivacyNotice } from './pages/compliance';
 
 import PrivateRoute from './components/common/PrivateRoute';
+import ErrorBoundary from './components/common/ErrorBoundary';
 import useFavicon from './hooks/useFavicon';
 import logoAmalitica from './assets/images/amalitica_logo.png';
 
@@ -46,10 +47,11 @@ const FaviconManager = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <FaviconManager />
-        <Routes>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Router>
+          <FaviconManager />
+          <Routes>
           <Route path='/login' element={<Login />} />
           <Route path='/register' element={<Register />} />
           
@@ -88,9 +90,10 @@ function App() {
           </Route>
 
           <Route path='*' element={<Login />} />
-        </Routes>
-      </Router>
-    </AuthProvider>
+          </Routes>
+        </Router>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

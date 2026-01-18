@@ -53,8 +53,16 @@
 
   body {
     @apply bg-background text-foreground;
-    /* Prevenir scroll en body cuando hay modales/portals */
+  }
+
+  /* Prevenir scroll en body solo cuando hay layout autenticado */
+  body.has-layout {
     overflow: hidden;
+  }
+
+  /* Permitir scroll en páginas públicas (Login, Register) */
+  body.public-page {
+    overflow: auto;
   }
 
   /* Asegurar que los portals de Radix UI tengan z-index adecuado */

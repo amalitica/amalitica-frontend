@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { Menu } from 'lucide-react';
@@ -6,6 +6,16 @@ import { Button } from '@/components/ui/button';
 
 const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Agregar clase al body cuando el Layout está montado
+  useEffect(() => {
+    document.body.classList.add('has-layout');
+    document.body.classList.remove('public-page');
+    
+    return () => {
+      document.body.classList.remove('has-layout');
+    };
+  }, []);
 
   return (
     <div className='flex h-screen bg-gray-50'>

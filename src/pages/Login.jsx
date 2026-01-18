@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,16 @@ const Login = () => {
   const [error, setError] = useState('');
   const { login, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Agregar clase al body para permitir scroll en página pública
+  useEffect(() => {
+    document.body.classList.add('public-page');
+    document.body.classList.remove('has-layout');
+    
+    return () => {
+      document.body.classList.remove('public-page');
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

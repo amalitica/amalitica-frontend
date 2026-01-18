@@ -12,7 +12,7 @@
  * - GeographicSelector: Captura datos geográficos basados en SEPOMEX
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,6 +47,16 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+
+  // Agregar clase al body para permitir scroll en página pública
+  useEffect(() => {
+    document.body.classList.add('public-page');
+    document.body.classList.remove('has-layout');
+    
+    return () => {
+      document.body.classList.remove('public-page');
+    };
+  }, []);
 
   // Estado del formulario
   const [formData, setFormData] = useState({

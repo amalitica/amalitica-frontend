@@ -9,6 +9,7 @@
  * Ruta: /aviso-de-privacidad
  */
 
+import { useEffect } from 'react';
 import { ArrowLeft, Shield, FileText, Scale, Lock, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,16 @@ const PRIVACY_POLICY_VERSION = '1.0.0';
 const LAST_UPDATE_DATE = '13 de enero de 2025';
 
 export function PrivacyNotice() {
+  // Agregar clase al body para permitir scroll en página pública
+  useEffect(() => {
+    document.body.classList.add('public-page');
+    document.body.classList.remove('has-layout');
+    
+    return () => {
+      document.body.classList.remove('public-page');
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}

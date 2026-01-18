@@ -27,8 +27,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import PersonNameFields from '@/components/common/PersonNameFields';
 
 const ASSIGNMENT_ROLES = [
-  { value: 'EMPLOYEE', label: 'Empleado' },
-  { value: 'MANAGER', label: 'Gerente' },
+  { value: 'Empleado', label: 'Empleado' },
+  { value: 'Gerente', label: 'Gerente' },
 ];
 
 const UserForm = ({ mode = 'create' }) => {

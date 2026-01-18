@@ -8,13 +8,17 @@ const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
-    <div className='flex h-screen bg-gray-50'>
+    <div className='flex h-screen bg-gray-50 overflow-hidden'>
+      {' '}
+      {/* ✅ overflow-hidden aquí */}
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-
-      <div className='flex-1 flex flex-col h-screen'>
+      {/* Contenedor que crecerá y tendrá scroll */}
+      <div className='flex-1 flex flex-col overflow-hidden'>
         {' '}
-        {/* ✅ h-screen explícito */}
-        <header className='lg:hidden bg-white border-b border-gray-200 p-2 flex items-center'>
+        {/* ✅ Sin h-screen aquí */}
+        <header className='lg:hidden bg-white border-b border-gray-200 p-2 flex items-center shrink-0'>
+          {' '}
+          {/* ✅ shrink-0 */}
           <Button
             variant='ghost'
             size='icon'
@@ -26,15 +30,16 @@ const Layout = () => {
             <h1 className='text-lg font-bold'>Óptica</h1>
           </div>
         </header>
-        <main className='flex-1 overflow-y-scroll'>
+        {/* Área de contenido con scroll */}
+        <div className='flex-1 overflow-y-auto'>
           {' '}
-          {/* ✅ overflow-y-scroll en lugar de auto */}
-          <div className='p-4 sm:p-6 lg:p-8'>
+          {/* ✅ Solo este div tiene scroll */}
+          <div className='p-4 sm:p-6 lg:p-8 min-h-full'>
             {' '}
-            {/* ✅ min-h-full en lugar de nada */}
+            {/* ✅ min-h-full */}
             <Outlet />
           </div>
-        </main>
+        </div>
       </div>
     </div>
   );

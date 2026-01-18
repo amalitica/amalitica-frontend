@@ -7,17 +7,51 @@ import {
   UserCog,
   LogOut,
   X,
-  ShoppingCart,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import useAuth from '@/hooks/useAuth';
+import { useEffect, useRef } from 'react'; // <-- Agregar estos imports
 
 import logoAmalitica from '@/assets/images/amalitica_logo.png';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
+  const sidebarRef = useRef(null); // <-- Ref para la sidebar
+
+  // 🔥 CRÍTICO: Prevenir propagación del scroll
+  useEffect(() => {
+    const handleWheel = (e) => {
+      const sidebar = sidebarRef.current;
+      if (!sidebar) return;
+
+      // Verificar si el scroll está en los extremos
+      const isAtTop = sidebar.scrollTop === 0;
+      const isAtBottom =
+        sidebar.scrollHeight - sidebar.scrollTop <= sidebar.clientHeight + 1;
+
+      // Si está en el tope y scrolleas hacia arriba, prevenir
+      if (isAtTop && e.deltaY < 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+      // Si está en el fondo y scrolleas hacia abajo, prevenir
+      if (isAtBottom && e.deltaY > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
+
+    const sidebar = sidebarRef.current;
+    if (sidebar) {
+      // Usar { passive: false } para poder llamar preventDefault()
+      sidebar.addEventListener('wheel', handleWheel, { passive: false });
+      return () => sidebar.removeEventListener('wheel', handleWheel);
+    }
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -41,13 +75,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   ];
 
   const SidebarContent = () => (
-    <div className='flex flex-col h-full'>
+    <div
+      className='flex flex-col h-full overscroll-contain' // <-- Agregar overscroll-contain
+      ref={sidebarRef} // <-- Conectar la ref aquí
+    >
       {/* Header con logo */}
-      <div className='p-2 border-b border-gray-200 flex items-center justify-between'>
+      <div className='p-2 border-b border-gray-200 flex items-center justify-between shrink-0'>
+        {' '}
+        {/* shrink-0 */}
         <div className='flex items-center gap-3'>
           <img src={logoAmalitica} alt='Logo de Amalitica' className='h-16' />
         </div>
-
         {/* Botón para cerrar en móvil */}
         <Button
           variant='ghost'
@@ -60,9 +98,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       </div>
 
       {/* Navegación */}
-      <nav className='flex-1 p-4 space-y-1 overflow-y-auto'>
+      <nav className='flex-1 p-4 space-y-1 overflow-y-auto min-h-0'>
         {' '}
-        {/* ✅ Agregué overflow-y-auto aquí */}
+        {/* min-h-0 */}
         {menuItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
@@ -81,8 +119,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             </Link>
           );
         })}
-
-        {/* Sección de Administración (Solo para ADMIN y SUPERADMIN) */}
+        {/* Sección de Administración */}
         {(user?.role === 'Admin' || user?.role === 'SuperAdmin') && (
           <div className='pt-4'>
             <p className='px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider'>
@@ -111,7 +148,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       </nav>
 
       {/* Sección de Usuario */}
-      <div className='p-4 border-t border-gray-200'>
+      <div className='p-4 border-t border-gray-200 shrink-0'>
+        {' '}
+        {/* shrink-0 */}
         <div className='flex items-center gap-3 mb-3'>
           <Avatar className='h-9 w-9 bg-gray-300'>
             <AvatarFallback className='bg-gray-300 text-gray-700 font-semibold'>
@@ -142,9 +181,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   return (
     <>
       {/* Sidebar para pantallas grandes */}
-      <aside className='w-64 h-full bg-white border-r border-gray-200 flex-col hidden lg:flex'>
+      <aside className='w-64 h-full bg-white border-r border-gray-200 flex-col hidden lg:flex overflow-hidden'>
         {' '}
-        {/* ✅ Agregué h-full */}
+        {/* overflow-hidden */}
         <SidebarContent />
       </aside>
 
@@ -155,9 +194,9 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             className='absolute inset-0 bg-black/60'
             onClick={() => setIsOpen(false)}
           ></div>
-          <aside className='fixed top-0 left-0 h-screen w-64 bg-white z-50 flex flex-col overflow-y-auto animate-in slide-in-from-left duration-300'>
+          <aside className='fixed top-0 left-0 h-screen w-64 bg-white z-50 flex flex-col overflow-hidden animate-in slide-in-from-left duration-300'>
             {' '}
-            {/* ✅ Agregué overflow-y-auto */}
+            {/* overflow-hidden */}
             <SidebarContent />
           </aside>
         </div>

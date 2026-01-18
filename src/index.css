@@ -52,10 +52,6 @@
     @apply h-full;
   }
 
-  html {
-    @apply overflow-hidden;
-  }
-
   body {
     @apply bg-background text-foreground;
   }

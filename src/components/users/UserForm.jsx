@@ -82,6 +82,32 @@ const UserForm = ({ mode = 'create' }) => {
       setLoadingData(true);
       const user = await getUserById(id);
 
+      console.log('=== PASO 2: DATOS DEL BACKEND ===');
+      console.log('Usuario completo:', user);
+      console.log('Assignments cargados:', user.assignments); // ¡Corrige el typo!
+
+      // IMPORTANTE: Imprime con más detalle
+      if (user.assignments && user.assignments.length > 0) {
+        console.log('--- Detalle de cada assignment ---');
+        user.assignments.forEach((assignment, index) => {
+          console.log(`Assignment ${index}:`, {
+            id: assignment.id,
+            branch_id: assignment.branch_id,
+            assignment_role: assignment.assignment_role, // <-- ESTO ES LO QUE BUSCAMOS
+            start_date: assignment.start_date,
+            end_date: assignment.end_date,
+            is_primary: assignment.is_primary,
+            // Mostrar TODOS los campos
+            all_keys: Object.keys(assignment),
+          });
+        });
+      } else {
+        console.log('No hay assignments en este usuario');
+      }
+
+      console.log('=== ENUMS COMPARACIÓN ===');
+      console.log('ASSIGNMENT_ROLES en frontend:', ASSIGNMENT_ROLES);
+      // Esto nos dirá si los valores coinciden
       Object.keys(user).forEach((key) => {
         if (key === 'birth_date' && user[key]) {
           setValue(key, user[key].split('T')[0]);
@@ -174,10 +200,14 @@ const UserForm = ({ mode = 'create' }) => {
                 <Input
                   id='email'
                   type='email'
-                  {...register('email', { required: 'El email es obligatorio' })}
+                  {...register('email', {
+                    required: 'El email es obligatorio',
+                  })}
                 />
                 {errors.email && (
-                  <p className='text-xs text-destructive'>{errors.email.message}</p>
+                  <p className='text-xs text-destructive'>
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
               <div className='space-y-2'>
@@ -186,10 +216,14 @@ const UserForm = ({ mode = 'create' }) => {
                 </Label>
                 <Input
                   id='phone'
-                  {...register('phone', { required: 'El teléfono es obligatorio' })}
+                  {...register('phone', {
+                    required: 'El teléfono es obligatorio',
+                  })}
                 />
                 {errors.phone && (
-                  <p className='text-xs text-destructive'>{errors.phone.message}</p>
+                  <p className='text-xs text-destructive'>
+                    {errors.phone.message}
+                  </p>
                 )}
               </div>
               <div className='space-y-2'>
@@ -248,7 +282,8 @@ const UserForm = ({ mode = 'create' }) => {
                 id='password'
                 type='password'
                 {...register('password', {
-                  required: mode === 'create' ? 'La contraseña es obligatoria' : false,
+                  required:
+                    mode === 'create' ? 'La contraseña es obligatoria' : false,
                 })}
               />
             </div>
@@ -286,7 +321,8 @@ const UserForm = ({ mode = 'create' }) => {
           <CardHeader>
             <CardTitle>Asignaciones a Sucursales</CardTitle>
             <CardDescription>
-              Un usuario puede estar asignado a múltiples sucursales con diferentes roles.
+              Un usuario puede estar asignado a múltiples sucursales con
+              diferentes roles.
             </CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
@@ -367,7 +403,11 @@ const UserForm = ({ mode = 'create' }) => {
         {error && <p className='text-sm text-destructive'>{error}</p>}
 
         <div className='flex justify-end gap-4'>
-          <Button type='button' variant='outline' onClick={() => navigate('/users')}>
+          <Button
+            type='button'
+            variant='outline'
+            onClick={() => navigate('/users')}
+          >
             Cancelar
           </Button>
           <Button type='submit' disabled={loading}>

@@ -18,6 +18,7 @@ import MeasurementsTab from './tabs/MeasurementsTab';
 import SymptomsTab from './tabs/SymptomsTab';
 import ProductTab from './tabs/ProductTab';
 import NotesTab from './tabs/NotesTab';
+import { formatValidationError } from '@/utils/errorHandler';
 
 export default function ConsultationForm({
   consultationId,
@@ -185,7 +186,7 @@ export default function ConsultationForm({
 
       navigate('/consultations');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Error al guardar la consulta');
+      setError(formatValidationError(err));
       console.error('Error completo:', err);
       console.error('Respuesta del servidor:', err.response?.data);
     } finally {
@@ -225,8 +226,11 @@ export default function ConsultationForm({
 
         {/* Error Message */}
         {error && (
-          <div className='bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded'>
-            {error}
+          <div className='bg-destructive/10 border border-destructive/20 rounded-md p-4'>
+            <p className='text-sm text-destructive font-medium mb-1'>Error al guardar:</p>
+            <div className='text-sm text-destructive whitespace-pre-line'>
+              {error}
+            </div>
           </div>
         )}
 

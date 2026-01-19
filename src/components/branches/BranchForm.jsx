@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import GeographicSelector from '@/components/common/GeographicSelector';
+import { formatValidationError } from '@/utils/errorHandler';
 
 const BranchForm = ({ mode = 'create' }) => {
   const navigate = useNavigate();
@@ -105,7 +106,7 @@ const BranchForm = ({ mode = 'create' }) => {
       navigate('/branches');
     } catch (err) {
       console.error('Error al guardar sucursal:', err);
-      setError(err.response?.data?.detail || 'Error al guardar la sucursal');
+      setError(formatValidationError(err));
     } finally {
       setLoading(false);
     }
@@ -222,7 +223,14 @@ const BranchForm = ({ mode = 'create' }) => {
           </CardContent>
         </Card>
 
-        {error && <p className='text-sm text-destructive'>{error}</p>}
+        {error && (
+          <div className='bg-destructive/10 border border-destructive/20 rounded-md p-4'>
+            <p className='text-sm text-destructive font-medium mb-1'>Error al guardar:</p>
+            <div className='text-sm text-destructive whitespace-pre-line'>
+              {error}
+            </div>
+          </div>
+        )}
 
         <div className='flex justify-end gap-4'>
           <Button

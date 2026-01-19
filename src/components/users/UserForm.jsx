@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import PersonNameFields from '@/components/common/PersonNameFields';
+import { formatValidationError } from '@/utils/errorHandler';
 
 const ASSIGNMENT_ROLES = [
   { value: 'Empleado', label: 'Empleado' },
@@ -146,7 +147,7 @@ const UserForm = ({ mode = 'create' }) => {
       navigate('/users');
     } catch (err) {
       console.error('Error al guardar usuario:', err);
-      setError(err.response?.data?.detail || 'Error al guardar el usuario');
+      setError(formatValidationError(err));
     } finally {
       setLoading(false);
     }
@@ -400,7 +401,14 @@ const UserForm = ({ mode = 'create' }) => {
           </CardContent>
         </Card>
 
-        {error && <p className='text-sm text-destructive'>{error}</p>}
+        {error && (
+          <div className='bg-destructive/10 border border-destructive/20 rounded-md p-4'>
+            <p className='text-sm text-destructive font-medium mb-1'>Error al guardar:</p>
+            <div className='text-sm text-destructive whitespace-pre-line'>
+              {error}
+            </div>
+          </div>
+        )}
 
         <div className='flex justify-end gap-4'>
           <Button

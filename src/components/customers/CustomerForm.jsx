@@ -44,6 +44,7 @@ import PersonNameFields from '@/components/common/PersonNameFields';
 import GeographicSelector from '@/components/common/GeographicSelector';
 import { ConsentModal } from '@/components/compliance';
 import useAuth from '@/hooks/useAuth';
+import { formatValidationError } from '@/utils/errorHandler';
 
 const CustomerForm = ({ mode = 'create' }) => {
   const navigate = useNavigate();
@@ -254,29 +255,10 @@ const CustomerForm = ({ mode = 'create' }) => {
   };
 
   /**
-   * Maneja errores de la API de forma consistente.
-   */
-  const handleApiError = (err, action) => {
-    let errorMessage = `Error al ${action} el paciente`;
-
-    if (err.response?.data?.detail) {
-      const detail = err.response.data.detail;
-      // Si detail es un array (errores de validación de Pydantic)
-      if (Array.isArray(detail)) {
-        errorMessage = detail
-          .map((e) => e.msg || e.message || JSON.stringify(e))
-          .join(', ');
-      } else if (typeof detail === 'string') {
-        errorMessage = detail;
-      } else if (typeof detail === 'object') {
-        errorMessage = detail.msg || detail.message || JSON.stringify(detail);
-      }
-    }
-
-    setError(errorMessage);
-  };
-
-  /**
+   * Maneja errores de la API d  const handleError = (err) => {
+    console.error('Error completo:', err);
+    setError(formatValidationError(err));
+  }; /**
    * Maneja el cierre del modal de consentimiento.
    */
   const handleConsentModalClose = (open) => {
@@ -319,11 +301,12 @@ const CustomerForm = ({ mode = 'create' }) => {
       </div>
 
       {error && (
-        <Card className='border-destructive'>
-          <CardContent className='pt-6'>
-            <p className='text-destructive text-sm'>{error}</p>
-          </CardContent>
-        </Card>
+        <div className='bg-destructive/10 border border-destructive/20 rounded-md p-4'>
+          <p className='text-sm text-destructive font-medium mb-1'>Error al guardar:</p>
+          <div className='text-sm text-destructive whitespace-pre-line'>
+            {error}
+          </div>
+        </div>
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>

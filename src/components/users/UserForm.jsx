@@ -253,26 +253,8 @@ const UserForm = ({ mode = 'create' }) => {
               El rol del sistema define los permisos globales del usuario.
             </CardDescription>
           </CardHeader>
-          <CardContent className='grid gap-4 sm:grid-cols-2'>
-            <div className='space-y-2'>
-              <Label htmlFor='role'>
-                Rol del Sistema <span className='text-destructive'>*</span>
-              </Label>
-              <Select
-                value={watch('role')}
-                onValueChange={(val) => setValue('role', val)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Seleccionar rol' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='Admin'>Administrador</SelectItem>
-                  <SelectItem value='Manager'>Gerente</SelectItem>
-                  <SelectItem value='Empleado'>Empleado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Campos de contraseña en la misma fila */}
+          <CardContent className='space-y-4'>
+            {/* Primera fila: Campos de contraseña lado a lado */}
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
               <div className='space-y-2'>
                 <Label htmlFor='password'>
@@ -348,6 +330,25 @@ const UserForm = ({ mode = 'create' }) => {
                   </p>
                 )}
               </div>
+            </div>
+            {/* Segunda fila: Rol del Sistema */}
+            <div className='space-y-2'>
+              <Label htmlFor='role'>
+                Rol del Sistema <span className='text-destructive'>*</span>
+              </Label>
+              <Select
+                value={watch('role')}
+                onValueChange={(val) => setValue('role', val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='Seleccionar rol' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='Admin'>Administrador</SelectItem>
+                  <SelectItem value='Manager'>Gerente</SelectItem>
+                  <SelectItem value='Empleado'>Empleado</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>

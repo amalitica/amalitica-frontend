@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { ArrowLeft, Save, Calendar, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Calendar, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
 import { createUser, updateUser, getUserById } from '@/api/users';
 import { getAllBranches } from '@/api/branches';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,8 @@ const UserForm = ({ mode = 'create' }) => {
   const [loadingData, setLoadingData] = useState(mode === 'edit');
   const [error, setError] = useState(null);
   const [branches, setBranches] = useState([]);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
 
   const {
     register,
@@ -270,49 +272,82 @@ const UserForm = ({ mode = 'create' }) => {
                 </SelectContent>
               </Select>
             </div>
-            <div className='space-y-2'>
-              <Label htmlFor='password'>
-                Contraseña{' '}
-                {mode === 'create' ? (
-                  <span className='text-destructive'>*</span>
-                ) : (
-                  '(dejar en blanco para no cambiar)'
+            {/* Campos de contraseña en la misma fila */}
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='password'>
+                  Contraseña{' '}
+                  {mode === 'create' ? (
+                    <span className='text-destructive'>*</span>
+                  ) : (
+                    '(dejar en blanco para no cambiar)'
+                  )}
+                </Label>
+                <div className='relative'>
+                  <Input
+                    id='password'
+                    type={showPassword ? 'text' : 'password'}
+                    {...register('password', {
+                      required:
+                        mode === 'create' ? 'La contraseña es obligatoria' : false,
+                    })}
+                  />
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='sm'
+                    className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className='h-4 w-4' />
+                    ) : (
+                      <Eye className='h-4 w-4' />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='password_confirmation'>
+                  Confirmar Contraseña{' '}
+                  {mode === 'create' ? (
+                    <span className='text-destructive'>*</span>
+                  ) : (
+                    '(rellenar si cambias de contraseña)'
+                  )}
+                </Label>
+                <div className='relative'>
+                  <Input
+                    id='password_confirmation'
+                    type={showPasswordConfirmation ? 'text' : 'password'}
+                    {...register('password_confirmation', {
+                      validate: (val) => {
+                        if (watch('password') && val !== watch('password')) {
+                          return 'Las contraseñas no coinciden';
+                        }
+                      },
+                    })}
+                  />
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='sm'
+                    className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
+                    onClick={() => setShowPasswordConfirmation(!showPasswordConfirmation)}
+                  >
+                    {showPasswordConfirmation ? (
+                      <EyeOff className='h-4 w-4' />
+                    ) : (
+                      <Eye className='h-4 w-4' />
+                    )}
+                  </Button>
+                </div>
+                {errors.password_confirmation && (
+                  <p className='text-xs text-destructive'>
+                    {errors.password_confirmation.message}
+                  </p>
                 )}
-              </Label>
-              <Input
-                id='password'
-                type='password'
-                {...register('password', {
-                  required:
-                    mode === 'create' ? 'La contraseña es obligatoria' : false,
-                })}
-              />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='password_confirmation'>
-                Confirmar Contraseña{' '}
-                {mode === 'create' ? (
-                  <span className='text-destructive'>*</span>
-                ) : (
-                  '(rellenar si cambias de contraseña)'
-                )}
-              </Label>
-              <Input
-                id='password_confirmation'
-                type='password'
-                {...register('password_confirmation', {
-                  validate: (val) => {
-                    if (watch('password') && val !== watch('password')) {
-                      return 'Las contraseñas no coinciden';
-                    }
-                  },
-                })}
-              />
-              {errors.password_confirmation && (
-                <p className='text-xs text-destructive'>
-                  {errors.password_confirmation.message}
-                </p>
-              )}
+              </div>
             </div>
           </CardContent>
         </Card>

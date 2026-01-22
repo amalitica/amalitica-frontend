@@ -19,6 +19,7 @@ import ConsultationsList from './pages/consultations/ConsultationsList';
 import CreateConsultation from './pages/consultations/CreateConsultation';
 import EditConsultation from './pages/consultations/EditConsultation';
 import ConsultationDetails from './pages/consultations/ConsultationDetails';
+import { ProductsList, ProductForm, ProductDetail } from './pages/products';
 
 // Compliance (LFPDPPP)
 import { PrivacyNotice } from './pages/compliance';
@@ -85,6 +86,12 @@ function App() {
             <Route path='/users' element={<UsersList />} />
             <Route path='/users/new' element={<CreateUser />} />
             <Route path='/users/:id/edit' element={<EditUser />} />
+
+            {/* Productos */}
+            <Route path='/products' element={<ProductsList />} />
+            <Route path='/products/new' element={<ProductForm />} />
+            <Route path='/products/:id/edit' element={<ProductForm />} />
+            <Route path='/products/:id' element={<ProductDetail />} />
 
             {/* Aquí irán las demás rutas protegidas */}
           </Route>

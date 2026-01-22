@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Users,
   FileText,
+  Package,
   Store,
   UserCog,
   LogOut,
@@ -67,6 +68,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Users, label: 'Pacientes', path: '/customers' },
     { icon: FileText, label: 'Consultas', path: '/consultations' },
+    { icon: Package, label: 'Productos', path: '/products' },
   ];
 
   const adminItems = [

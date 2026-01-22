@@ -289,12 +289,11 @@ const PricingSection = ({ control, errors, enums }) => (
           name="price_tier"
           control={control}
           render={({ field }) => (
-            <Select onValueChange={field.onChange} value={field.value || ''}>
+            <Select onValueChange={field.onChange} value={field.value || undefined}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona un segmento" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sin especificar</SelectItem>
                 {enums?.price_tiers?.map((tier) => (
                   <SelectItem key={tier.value} value={tier.value}>
                     {tier.label}
@@ -330,12 +329,11 @@ const LifecycleSection = ({ control, enums }) => (
           name="season"
           control={control}
           render={({ field }) => (
-            <Select onValueChange={field.onChange} value={field.value || ''}>
+            <Select onValueChange={field.onChange} value={field.value || undefined}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona una temporada" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sin especificar</SelectItem>
                 {enums?.seasons?.map((s) => (
                   <SelectItem key={s.value} value={s.value}>
                     {s.label}
@@ -353,12 +351,11 @@ const LifecycleSection = ({ control, enums }) => (
           name="lifecycle_stage"
           control={control}
           render={({ field }) => (
-            <Select onValueChange={field.onChange} value={field.value || ''}>
+            <Select onValueChange={field.onChange} value={field.value || undefined}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecciona una etapa" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sin especificar</SelectItem>
                 {enums?.lifecycle_stages?.map((stage) => (
                   <SelectItem key={stage.value} value={stage.value}>
                     {stage.label}
@@ -456,7 +453,7 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums }) => (
       <div className="space-y-2">
         <Label>Material *</Label>
         <Select
-          value={frameDetails.material || ''}
+          value={frameDetails.material || undefined}
           onValueChange={(value) => setFrameDetails({ ...frameDetails, material: value })}
         >
           <SelectTrigger>
@@ -475,7 +472,7 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums }) => (
       <div className="space-y-2">
         <Label>Estilo *</Label>
         <Select
-          value={frameDetails.style || ''}
+          value={frameDetails.style || undefined}
           onValueChange={(value) => setFrameDetails({ ...frameDetails, style: value })}
         >
           <SelectTrigger>
@@ -494,16 +491,13 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums }) => (
       <div className="space-y-2">
         <Label>Forma</Label>
         <Select
-          value={frameDetails.shape || ''}
+          value={frameDetails.shape || undefined}
           onValueChange={(value) => setFrameDetails({ ...frameDetails, shape: value })}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecciona forma" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">Sin especificar</SelectItem>
-            {enums?.frame_shapes?.map((s) => (
-              <SelectItem key={s.value} value={s.value}>
+          </SelectTrigger          <SelectContent>
+            {enums?.frame_shapes?.map((shape) => (             <SelectItem key={s.value} value={s.value}>
                 {s.label}
               </SelectItem>
             ))}
@@ -514,7 +508,7 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums }) => (
       <div className="space-y-2">
         <Label>Género *</Label>
         <Select
-          value={frameDetails.gender || ''}
+          value={frameDetails.gender || undefined}
           onValueChange={(value) => setFrameDetails({ ...frameDetails, gender: value })}
         >
           <SelectTrigger>
@@ -634,7 +628,7 @@ const LensDetailsSection = ({ lensDetails, setLensDetails, enums }) => (
       <div className="space-y-2">
         <Label>Tipo de lente *</Label>
         <Select
-          value={lensDetails.lens_type || ''}
+          value={lensDetails.lens_type || undefined}
           onValueChange={(value) => setLensDetails({ ...lensDetails, lens_type: value })}
         >
           <SelectTrigger>
@@ -653,7 +647,7 @@ const LensDetailsSection = ({ lensDetails, setLensDetails, enums }) => (
       <div className="space-y-2">
         <Label>Material *</Label>
         <Select
-          value={lensDetails.material || ''}
+          value={lensDetails.material || undefined}
           onValueChange={(value) => setLensDetails({ ...lensDetails, material: value })}
         >
           <SelectTrigger>
@@ -672,7 +666,7 @@ const LensDetailsSection = ({ lensDetails, setLensDetails, enums }) => (
       <div className="space-y-2">
         <Label>Tratamiento *</Label>
         <Select
-          value={lensDetails.treatment || ''}
+          value={lensDetails.treatment || undefined}
           onValueChange={(value) => setLensDetails({ ...lensDetails, treatment: value })}
         >
           <SelectTrigger>
@@ -769,7 +763,7 @@ const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums })
       <div className="space-y-2">
         <Label>Tipo *</Label>
         <Select
-          value={contactDetails.lens_type || ''}
+          value={contactDetails.lens_type || undefined}
           onValueChange={(value) => setContactDetails({ ...contactDetails, lens_type: value })}
         >
           <SelectTrigger>
@@ -788,7 +782,7 @@ const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums })
       <div className="space-y-2">
         <Label>Diseño *</Label>
         <Select
-          value={contactDetails.design || ''}
+          value={contactDetails.design || undefined}
           onValueChange={(value) => setContactDetails({ ...contactDetails, design: value })}
         >
           <SelectTrigger>
@@ -807,7 +801,7 @@ const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums })
       <div className="space-y-2">
         <Label>Frecuencia de reemplazo *</Label>
         <Select
-          value={contactDetails.replacement_frequency || ''}
+          value={contactDetails.replacement_frequency || undefined}
           onValueChange={(value) => setContactDetails({ ...contactDetails, replacement_frequency: value })}
         >
           <SelectTrigger>

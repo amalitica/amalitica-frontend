@@ -496,9 +496,11 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums }) => (
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecciona forma" />
-          </SelectTrigger          <SelectContent>
-            {enums?.frame_shapes?.map((shape) => (             <SelectItem key={s.value} value={s.value}>
-                {s.label}
+          </SelectTrigger>
+          <SelectContent>
+            {enums?.frame_shapes?.map((shape) => (
+              <SelectItem key={shape.value} value={shape.value}>
+                {shape.label}
               </SelectItem>
             ))}
           </SelectContent>

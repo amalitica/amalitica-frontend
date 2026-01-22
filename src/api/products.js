@@ -1,7 +1,7 @@
 // src/api/products.js
 /**
  * Servicio API para gestión de productos.
- * 
+ *
  * Este módulo contiene todas las funciones para comunicarse con
  * los endpoints de productos del backend.
  */
@@ -11,27 +11,27 @@ import api from './axios';
 /**
  * Obtiene todos los enums disponibles para productos.
  * Se usa para poblar los selectores en formularios.
- * 
+ *
  * @returns {Promise<Object>} Objeto con todos los enums
  */
 export const getProductEnums = async () => {
-  const response = await api.get('/inventory/products/enums');
+  const response = await api.get('/products/enums');
   return response.data;
 };
 
 /**
  * Obtiene el resumen de estadísticas de productos.
- * 
+ *
  * @returns {Promise<Object>} Estadísticas de productos
  */
 export const getProductsStatsSummary = async () => {
-  const response = await api.get('/inventory/products/stats/summary');
+  const response = await api.get('/products/stats/summary');
   return response.data;
 };
 
 /**
  * Lista productos con paginación, filtros y búsqueda.
- * 
+ *
  * @param {Object} params - Parámetros de consulta
  * @param {number} [params.page=1] - Número de página
  * @param {number} [params.page_size=20] - Tamaño de página
@@ -48,62 +48,62 @@ export const getProductsStatsSummary = async () => {
  * @returns {Promise<Object>} Respuesta paginada con productos
  */
 export const getProducts = async (params = {}) => {
-  const response = await api.get('/inventory/products', { params });
+  const response = await api.get('/products', { params });
   return response.data;
 };
 
 /**
  * Obtiene un producto por su ID con todos los detalles.
- * 
+ *
  * @param {number} productId - ID del producto
  * @returns {Promise<Object>} Producto con detalles y métricas
  */
 export const getProduct = async (productId) => {
-  const response = await api.get(`/inventory/products/${productId}`);
+  const response = await api.get(`/products/${productId}`);
   return response.data;
 };
 
 /**
  * Crea un nuevo producto.
- * 
+ *
  * @param {Object} productData - Datos del producto
  * @returns {Promise<Object>} Producto creado
  */
 export const createProduct = async (productData) => {
-  const response = await api.post('/inventory/products', productData);
+  const response = await api.post('/products', productData);
   return response.data;
 };
 
 /**
  * Actualiza un producto existente.
- * 
+ *
  * @param {number} productId - ID del producto
  * @param {Object} productData - Datos a actualizar
  * @returns {Promise<Object>} Producto actualizado
  */
 export const updateProduct = async (productId, productData) => {
-  const response = await api.patch(`/inventory/products/${productId}`, productData);
+  const response = await api.patch(`/products/${productId}`, productData);
   return response.data;
 };
 
 /**
  * Elimina (soft delete) un producto.
- * 
+ *
  * @param {number} productId - ID del producto
  * @returns {Promise<void>}
  */
 export const deleteProduct = async (productId) => {
-  await api.delete(`/inventory/products/${productId}`);
+  await api.delete(`/products/${productId}`);
 };
 
 /**
  * Exporta productos a CSV.
- * 
+ *
  * @param {Object} params - Parámetros de filtro (mismos que getProducts)
  * @returns {Promise<Blob>} Archivo CSV
  */
 export const exportProductsCSV = async (params = {}) => {
-  const response = await api.get('/inventory/products/export/csv', {
+  const response = await api.get('/products/export/csv', {
     params,
     responseType: 'blob',
   });
@@ -165,7 +165,7 @@ export const LIFECYCLE_COLORS = {
 
 /**
  * Formatea un precio en pesos mexicanos.
- * 
+ *
  * @param {number} price - Precio a formatear
  * @returns {string} Precio formateado
  */
@@ -179,7 +179,7 @@ export const formatPrice = (price) => {
 
 /**
  * Formatea un porcentaje.
- * 
+ *
  * @param {number} value - Valor a formatear
  * @param {number} [decimals=1] - Decimales
  * @returns {string} Porcentaje formateado
@@ -191,7 +191,7 @@ export const formatPercent = (value, decimals = 1) => {
 
 /**
  * Formatea una fecha.
- * 
+ *
  * @param {string} dateString - Fecha en formato ISO
  * @returns {string} Fecha formateada
  */

@@ -26,7 +26,7 @@ const Login = () => {
   useEffect(() => {
     document.body.classList.add('public-page');
     document.body.classList.remove('has-layout');
-    
+
     return () => {
       document.body.classList.remove('public-page');
     };
@@ -38,7 +38,7 @@ const Login = () => {
     try {
       await login(email, password);
       navigate('/dashboard');
-    } catch (err) {
+    } catch {
       setError('Credenciales inválidas. Por favor, intenta de nuevo.');
     }
   };

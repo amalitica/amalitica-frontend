@@ -26,6 +26,7 @@ import { PrivacyNotice } from './pages/compliance';
 
 import PrivateRoute from './components/common/PrivateRoute';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import { Toaster } from './components/ui/toaster';
 import useFavicon from './hooks/useFavicon';
 import logoAmalitica from './assets/images/amalitica_logo.png';
 
@@ -98,6 +99,7 @@ function App() {
 
           <Route path='*' element={<Login />} />
           </Routes>
+          <Toaster />
         </Router>
       </AuthProvider>
     </ErrorBoundary>

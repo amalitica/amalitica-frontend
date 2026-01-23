@@ -191,12 +191,12 @@ const BrandsList = () => {
           />
         </div>
 
-        <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value); setPage(1); }}>
+        <Select value={categoryFilter || 'all'} onValueChange={(value) => { setCategoryFilter(value === 'all' ? '' : value); setPage(1); }}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Categoría" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas las categorías</SelectItem>
+            <SelectItem value="all">Todas las categorías</SelectItem>
             {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
               <SelectItem key={value} value={value}>
                 {label}
@@ -205,12 +205,12 @@ const BrandsList = () => {
           </SelectContent>
         </Select>
 
-        <Select value={supplierFilter} onValueChange={(value) => { setSupplierFilter(value); setPage(1); }}>
+        <Select value={supplierFilter || 'all'} onValueChange={(value) => { setSupplierFilter(value === 'all' ? '' : value); setPage(1); }}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Proveedor" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todos los proveedores</SelectItem>
+            <SelectItem value="all">Todos los proveedores</SelectItem>
             {suppliers.map((supplier) => (
               <SelectItem key={supplier.id} value={supplier.id.toString()}>
                 {supplier.name}

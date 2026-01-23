@@ -8,6 +8,8 @@ import {
   UserCog,
   LogOut,
   X,
+  Building2,
+  Tag,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -69,6 +71,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { icon: Users, label: 'Pacientes', path: '/customers' },
     { icon: FileText, label: 'Consultas', path: '/consultations' },
     { icon: Package, label: 'Productos', path: '/products' },
+    { icon: Building2, label: 'Proveedores', path: '/suppliers' },
+    { icon: Tag, label: 'Marcas', path: '/brands' },
   ];
 
   const adminItems = [

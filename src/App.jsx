@@ -20,6 +20,8 @@ import CreateConsultation from './pages/consultations/CreateConsultation';
 import EditConsultation from './pages/consultations/EditConsultation';
 import ConsultationDetails from './pages/consultations/ConsultationDetails';
 import { ProductsList, ProductForm, ProductDetail } from './pages/products';
+import { SuppliersList, SupplierForm } from './pages/suppliers';
+import { BrandsList, BrandForm } from './pages/brands';
 
 // Compliance (LFPDPPP)
 import { PrivacyNotice } from './pages/compliance';
@@ -93,6 +95,16 @@ function App() {
             <Route path='/products/new' element={<ProductForm />} />
             <Route path='/products/:id/edit' element={<ProductForm />} />
             <Route path='/products/:id' element={<ProductDetail />} />
+
+            {/* Proveedores */}
+            <Route path='/suppliers' element={<SuppliersList />} />
+            <Route path='/suppliers/new' element={<SupplierForm />} />
+            <Route path='/suppliers/:id/edit' element={<SupplierForm />} />
+
+            {/* Marcas */}
+            <Route path='/brands' element={<BrandsList />} />
+            <Route path='/brands/new' element={<BrandForm />} />
+            <Route path='/brands/:id/edit' element={<BrandForm />} />
 
             {/* Aquí irán las demás rutas protegidas */}
           </Route>

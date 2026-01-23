@@ -1,9 +1,9 @@
-// src/pages/products/ProductForm.jsx
 /**
  * Formulario para crear y editar productos.
  * 
  * Incluye:
  * - Datos básicos del producto
+ * - Selección de proveedor y marca desde catálogos normalizados
  * - Detalles específicos según categoría (armazón, lente, lente de contacto)
  * - Inventario inicial por sucursal (solo en creación)
  */
@@ -23,6 +23,7 @@ import {
   Glasses,
   Eye,
   CircleDot,
+  Plus,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -54,6 +55,8 @@ import {
   createProduct,
   updateProduct,
 } from '@/api/products';
+import { getSuppliersSimple } from '@/api/suppliers';
+import { getBrandsSimple } from '@/api/brands';
 
 // =============================================================================
 // SCHEMAS DE VALIDACIÓN
@@ -69,7 +72,7 @@ const productSchema = z.object({
   price: z.coerce.number().positive('El precio debe ser mayor a 0'),
   cost: z.coerce.number().min(0).optional().nullable(),
   price_tier: z.string().optional().nullable(),
-  supplier_name: z.string().max(200).optional().nullable(),
+  supplier_id: z.coerce.number().optional().nullable(),
   supplier_sku: z.string().max(50).optional().nullable(),
   season: z.string().optional().nullable(),
   lifecycle_stage: z.string().optional().nullable(),
@@ -84,7 +87,7 @@ const productSchema = z.object({
 /**
  * Sección de datos básicos.
  */
-const BasicInfoSection = ({ control, errors, enums }) => (
+const BasicInfoSection = ({ control, errors, enums, suppliers, category }) => (
   <Card>
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
@@ -105,7 +108,7 @@ const BasicInfoSection = ({ control, errors, enums }) => (
             <Input
               {...field}
               id="sku"
-              placeholder="Ej: ARM-RB-001"
+              placeholder="Ej: ARZ-RB-001"
               className={errors.sku ? 'border-red-500' : ''}
             />
           )}
@@ -140,7 +143,7 @@ const BasicInfoSection = ({ control, errors, enums }) => (
             <Input
               {...field}
               id="name"
-              placeholder="Ej: Ray-Ban Wayfarer Classic Negro"
+              placeholder="Ej: Armazón Ray-Ban Wayfarer Negro"
               className={errors.name ? 'border-red-500' : ''}
             />
           )}
@@ -193,17 +196,26 @@ const BasicInfoSection = ({ control, errors, enums }) => (
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="supplier_name">Proveedor</Label>
+        <Label htmlFor="supplier_id">Proveedor</Label>
         <Controller
-          name="supplier_name"
+          name="supplier_id"
           control={control}
           render={({ field }) => (
-            <Input
-              {...field}
-              id="supplier_name"
-              placeholder="Ej: Luxottica"
-              value={field.value || ''}
-            />
+            <Select 
+              onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} 
+              value={field.value?.toString() || undefined}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona un proveedor" />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers?.map((supplier) => (
+                  <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                    {supplier.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
         />
       </div>
@@ -405,7 +417,7 @@ const LifecycleSection = ({ control, enums }) => (
 /**
  * Sección de detalles de armazón.
  */
-const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums }) => (
+const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums, brands }) => (
   <Card>
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
@@ -416,11 +428,21 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums }) => (
     <CardContent className="grid gap-4 md:grid-cols-2">
       <div className="space-y-2">
         <Label>Marca *</Label>
-        <Input
-          value={frameDetails.brand || ''}
-          onChange={(e) => setFrameDetails({ ...frameDetails, brand: e.target.value })}
-          placeholder="Ej: Ray-Ban"
-        />
+        <Select
+          value={frameDetails.brand_id?.toString() || undefined}
+          onValueChange={(value) => setFrameDetails({ ...frameDetails, brand_id: value ? parseInt(value) : null })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecciona una marca" />
+          </SelectTrigger>
+          <SelectContent>
+            {brands?.map((brand) => (
+              <SelectItem key={brand.id} value={brand.id.toString()}>
+                {brand.name} {brand.is_luxury && '✨'}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
@@ -554,17 +576,17 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums }) => (
           type="number"
           value={frameDetails.temple_length || ''}
           onChange={(e) => setFrameDetails({ ...frameDetails, temple_length: e.target.value ? parseInt(e.target.value) : null })}
-          placeholder="Ej: 140"
+          placeholder="Ej: 145"
         />
       </div>
 
       <div className="space-y-2">
-        <Label>Peso (gramos)</Label>
+        <Label>Ancho total (mm)</Label>
         <Input
           type="number"
-          value={frameDetails.weight_grams || ''}
-          onChange={(e) => setFrameDetails({ ...frameDetails, weight_grams: e.target.value ? parseInt(e.target.value) : null })}
-          placeholder="Ej: 30"
+          value={frameDetails.total_width || ''}
+          onChange={(e) => setFrameDetails({ ...frameDetails, total_width: e.target.value ? parseInt(e.target.value) : null })}
+          placeholder="Ej: 140"
         />
       </div>
 
@@ -575,7 +597,7 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums }) => (
           checked={frameDetails.is_prescription_ready ?? true}
           onCheckedChange={(checked) => setFrameDetails({ ...frameDetails, is_prescription_ready: checked })}
         />
-        <Label>Apto para graduación</Label>
+        <Label>Listo para graduación</Label>
       </div>
 
       <div className="flex items-center space-x-2">
@@ -583,7 +605,7 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums }) => (
           checked={frameDetails.is_sunglasses ?? false}
           onCheckedChange={(checked) => setFrameDetails({ ...frameDetails, is_sunglasses: checked })}
         />
-        <Label>Es para lentes de sol</Label>
+        <Label>Es lente de sol</Label>
       </div>
 
       <div className="flex items-center space-x-2">
@@ -591,7 +613,7 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums }) => (
           checked={frameDetails.has_spring_hinges ?? false}
           onCheckedChange={(checked) => setFrameDetails({ ...frameDetails, has_spring_hinges: checked })}
         />
-        <Label>Tiene bisagras flexibles</Label>
+        <Label>Bisagras de resorte</Label>
       </div>
     </CardContent>
   </Card>
@@ -600,7 +622,7 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums }) => (
 /**
  * Sección de detalles de lente oftálmico.
  */
-const LensDetailsSection = ({ lensDetails, setLensDetails, enums }) => (
+const LensDetailsSection = ({ lensDetails, setLensDetails, enums, brands }) => (
   <Card>
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
@@ -611,11 +633,21 @@ const LensDetailsSection = ({ lensDetails, setLensDetails, enums }) => (
     <CardContent className="grid gap-4 md:grid-cols-2">
       <div className="space-y-2">
         <Label>Marca *</Label>
-        <Input
-          value={lensDetails.brand || ''}
-          onChange={(e) => setLensDetails({ ...lensDetails, brand: e.target.value })}
-          placeholder="Ej: Essilor"
-        />
+        <Select
+          value={lensDetails.brand_id?.toString() || undefined}
+          onValueChange={(value) => setLensDetails({ ...lensDetails, brand_id: value ? parseInt(value) : null })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecciona una marca" />
+          </SelectTrigger>
+          <SelectContent>
+            {brands?.map((brand) => (
+              <SelectItem key={brand.id} value={brand.id.toString()}>
+                {brand.name} {brand.is_luxury && '✨'}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">
@@ -735,7 +767,7 @@ const LensDetailsSection = ({ lensDetails, setLensDetails, enums }) => (
 /**
  * Sección de detalles de lente de contacto.
  */
-const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums }) => (
+const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums, brands }) => (
   <Card>
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
@@ -746,35 +778,17 @@ const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums })
     <CardContent className="grid gap-4 md:grid-cols-2">
       <div className="space-y-2">
         <Label>Marca *</Label>
-        <Input
-          value={contactDetails.brand || ''}
-          onChange={(e) => setContactDetails({ ...contactDetails, brand: e.target.value })}
-          placeholder="Ej: Acuvue"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Modelo *</Label>
-        <Input
-          value={contactDetails.model || ''}
-          onChange={(e) => setContactDetails({ ...contactDetails, model: e.target.value })}
-          placeholder="Ej: Oasys"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Tipo *</Label>
         <Select
-          value={contactDetails.lens_type || undefined}
-          onValueChange={(value) => setContactDetails({ ...contactDetails, lens_type: value })}
+          value={contactDetails.brand_id?.toString() || undefined}
+          onValueChange={(value) => setContactDetails({ ...contactDetails, brand_id: value ? parseInt(value) : null })}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona tipo" />
+            <SelectValue placeholder="Selecciona una marca" />
           </SelectTrigger>
           <SelectContent>
-            {enums?.contact_lens_types?.map((t) => (
-              <SelectItem key={t.value} value={t.value}>
-                {t.label}
+            {brands?.map((brand) => (
+              <SelectItem key={brand.id} value={brand.id.toString()}>
+                {brand.name} {brand.is_luxury && '✨'}
               </SelectItem>
             ))}
           </SelectContent>
@@ -782,18 +796,27 @@ const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums })
       </div>
 
       <div className="space-y-2">
-        <Label>Diseño *</Label>
+        <Label>Modelo</Label>
+        <Input
+          value={contactDetails.model || ''}
+          onChange={(e) => setContactDetails({ ...contactDetails, model: e.target.value })}
+          placeholder="Ej: Acuvue Oasys"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Tipo *</Label>
         <Select
-          value={contactDetails.design || undefined}
-          onValueChange={(value) => setContactDetails({ ...contactDetails, design: value })}
+          value={contactDetails.contact_type || undefined}
+          onValueChange={(value) => setContactDetails({ ...contactDetails, contact_type: value })}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona diseño" />
+            <SelectValue placeholder="Selecciona tipo" />
           </SelectTrigger>
           <SelectContent>
-            {enums?.contact_lens_designs?.map((d) => (
-              <SelectItem key={d.value} value={d.value}>
-                {d.label}
+            {enums?.contact_types?.map((t) => (
+              <SelectItem key={t.value} value={t.value}>
+                {t.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -810,7 +833,7 @@ const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums })
             <SelectValue placeholder="Selecciona frecuencia" />
           </SelectTrigger>
           <SelectContent>
-            {enums?.contact_lens_frequencies?.map((f) => (
+            {enums?.contact_frequencies?.map((f) => (
               <SelectItem key={f.value} value={f.value}>
                 {f.label}
               </SelectItem>
@@ -820,16 +843,86 @@ const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums })
       </div>
 
       <div className="space-y-2">
-        <Label>Lentes por caja</Label>
+        <Label>Diseño</Label>
+        <Select
+          value={contactDetails.design || undefined}
+          onValueChange={(value) => setContactDetails({ ...contactDetails, design: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecciona diseño" />
+          </SelectTrigger>
+          <SelectContent>
+            {enums?.contact_designs?.map((d) => (
+              <SelectItem key={d.value} value={d.value}>
+                {d.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Contenido de agua (%)</Label>
         <Input
           type="number"
-          value={contactDetails.lenses_per_box || ''}
-          onChange={(e) => setContactDetails({ ...contactDetails, lenses_per_box: e.target.value ? parseInt(e.target.value) : null })}
-          placeholder="Ej: 30"
+          step="0.1"
+          value={contactDetails.water_content || ''}
+          onChange={(e) => setContactDetails({ ...contactDetails, water_content: e.target.value ? parseFloat(e.target.value) : null })}
+          placeholder="Ej: 38.5"
         />
       </div>
 
       <Separator className="md:col-span-2" />
+
+      <div className="space-y-2">
+        <Label>Curva base (mm)</Label>
+        <Input
+          type="number"
+          step="0.1"
+          value={contactDetails.base_curve || ''}
+          onChange={(e) => setContactDetails({ ...contactDetails, base_curve: e.target.value ? parseFloat(e.target.value) : null })}
+          placeholder="Ej: 8.6"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Diámetro (mm)</Label>
+        <Input
+          type="number"
+          step="0.1"
+          value={contactDetails.diameter || ''}
+          onChange={(e) => setContactDetails({ ...contactDetails, diameter: e.target.value ? parseFloat(e.target.value) : null })}
+          placeholder="Ej: 14.2"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Unidades por caja</Label>
+        <Input
+          type="number"
+          value={contactDetails.units_per_box || ''}
+          onChange={(e) => setContactDetails({ ...contactDetails, units_per_box: e.target.value ? parseInt(e.target.value) : null })}
+          placeholder="Ej: 6"
+        />
+      </div>
+
+      <Separator className="md:col-span-2" />
+
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={contactDetails.has_cylinder ?? false}
+          onCheckedChange={(checked) => setContactDetails({ ...contactDetails, has_cylinder: checked })}
+        />
+        <Label>Para astigmatismo (tórico)</Label>
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={contactDetails.has_multifocal ?? false}
+          onCheckedChange={(checked) => setContactDetails({ ...contactDetails, has_multifocal: checked })}
+        />
+        <Label>Multifocal</Label>
+      </div>
 
       <div className="flex items-center space-x-2">
         <Switch
@@ -844,7 +937,7 @@ const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums })
           checked={contactDetails.is_colored ?? false}
           onCheckedChange={(checked) => setContactDetails({ ...contactDetails, is_colored: checked })}
         />
-        <Label>Es de color</Label>
+        <Label>De color</Label>
       </div>
     </CardContent>
   </Card>
@@ -864,6 +957,8 @@ const ProductForm = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [enums, setEnums] = useState(null);
+  const [suppliers, setSuppliers] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [frameDetails, setFrameDetails] = useState({
     is_prescription_ready: true,
     is_sunglasses: false,
@@ -902,7 +997,7 @@ const ProductForm = () => {
       price: '',
       cost: '',
       price_tier: '',
-      supplier_name: '',
+      supplier_id: null,
       supplier_sku: '',
       season: '',
       lifecycle_stage: '',
@@ -913,18 +1008,37 @@ const ProductForm = () => {
 
   const category = watch('category');
 
-  // Cargar enums
+  // Cargar enums, suppliers y brands
   useEffect(() => {
-    const loadEnums = async () => {
+    const loadData = async () => {
       try {
-        const data = await getProductEnums();
-        setEnums(data);
+        const [enumsData, suppliersData] = await Promise.all([
+          getProductEnums(),
+          getSuppliersSimple(),
+        ]);
+        setEnums(enumsData);
+        setSuppliers(suppliersData);
       } catch (error) {
-        console.error('Error al cargar enums:', error);
+        console.error('Error al cargar datos iniciales:', error);
       }
     };
-    loadEnums();
+    loadData();
   }, []);
+
+  // Cargar marcas cuando cambia la categoría
+  useEffect(() => {
+    const loadBrands = async () => {
+      if (category && ['FRAME', 'LENS', 'CONTACT_LENS'].includes(category)) {
+        try {
+          const brandsData = await getBrandsSimple({ category });
+          setBrands(brandsData);
+        } catch (error) {
+          console.error('Error al cargar marcas:', error);
+        }
+      }
+    };
+    loadBrands();
+  }, [category]);
 
   // Cargar producto si estamos editando
   useEffect(() => {
@@ -942,7 +1056,7 @@ const ProductForm = () => {
             price: data.price,
             cost: data.cost || '',
             price_tier: data.price_tier || '',
-            supplier_name: data.supplier_name || '',
+            supplier_id: data.supplier_id || null,
             supplier_sku: data.supplier_sku || '',
             season: data.season || '',
             lifecycle_stage: data.lifecycle_stage || '',
@@ -984,6 +1098,7 @@ const ProductForm = () => {
         ...data,
         cost: data.cost || null,
         price_tier: data.price_tier || null,
+        supplier_id: data.supplier_id || null,
         season: data.season || null,
         lifecycle_stage: data.lifecycle_stage || null,
         launch_date: data.launch_date || null,
@@ -1085,7 +1200,13 @@ const ProductForm = () => {
         </TabsList>
 
         <TabsContent value="basic">
-          <BasicInfoSection control={control} errors={errors} enums={enums} />
+          <BasicInfoSection 
+            control={control} 
+            errors={errors} 
+            enums={enums} 
+            suppliers={suppliers}
+            category={category}
+          />
         </TabsContent>
 
         <TabsContent value="pricing">
@@ -1102,6 +1223,7 @@ const ProductForm = () => {
               frameDetails={frameDetails}
               setFrameDetails={setFrameDetails}
               enums={enums}
+              brands={brands}
             />
           )}
           {category === 'LENS' && (
@@ -1109,6 +1231,7 @@ const ProductForm = () => {
               lensDetails={lensDetails}
               setLensDetails={setLensDetails}
               enums={enums}
+              brands={brands}
             />
           )}
           {category === 'CONTACT_LENS' && (
@@ -1116,6 +1239,7 @@ const ProductForm = () => {
               contactDetails={contactDetails}
               setContactDetails={setContactDetails}
               enums={enums}
+              brands={brands}
             />
           )}
         </TabsContent>

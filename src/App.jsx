@@ -22,6 +22,7 @@ import ConsultationDetails from './pages/consultations/ConsultationDetails';
 import { ProductsList, ProductForm, ProductDetail } from './pages/products';
 import { SuppliersList, SupplierForm } from './pages/suppliers';
 import { BrandsList, BrandForm } from './pages/brands';
+import { BranchInventoryList } from './pages/inventory';
 
 // Compliance (LFPDPPP)
 import { PrivacyNotice } from './pages/compliance';
@@ -105,6 +106,9 @@ function App() {
             <Route path='/brands' element={<BrandsList />} />
             <Route path='/brands/new' element={<BrandForm />} />
             <Route path='/brands/:id/edit' element={<BrandForm />} />
+
+            {/* Inventario */}
+            <Route path='/inventory' element={<BranchInventoryList />} />
 
             {/* Aquí irán las demás rutas protegidas */}
           </Route>

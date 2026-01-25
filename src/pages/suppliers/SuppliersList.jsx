@@ -113,9 +113,26 @@ const SuppliersList = () => {
       loadSuppliers();
     } catch (error) {
       console.error('Error al eliminar proveedor:', error);
+      // Extract error message properly
+      let errorMessage = 'No se pudo eliminar el proveedor';
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        } else if (typeof error.response.data.detail === 'object' && error.response.data.detail.msg) {
+          errorMessage = error.response.data.detail.msg;
+        } else if (Array.isArray(error.response.data.detail) && error.response.data.detail.length > 0) {
+          const firstError = error.response.data.detail[0];
+          if (firstError.msg) {
+            errorMessage = firstError.msg;
+          } else if (typeof firstError === 'string') {
+            errorMessage = firstError;
+          }
+        }
+      }
+      
       toast({
         title: 'Error',
-        description: error.response?.data?.detail || 'No se pudo eliminar el proveedor',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

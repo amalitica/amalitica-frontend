@@ -49,13 +49,36 @@ import { CATEGORY_LABELS } from '@/api/products';
 
 const brandSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(100),
-  category: z.string().optional().nullable(),
+  category: z
+    .string()
+    .optional()
+    .nullable()
+    .refine(
+      (val) => 
+        val === null || 
+        val === 'Armazón' || 
+        val === 'Lente Oftálmico' || 
+        val === 'Lente de Contacto' || 
+        val === 'Accesorio' || 
+        val === 'Solución' || 
+        val === 'Estuche' ||
+        val === 'Limpieza' ||
+        val === 'Otro',
+      {
+        message: "Categoría inválida. Debe ser 'Armazón', 'Lente Oftálmico', 'Lente de Contacto', 'Accesorio', 'Solución', 'Estuche', 'Limpieza' o 'Otro'",
+      }
+    ),
   is_luxury: z.boolean().default(false),
   is_house_brand: z.boolean().default(false),
   supplier_id: z.coerce.number().optional().nullable(),
   manufacturer: z.string().max(100).optional().nullable(),
   country_of_origin: z.string().max(100).optional().nullable(),
-  website: z.string().url('URL inválida').optional().nullable().or(z.literal('')),
+  website: z
+    .string()
+    .url('URL inválida')
+    .optional()
+    .nullable()
+    .or(z.literal('')),
   notes: z.string().optional().nullable(),
 });
 
@@ -69,51 +92,49 @@ const brandSchema = z.object({
 const BasicInfoSection = ({ control, errors, suppliers }) => (
   <Card>
     <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <Tag className="h-5 w-5" />
+      <CardTitle className='flex items-center gap-2'>
+        <Tag className='h-5 w-5' />
         Información Básica
       </CardTitle>
-      <CardDescription>
-        Datos generales de la marca
-      </CardDescription>
+      <CardDescription>Datos generales de la marca</CardDescription>
     </CardHeader>
-    <CardContent className="grid gap-4 md:grid-cols-2">
-      <div className="space-y-2">
-        <Label htmlFor="name">Nombre de la marca *</Label>
+    <CardContent className='grid gap-4 md:grid-cols-2'>
+      <div className='space-y-2'>
+        <Label htmlFor='name'>Nombre de la marca *</Label>
         <Controller
-          name="name"
+          name='name'
           control={control}
           render={({ field }) => (
             <Input
               {...field}
-              id="name"
-              placeholder="Ej: Ray-Ban"
+              id='name'
+              placeholder='Ej: Ray-Ban'
               className={errors.name ? 'border-red-500' : ''}
             />
           )}
         />
         {errors.name && (
-          <p className="text-sm text-red-500">{errors.name.message}</p>
+          <p className='text-sm text-red-500'>{errors.name.message}</p>
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="category">Categoría de productos</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='category'>Categoría de productos</Label>
         <Controller
-          name="category"
+          name='category'
           control={control}
           render={({ field }) => (
-            <Select 
-              onValueChange={(value) => field.onChange(value || null)} 
+            <Select
+              onValueChange={(value) => field.onChange(value || null)}
               value={field.value || undefined}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Todas las categorías" />
+                <SelectValue placeholder='Todas las categorías' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas las categorías</SelectItem>
-                {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
+                <SelectItem value='all'>Todas las categorías</SelectItem>
+                {Object.entries(CATEGORY_LABELS).map(([key, label]) => (
+                  <SelectItem key={key} value={label}>
                     {label}
                   </SelectItem>
                 ))}
@@ -121,26 +142,29 @@ const BasicInfoSection = ({ control, errors, suppliers }) => (
             </Select>
           )}
         />
-        <p className="text-xs text-muted-foreground">
-          Si no seleccionas una categoría, la marca estará disponible para todos los tipos de productos
+        <p className='text-xs text-muted-foreground'>
+          Si no seleccionas una categoría, la marca estará disponible para todos
+          los tipos de productos
         </p>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="supplier_id">Proveedor principal</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='supplier_id'>Proveedor principal</Label>
         <Controller
-          name="supplier_id"
+          name='supplier_id'
           control={control}
           render={({ field }) => (
-            <Select 
-              onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} 
+            <Select
+              onValueChange={(value) =>
+                field.onChange(value ? parseInt(value) : null)
+              }
               value={field.value?.toString() || undefined}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona un proveedor" />
+                <SelectValue placeholder='Selecciona un proveedor' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Sin proveedor</SelectItem>
+                <SelectItem value='out'>Sin proveedor</SelectItem>
                 {suppliers.map((supplier) => (
                   <SelectItem key={supplier.id} value={supplier.id.toString()}>
                     {supplier.name}
@@ -152,38 +176,32 @@ const BasicInfoSection = ({ control, errors, suppliers }) => (
         />
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center space-x-2">
+      <div className='space-y-4'>
+        <div className='flex items-center space-x-2'>
           <Controller
-            name="is_luxury"
+            name='is_luxury'
             control={control}
             render={({ field }) => (
-              <Switch
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
             )}
           />
           <Label>Marca de lujo</Label>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className='text-xs text-muted-foreground'>
           Activa esta opción si es una marca premium o de alta gama
         </p>
 
-        <div className="flex items-center space-x-2">
+        <div className='flex items-center space-x-2'>
           <Controller
-            name="is_house_brand"
+            name='is_house_brand'
             control={control}
             render={({ field }) => (
-              <Switch
-                checked={field.value}
-                onCheckedChange={field.onChange}
-              />
+              <Switch checked={field.value} onCheckedChange={field.onChange} />
             )}
           />
           <Label>Marca propia</Label>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className='text-xs text-muted-foreground'>
           Activa esta opción si es una marca exclusiva de tu óptica
         </p>
       </div>
@@ -197,64 +215,64 @@ const BasicInfoSection = ({ control, errors, suppliers }) => (
 const ManufacturerSection = ({ control, errors }) => (
   <Card>
     <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <Building2 className="h-5 w-5" />
+      <CardTitle className='flex items-center gap-2'>
+        <Building2 className='h-5 w-5' />
         Fabricante
       </CardTitle>
       <CardDescription>
         Información sobre el fabricante de la marca
       </CardDescription>
     </CardHeader>
-    <CardContent className="grid gap-4 md:grid-cols-2">
-      <div className="space-y-2">
-        <Label htmlFor="manufacturer">Nombre del fabricante</Label>
+    <CardContent className='grid gap-4 md:grid-cols-2'>
+      <div className='space-y-2'>
+        <Label htmlFor='manufacturer'>Nombre del fabricante</Label>
         <Controller
-          name="manufacturer"
+          name='manufacturer'
           control={control}
           render={({ field }) => (
             <Input
               {...field}
-              id="manufacturer"
-              placeholder="Ej: Luxottica Group"
+              id='manufacturer'
+              placeholder='Ej: Luxottica Group'
               value={field.value || ''}
             />
           )}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="country_of_origin">País de origen</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='country_of_origin'>País de origen</Label>
         <Controller
-          name="country_of_origin"
+          name='country_of_origin'
           control={control}
           render={({ field }) => (
             <Input
               {...field}
-              id="country_of_origin"
-              placeholder="Ej: Italia"
+              id='country_of_origin'
+              placeholder='Ej: Italia'
               value={field.value || ''}
             />
           )}
         />
       </div>
 
-      <div className="space-y-2 md:col-span-2">
-        <Label htmlFor="website">Sitio web de la marca</Label>
+      <div className='space-y-2 md:col-span-2'>
+        <Label htmlFor='website'>Sitio web de la marca</Label>
         <Controller
-          name="website"
+          name='website'
           control={control}
           render={({ field }) => (
             <Input
               {...field}
-              id="website"
-              type="url"
-              placeholder="https://www.marca.com"
+              id='website'
+              type='url'
+              placeholder='https://www.marca.com'
               value={field.value || ''}
             />
           )}
         />
         {errors.website && (
-          <p className="text-sm text-red-500">{errors.website.message}</p>
+          <p className='text-sm text-red-500'>{errors.website.message}</p>
         )}
       </div>
     </CardContent>
@@ -267,22 +285,20 @@ const ManufacturerSection = ({ control, errors }) => (
 const NotesSection = ({ control }) => (
   <Card>
     <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <FileText className="h-5 w-5" />
+      <CardTitle className='flex items-center gap-2'>
+        <FileText className='h-5 w-5' />
         Notas
       </CardTitle>
-      <CardDescription>
-        Información adicional sobre la marca
-      </CardDescription>
+      <CardDescription>Información adicional sobre la marca</CardDescription>
     </CardHeader>
     <CardContent>
       <Controller
-        name="notes"
+        name='notes'
         control={control}
         render={({ field }) => (
           <Textarea
             {...field}
-            placeholder="Notas internas sobre la marca..."
+            placeholder='Notas internas sobre la marca...'
             rows={4}
             value={field.value || ''}
           />
@@ -405,59 +421,76 @@ const BrandForm = () => {
       }
 
       navigate('/brands');
-    } catch (error) {
-      console.error('Error al guardar marca:', error);
-      toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'No se pudo guardar la marca',
-        variant: 'destructive',
-      });
-    } finally {
+} catch (error) {
+        console.error('Error al guardar marca:', error);
+        // Extract error message properly
+        let errorMessage = 'No se pudo guardar la marca';
+        if (error.response?.data?.detail) {
+          if (typeof error.response.data.detail === 'string') {
+            errorMessage = error.response.data.detail;
+          } else if (typeof error.response.data.detail === 'object' && error.response.data.detail.msg) {
+            errorMessage = error.response.data.detail.msg;
+          } else if (Array.isArray(error.response.data.detail) && error.response.data.detail.length > 0) {
+            const firstError = error.response.data.detail[0];
+            if (firstError.msg) {
+              errorMessage = firstError.msg;
+            } else if (typeof firstError === 'string') {
+              errorMessage = firstError;
+            }
+          }
+        }
+        
+        toast({
+          title: 'Error',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className='flex items-center justify-center h-64'>
+        <Loader2 className='h-8 w-8 animate-spin' />
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className='flex items-center justify-between'>
+        <div className='flex items-center gap-4'>
           <Button
-            type="button"
-            variant="ghost"
-            size="icon"
+            type='button'
+            variant='ghost'
+            size='icon'
             onClick={() => navigate('/brands')}
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className='h-4 w-4' />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className='text-3xl font-bold tracking-tight'>
               {isEditing ? 'Editar Marca' : 'Nueva Marca'}
             </h1>
-            <p className="text-muted-foreground">
+            <p className='text-muted-foreground'>
               {isEditing
                 ? 'Modifica los datos de la marca'
                 : 'Completa la información de la nueva marca'}
             </p>
           </div>
         </div>
-        <Button type="submit" disabled={saving}>
+        <Button type='submit' disabled={saving}>
           {saving ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
               Guardando...
             </>
           ) : (
             <>
-              <Save className="mr-2 h-4 w-4" />
+              <Save className='mr-2 h-4 w-4' />
               Guardar
             </>
           )}
@@ -465,22 +498,26 @@ const BrandForm = () => {
       </div>
 
       {/* Tabs de secciones */}
-      <Tabs defaultValue="basic" className="space-y-6">
+      <Tabs defaultValue='basic' className='space-y-6'>
         <TabsList>
-          <TabsTrigger value="basic">Información Básica</TabsTrigger>
-          <TabsTrigger value="manufacturer">Fabricante</TabsTrigger>
-          <TabsTrigger value="notes">Notas</TabsTrigger>
+          <TabsTrigger value='basic'>Información Básica</TabsTrigger>
+          <TabsTrigger value='manufacturer'>Fabricante</TabsTrigger>
+          <TabsTrigger value='notes'>Notas</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="basic">
-          <BasicInfoSection control={control} errors={errors} suppliers={suppliers} />
+        <TabsContent value='basic'>
+          <BasicInfoSection
+            control={control}
+            errors={errors}
+            suppliers={suppliers}
+          />
         </TabsContent>
 
-        <TabsContent value="manufacturer">
+        <TabsContent value='manufacturer'>
           <ManufacturerSection control={control} errors={errors} />
         </TabsContent>
 
-        <TabsContent value="notes">
+        <TabsContent value='notes'>
           <NotesSection control={control} />
         </TabsContent>
       </Tabs>

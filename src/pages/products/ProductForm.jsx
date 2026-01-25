@@ -1016,6 +1016,8 @@ const ProductForm = () => {
           getProductEnums(),
           getSuppliersSimple(),
         ]);
+        console.log('Enums cargados:', enumsData);
+        console.log('Suppliers cargados:', suppliersData);
         setEnums(enumsData);
         setSuppliers(suppliersData);
       } catch (error) {
@@ -1030,7 +1032,14 @@ const ProductForm = () => {
     const loadBrands = async () => {
       if (category && ['FRAME', 'LENS', 'CONTACT_LENS'].includes(category)) {
         try {
-          const brandsData = await getBrandsSimple({ category });
+          // Mapear categoría de producto al valor del enum en backend (en español)
+          const categoryToEnumValue = {
+            FRAME: 'Armazón',
+            LENS: 'Lente Oftálmico',
+            CONTACT_LENS: 'Lente de Contacto',
+          };
+          
+          const brandsData = await getBrandsSimple({ category: categoryToEnumValue[category] });
           setBrands(brandsData);
         } catch (error) {
           console.error('Error al cargar marcas:', error);
@@ -1131,9 +1140,26 @@ const ProductForm = () => {
       navigate('/products');
     } catch (error) {
       console.error('Error al guardar producto:', error);
+      // Extract error message properly
+      let errorMessage = 'No se pudo guardar el producto';
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage = error.response.data.detail;
+        } else if (typeof error.response.data.detail === 'object' && error.response.data.detail.msg) {
+          errorMessage = error.response.data.detail.msg;
+        } else if (Array.isArray(error.response.data.detail) && error.response.data.detail.length > 0) {
+          const firstError = error.response.data.detail[0];
+          if (firstError.msg) {
+            errorMessage = firstError.msg;
+          } else if (typeof firstError === 'string') {
+            errorMessage = firstError;
+          }
+        }
+      }
+      
       toast({
         title: 'Error',
-        description: error.response?.data?.detail || 'No se pudo guardar el producto',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

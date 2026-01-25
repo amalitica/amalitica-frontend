@@ -141,7 +141,8 @@ const BrandsList = () => {
       console.error('Error al eliminar marca:', error);
       toast({
         title: 'Error',
-        description: error.response?.data?.detail || 'No se pudo eliminar la marca',
+        description:
+          error.response?.data?.detail || 'No se pudo eliminar la marca',
         variant: 'destructive',
       });
     } finally {
@@ -151,66 +152,78 @@ const BrandsList = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Marcas</h1>
-          <p className="text-muted-foreground">
+          <h1 className='text-3xl font-bold tracking-tight'>Marcas</h1>
+          <p className='text-muted-foreground'>
             Gestiona las marcas de productos de tu óptica
           </p>
         </div>
         <Button onClick={() => navigate('/brands/new')}>
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className='mr-2 h-4 w-4' />
           Nueva Marca
         </Button>
       </div>
 
       {/* Estadísticas */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className='grid gap-4 md:grid-cols-3'>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Marcas</CardTitle>
-            <Tag className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>Total Marcas</CardTitle>
+            <Tag className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{total}</div>
+            <div className='text-2xl font-bold'>{total}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <div className='flex flex-wrap items-center gap-4'>
+        <div className='relative flex-1 max-w-sm'>
+          <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground' />
           <Input
-            placeholder="Buscar por nombre o fabricante..."
+            placeholder='Buscar por nombre o fabricante...'
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
+            className='pl-10'
           />
         </div>
 
-        <Select value={categoryFilter || 'all'} onValueChange={(value) => { setCategoryFilter(value === 'all' ? '' : value); setPage(1); }}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Categoría" />
+        <Select
+          value={categoryFilter || 'all'}
+          onValueChange={(value) => {
+            setCategoryFilter(value === 'all' ? '' : value);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className='w-[180px]'>
+            <SelectValue placeholder='Categoría' />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todas las categorías</SelectItem>
+            <SelectItem value='all'>Todas las categorías</SelectItem>
             {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
-              <SelectItem key={value} value={value}>
+              <SelectItem key={label} value={label}>
                 {label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Select value={supplierFilter || 'all'} onValueChange={(value) => { setSupplierFilter(value === 'all' ? '' : value); setPage(1); }}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Proveedor" />
+        <Select
+          value={supplierFilter || 'all'}
+          onValueChange={(value) => {
+            setSupplierFilter(value === 'all' ? '' : value);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className='w-[180px]'>
+            <SelectValue placeholder='Proveedor' />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos los proveedores</SelectItem>
+            <SelectItem value='all'>Todos los proveedores</SelectItem>
             {suppliers.map((supplier) => (
               <SelectItem key={supplier.id} value={supplier.id.toString()}>
                 {supplier.name}
@@ -221,29 +234,32 @@ const BrandsList = () => {
       </div>
 
       {/* Tabla */}
-      <div className="rounded-md border">
+      <div className='rounded-md border'>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Marca</TableHead>
               <TableHead>Categoría</TableHead>
               <TableHead>Proveedor</TableHead>
-              <TableHead className="text-center">Productos</TableHead>
-              <TableHead className="text-center">Tipo</TableHead>
-              <TableHead className="text-center">Estado</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
+              <TableHead className='text-center'>Productos</TableHead>
+              <TableHead className='text-center'>Tipo</TableHead>
+              <TableHead className='text-center'>Estado</TableHead>
+              <TableHead className='w-[50px]'></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                <TableCell colSpan={7} className='text-center py-8'>
+                  <Loader2 className='h-6 w-6 animate-spin mx-auto' />
                 </TableCell>
               </TableRow>
             ) : brands.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell
+                  colSpan={7}
+                  className='text-center py-8 text-muted-foreground'
+                >
                   No se encontraron marcas
                 </TableCell>
               </TableRow>
@@ -251,16 +267,16 @@ const BrandsList = () => {
               brands.map((brand) => (
                 <TableRow key={brand.id}>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className='flex items-center gap-2'>
                       <div>
-                        <div className="font-medium flex items-center gap-1">
+                        <div className='font-medium flex items-center gap-1'>
                           {brand.name}
                           {brand.is_luxury && (
-                            <Sparkles className="h-4 w-4 text-amber-500" />
+                            <Sparkles className='h-4 w-4 text-amber-500' />
                           )}
                         </div>
                         {brand.manufacturer && (
-                          <div className="text-sm text-muted-foreground">
+                          <div className='text-sm text-muted-foreground'>
                             {brand.manufacturer}
                           </div>
                         )}
@@ -270,46 +286,52 @@ const BrandsList = () => {
                   <TableCell>
                     {brand.category ? (
                       <Badge className={CATEGORY_COLORS[brand.category]}>
-                        {CATEGORY_LABELS[brand.category]}
+                        {brand.category}
                       </Badge>
                     ) : (
-                      <span className="text-muted-foreground">Todas</span>
+                      <span className='text-muted-foreground'>Todas</span>
                     )}
                   </TableCell>
                   <TableCell>
                     {brand.supplier ? (
-                      <div className="flex items-center gap-1">
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                      <div className='flex items-center gap-1'>
+                        <Building2 className='h-4 w-4 text-muted-foreground' />
                         {brand.supplier.name}
                       </div>
                     ) : (
-                      <span className="text-muted-foreground">-</span>
+                      <span className='text-muted-foreground'>-</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Package className="h-4 w-4 text-muted-foreground" />
+                  <TableCell className='text-center'>
+                    <div className='flex items-center justify-center gap-1'>
+                      <Package className='h-4 w-4 text-muted-foreground' />
                       {brand.products_count || 0}
                     </div>
                   </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex flex-col items-center gap-1">
+                  <TableCell className='text-center'>
+                    <div className='flex flex-col items-center gap-1'>
                       {brand.is_luxury && (
-                        <Badge variant="outline" className="text-amber-600 border-amber-300">
+                        <Badge
+                          variant='outline'
+                          className='text-amber-600 border-amber-300'
+                        >
                           Lujo
                         </Badge>
                       )}
                       {brand.is_house_brand && (
-                        <Badge variant="outline" className="text-blue-600 border-blue-300">
+                        <Badge
+                          variant='outline'
+                          className='text-blue-600 border-blue-300'
+                        >
                           Propia
                         </Badge>
                       )}
                       {!brand.is_luxury && !brand.is_house_brand && (
-                        <span className="text-muted-foreground">-</span>
+                        <span className='text-muted-foreground'>-</span>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className='text-center'>
                     <Badge variant={brand.active ? 'default' : 'secondary'}>
                       {brand.active ? 'Activa' : 'Inactiva'}
                     </Badge>
@@ -317,25 +339,25 @@ const BrandsList = () => {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
+                        <Button variant='ghost' size='icon'>
+                          <MoreHorizontal className='h-4 w-4' />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align='end'>
                         <DropdownMenuItem
                           onClick={() => navigate(`/brands/${brand.id}/edit`)}
                         >
-                          <Pencil className="mr-2 h-4 w-4" />
+                          <Pencil className='mr-2 h-4 w-4' />
                           Editar
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          className="text-red-600"
+                          className='text-red-600'
                           onClick={() => {
                             setBrandToDelete(brand);
                             setDeleteDialogOpen(true);
                           }}
                         >
-                          <Trash2 className="mr-2 h-4 w-4" />
+                          <Trash2 className='mr-2 h-4 w-4' />
                           Eliminar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -350,22 +372,22 @@ const BrandsList = () => {
 
       {/* Paginación */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
+        <div className='flex items-center justify-between'>
+          <p className='text-sm text-muted-foreground'>
             Mostrando {brands.length} de {total} marcas
           </p>
-          <div className="flex gap-2">
+          <div className='flex gap-2'>
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
               Anterior
             </Button>
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
             >
@@ -381,16 +403,16 @@ const BrandsList = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar marca?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción desactivará la marca "{brandToDelete?.name}".
-              Los productos asociados mantendrán la referencia pero la marca
-              no aparecerá en nuevas selecciones.
+              Esta acción desactivará la marca "{brandToDelete?.name}". Los
+              productos asociados mantendrán la referencia pero la marca no
+              aparecerá en nuevas selecciones.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-red-600 hover:bg-red-700"
+              className='bg-red-600 hover:bg-red-700'
             >
               Eliminar
             </AlertDialogAction>

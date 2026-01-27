@@ -1,3 +1,11 @@
+// src/pages/inventory/ProductsAndInventory.jsx
+/**
+ * Página de Productos y Stock.
+ *
+ * Vista unificada que muestra el catálogo de productos con su inventario
+ * por sucursal de forma expandible.
+ */
+
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
@@ -31,7 +39,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { getProducts, deleteProduct } from '@/api/products';
+import { getProducts, deleteProduct, formatPrice, CATEGORY_LABELS } from '@/api/products';
 import { getProductInventoryAllBranches } from '@/api/inventory';
 import AdjustInventoryModal from './AdjustInventoryModal';
 import TransferInventoryModal from './TransferInventoryModal';
@@ -151,6 +159,8 @@ const ProductsAndInventory = () => {
       ACCESSORY: 'bg-yellow-100 text-yellow-800',
       SOLUTION: 'bg-pink-100 text-pink-800',
       CASE: 'bg-gray-100 text-gray-800',
+      CLEANING: 'bg-orange-100 text-orange-800',
+      OTHER: 'bg-slate-100 text-slate-800',
     };
     return colors[category] || 'bg-gray-100 text-gray-800';
   };
@@ -183,7 +193,7 @@ const ProductsAndInventory = () => {
   return (
     <div className='space-y-6'>
       {/* Header */}
-      <div className='flex justify-between items-center'>
+      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
         <div>
           <h1 className='text-3xl font-bold text-gray-900'>
             Productos y Stock
@@ -236,6 +246,8 @@ const ProductsAndInventory = () => {
                 <SelectItem value='ACCESSORY'>Accesorios</SelectItem>
                 <SelectItem value='SOLUTION'>Soluciones</SelectItem>
                 <SelectItem value='CASE'>Estuches</SelectItem>
+                <SelectItem value='CLEANING'>Limpieza</SelectItem>
+                <SelectItem value='OTHER'>Otros</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -243,7 +255,7 @@ const ProductsAndInventory = () => {
       </Card>
 
       {/* Tabla de productos con inventario expandible */}
-      <Card>
+      <Card className='overflow-x-auto'>
         <Table>
           <TableHeader>
             <TableRow>
@@ -279,7 +291,7 @@ const ProductsAndInventory = () => {
                 const isExpanded = expandedRows.has(product.id);
                 const inventory = inventoryData[product.id] || [];
                 const totalStock = inventory.reduce(
-                  (sum, inv) => sum + inv.current_stock,
+                  (sum, inv) => sum + (inv.current_stock || 0),
                   0
                 );
 
@@ -306,16 +318,18 @@ const ProductsAndInventory = () => {
                       </TableCell>
                       <TableCell>
                         <Badge className={getCategoryBadge(product.category)}>
-                          {product.category}
+                          {CATEGORY_LABELS[product.category] || product.category}
                         </Badge>
                       </TableCell>
                       <TableCell>{product.supplier_name || 'N/A'}</TableCell>
                       <TableCell className='text-right'>
-                        ${product.price.toFixed(2)}
+                        {formatPrice(product.price)}
                       </TableCell>
                       <TableCell className='text-right'>
                         {inventory.length > 0 ? (
                           <span className='font-medium'>{totalStock}</span>
+                        ) : product.total_stock !== undefined ? (
+                          <span className='font-medium'>{product.total_stock}</span>
                         ) : (
                           <span className='text-gray-400'>-</span>
                         )}
@@ -343,7 +357,7 @@ const ProductsAndInventory = () => {
 
                     {/* Fila expandida con inventario por sucursal */}
                     {isExpanded && (
-                      <TableRow>
+                      <TableRow key={`${product.id}-expanded`}>
                         <TableCell colSpan={8} className='bg-gray-50 p-0'>
                           <div className='p-6'>
                             {loadingInventory[product.id] ? (

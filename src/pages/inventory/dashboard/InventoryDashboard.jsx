@@ -1,15 +1,23 @@
+// src/pages/inventory/dashboard/InventoryDashboard.jsx
+/**
+ * Dashboard principal del módulo de Inventario.
+ *
+ * Muestra métricas generales, alertas de stock y accesos rápidos
+ * a los submódulos de inventario (proveedores, marcas, productos).
+ */
+
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Building2,
   Tag,
   Package,
-  BarChart3,
   AlertTriangle,
   TrendingUp,
   ArrowRight,
   CheckCircle2,
   Circle,
+  RefreshCw,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,11 +27,13 @@ import {
   getInventoryDashboard,
   getSetupProgress,
 } from '@/api/inventory';
+import { formatPrice } from '@/api/products';
 
 const InventoryDashboard = () => {
   const [dashboard, setDashboard] = useState(null);
   const [setupProgress, setSetupProgress] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -32,14 +42,16 @@ const InventoryDashboard = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const [dashboardData, progressData] = await Promise.all([
         getInventoryDashboard(),
         getSetupProgress(),
       ]);
       setDashboard(dashboardData);
       setSetupProgress(progressData);
-    } catch (error) {
-      console.error('Error al cargar dashboard:', error);
+    } catch (err) {
+      console.error('Error al cargar dashboard:', err);
+      setError('No se pudo cargar la información del dashboard. Por favor, intenta de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -56,30 +68,51 @@ const InventoryDashboard = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className='flex items-center justify-center h-96'>
+        <div className='text-center'>
+          <AlertTriangle className='h-12 w-12 text-red-500 mx-auto mb-4' />
+          <p className='text-gray-600 mb-4'>{error}</p>
+          <Button onClick={fetchData} variant='outline'>
+            <RefreshCw className='h-4 w-4 mr-2' />
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const modules = [
     {
       icon: Building2,
       title: 'Proveedores',
       description: 'Gestiona tus proveedores de productos',
       path: '/inventory/suppliers',
-      count: dashboard?.suppliers_count || 0,
+      count: dashboard?.suppliers_count ?? 0,
       color: 'blue',
+      bgColor: 'bg-blue-50',
+      iconColor: 'text-blue-600',
     },
     {
       icon: Tag,
       title: 'Marcas',
       description: 'Administra las marcas de tus productos',
       path: '/inventory/brands',
-      count: dashboard?.brands_count || 0,
+      count: dashboard?.brands_count ?? 0,
       color: 'purple',
+      bgColor: 'bg-purple-50',
+      iconColor: 'text-purple-600',
     },
     {
       icon: Package,
       title: 'Productos y Stock',
       description: 'Catálogo de productos e inventario por sucursal',
       path: '/inventory/products',
-      count: dashboard?.products_count || 0,
+      count: dashboard?.products_count ?? 0,
       color: 'green',
+      bgColor: 'bg-green-50',
+      iconColor: 'text-green-600',
     },
   ];
 
@@ -109,11 +142,17 @@ const InventoryDashboard = () => {
   return (
     <div className='space-y-6'>
       {/* Header */}
-      <div>
-        <h1 className='text-3xl font-bold text-gray-900'>Inventario</h1>
-        <p className='mt-2 text-gray-600'>
-          Gestiona proveedores, marcas, productos y stock de tu negocio
-        </p>
+      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
+        <div>
+          <h1 className='text-3xl font-bold text-gray-900'>Inventario</h1>
+          <p className='mt-2 text-gray-600'>
+            Gestiona proveedores, marcas, productos y stock de tu negocio
+          </p>
+        </div>
+        <Button onClick={fetchData} variant='outline' size='sm'>
+          <RefreshCw className='h-4 w-4 mr-2' />
+          Actualizar
+        </Button>
       </div>
 
       {/* Banner de configuración inicial */}
@@ -151,7 +190,7 @@ const InventoryDashboard = () => {
 
               {/* Checklist */}
               <div className='grid grid-cols-1 md:grid-cols-2 gap-3 mt-4'>
-                {setupProgress.steps.map((step) => (
+                {setupProgress.steps?.map((step) => (
                   <div
                     key={step.id}
                     className='flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-100'
@@ -193,7 +232,7 @@ const InventoryDashboard = () => {
       )}
 
       {/* Métricas principales */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6'>
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>
@@ -203,7 +242,7 @@ const InventoryDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold'>
-              ${dashboard?.inventory_value?.toLocaleString('es-MX') || '0'}
+              {formatPrice(dashboard?.inventory_value ?? 0)}
             </div>
             <p className='text-xs text-gray-600 mt-1'>
               Valor total del stock
@@ -218,7 +257,7 @@ const InventoryDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold'>
-              {dashboard?.products_count || 0}
+              {dashboard?.products_count ?? 0}
             </div>
             <p className='text-xs text-gray-600 mt-1'>
               Productos activos
@@ -233,7 +272,7 @@ const InventoryDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold'>
-              {dashboard?.low_stock_count || 0}
+              {dashboard?.low_stock_count ?? 0}
             </div>
             <p className='text-xs text-gray-600 mt-1'>
               Requieren reorden
@@ -248,7 +287,7 @@ const InventoryDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold'>
-              {dashboard?.out_of_stock_count || 0}
+              {dashboard?.out_of_stock_count ?? 0}
             </div>
             <p className='text-xs text-gray-600 mt-1'>
               Sin stock disponible
@@ -283,7 +322,7 @@ const InventoryDashboard = () => {
                     : 'text-blue-600'
                 }`}
               />
-              <AlertDescription className='flex items-center justify-between'>
+              <AlertDescription className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2'>
                 <span
                   className={
                     alert.type === 'error'
@@ -312,7 +351,7 @@ const InventoryDashboard = () => {
         <h2 className='text-lg font-semibold text-gray-900 mb-4'>
           Módulos de Inventario
         </h2>
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+        <div className='grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6'>
           {modules.map((module) => {
             const Icon = module.icon;
             return (
@@ -321,10 +360,10 @@ const InventoryDashboard = () => {
                   <CardHeader>
                     <div className='flex items-center justify-between'>
                       <div
-                        className={`p-3 rounded-lg bg-${module.color}-50`}
+                        className={`p-3 rounded-lg ${module.bgColor}`}
                       >
                         <Icon
-                          className={`h-6 w-6 text-${module.color}-600`}
+                          className={`h-6 w-6 ${module.iconColor}`}
                         />
                       </div>
                       <span className='text-2xl font-bold text-gray-900'>

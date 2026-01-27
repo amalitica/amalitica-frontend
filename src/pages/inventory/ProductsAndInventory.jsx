@@ -33,8 +33,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { getProducts, deleteProduct } from '@/api/products';
 import { getProductInventoryAllBranches } from '@/api/inventory';
-import { AdjustInventoryModal } from './AdjustInventoryModal';
-import { TransferInventoryModal } from './TransferInventoryModal';
+import AdjustInventoryModal from './AdjustInventoryModal';
+import TransferInventoryModal from './TransferInventoryModal';
 
 const ProductsAndInventory = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -68,7 +68,7 @@ const ProductsAndInventory = () => {
         search: searchTerm,
         category: categoryFilter || undefined,
       });
-      setProducts(data);
+      setProducts(data.items || []);
     } catch (error) {
       console.error('Error al cargar productos:', error);
     } finally {
@@ -160,7 +160,11 @@ const ProductsAndInventory = () => {
       return { label: 'Agotado', color: 'text-red-600', icon: AlertTriangle };
     }
     if (inventory.current_stock <= inventory.reorder_level) {
-      return { label: 'Stock bajo', color: 'text-yellow-600', icon: AlertTriangle };
+      return {
+        label: 'Stock bajo',
+        color: 'text-yellow-600',
+        icon: AlertTriangle,
+      };
     }
     return { label: 'Disponible', color: 'text-green-600', icon: Package };
   };
@@ -181,7 +185,9 @@ const ProductsAndInventory = () => {
       {/* Header */}
       <div className='flex justify-between items-center'>
         <div>
-          <h1 className='text-3xl font-bold text-gray-900'>Productos y Stock</h1>
+          <h1 className='text-3xl font-bold text-gray-900'>
+            Productos y Stock
+          </h1>
           <p className='mt-2 text-gray-600'>
             Gestiona tu catálogo de productos e inventario por sucursal
           </p>
@@ -295,7 +301,9 @@ const ProductsAndInventory = () => {
                       <TableCell className='font-mono text-sm'>
                         {product.sku}
                       </TableCell>
-                      <TableCell className='font-medium'>{product.name}</TableCell>
+                      <TableCell className='font-medium'>
+                        {product.name}
+                      </TableCell>
                       <TableCell>
                         <Badge className={getCategoryBadge(product.category)}>
                           {product.category}
@@ -352,7 +360,8 @@ const ProductsAndInventory = () => {
                                   Sin inventario configurado
                                 </p>
                                 <p className='text-sm text-gray-500 mt-1'>
-                                  Este producto no tiene stock en ninguna sucursal
+                                  Este producto no tiene stock en ninguna
+                                  sucursal
                                 </p>
                               </div>
                             ) : (
@@ -409,7 +418,9 @@ const ProductsAndInventory = () => {
                                             size='sm'
                                             variant='outline'
                                             className='flex-1'
-                                            onClick={() => handleAdjustInventory(inv)}
+                                            onClick={() =>
+                                              handleAdjustInventory(inv)
+                                            }
                                           >
                                             <Settings className='h-3 w-3 mr-1' />
                                             Ajustar
@@ -418,7 +429,9 @@ const ProductsAndInventory = () => {
                                             size='sm'
                                             variant='outline'
                                             className='flex-1'
-                                            onClick={() => handleTransferInventory(inv)}
+                                            onClick={() =>
+                                              handleTransferInventory(inv)
+                                            }
                                           >
                                             <ArrowLeftRight className='h-3 w-3 mr-1' />
                                             Transferir

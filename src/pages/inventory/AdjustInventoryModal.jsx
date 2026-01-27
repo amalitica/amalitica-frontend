@@ -1,7 +1,7 @@
 // src/pages/inventory/AdjustInventoryModal.jsx
 /**
  * Modal para ajustar el inventario de un producto.
- * 
+ *
  * Permite realizar ajustes manuales de entrada o salida de stock
  * con diferentes razones y notas explicativas.
  */
@@ -50,12 +50,7 @@ const ADJUSTMENT_REASONS = [
 // COMPONENTE
 // =============================================================================
 
-export default function AdjustInventoryModal({
-  open,
-  onClose,
-  inventory,
-  onSuccess,
-}) {
+export function AdjustInventoryModal({ open, onClose, inventory, onSuccess }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [adjustmentType, setAdjustmentType] = useState('in'); // 'in' o 'out'
@@ -69,7 +64,7 @@ export default function AdjustInventoryModal({
    * Maneja el cambio de campos del formulario.
    */
   const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   /**
@@ -151,7 +146,8 @@ export default function AdjustInventoryModal({
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.detail || 'No se pudo ajustar el inventario',
+        description:
+          error.response?.data?.detail || 'No se pudo ajustar el inventario',
       });
     } finally {
       setLoading(false);
@@ -172,7 +168,7 @@ export default function AdjustInventoryModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className='sm:max-w-[500px]'>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Ajustar Inventario</DialogTitle>
@@ -181,60 +177,68 @@ export default function AdjustInventoryModal({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className='space-y-4 py-4'>
             {/* Información del producto */}
-            <div className="rounded-lg bg-muted p-4 space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Producto:</span>
-                <span className="text-sm font-medium">{inventory.product_name}</span>
+            <div className='rounded-lg bg-muted p-4 space-y-2'>
+              <div className='flex justify-between'>
+                <span className='text-sm text-muted-foreground'>Producto:</span>
+                <span className='text-sm font-medium'>
+                  {inventory.product_name}
+                </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">SKU:</span>
-                <span className="text-sm font-mono">{inventory.product_sku}</span>
+              <div className='flex justify-between'>
+                <span className='text-sm text-muted-foreground'>SKU:</span>
+                <span className='text-sm font-mono'>
+                  {inventory.product_sku}
+                </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Stock actual:</span>
-                <span className="text-sm font-semibold">{inventory.stock}</span>
+              <div className='flex justify-between'>
+                <span className='text-sm text-muted-foreground'>
+                  Stock actual:
+                </span>
+                <span className='text-sm font-semibold'>{inventory.stock}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Sucursal:</span>
-                <span className="text-sm font-medium">{inventory.branch_name}</span>
+              <div className='flex justify-between'>
+                <span className='text-sm text-muted-foreground'>Sucursal:</span>
+                <span className='text-sm font-medium'>
+                  {inventory.branch_name}
+                </span>
               </div>
             </div>
 
             {/* Tipo de ajuste */}
-            <div className="space-y-2">
+            <div className='space-y-2'>
               <Label>Tipo de Ajuste</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className='grid grid-cols-2 gap-2'>
                 <Button
-                  type="button"
+                  type='button'
                   variant={adjustmentType === 'in' ? 'default' : 'outline'}
-                  className="w-full"
+                  className='w-full'
                   onClick={() => setAdjustmentType('in')}
                 >
-                  <Plus className="mr-2 h-4 w-4" />
+                  <Plus className='mr-2 h-4 w-4' />
                   Entrada
                 </Button>
                 <Button
-                  type="button"
+                  type='button'
                   variant={adjustmentType === 'out' ? 'default' : 'outline'}
-                  className="w-full"
+                  className='w-full'
                   onClick={() => setAdjustmentType('out')}
                 >
-                  <Minus className="mr-2 h-4 w-4" />
+                  <Minus className='mr-2 h-4 w-4' />
                   Salida
                 </Button>
               </div>
             </div>
 
             {/* Cantidad */}
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Cantidad *</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='quantity'>Cantidad *</Label>
               <Input
-                id="quantity"
-                type="number"
-                min="1"
-                placeholder="Ingresa la cantidad"
+                id='quantity'
+                type='number'
+                min='1'
+                placeholder='Ingresa la cantidad'
                 value={formData.quantity}
                 onChange={(e) => handleChange('quantity', e.target.value)}
                 required
@@ -242,15 +246,15 @@ export default function AdjustInventoryModal({
             </div>
 
             {/* Razón */}
-            <div className="space-y-2">
-              <Label htmlFor="reason">Razón *</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='reason'>Razón *</Label>
               <Select
                 value={formData.reason}
                 onValueChange={(value) => handleChange('reason', value)}
                 required
               >
-                <SelectTrigger id="reason">
-                  <SelectValue placeholder="Selecciona una razón" />
+                <SelectTrigger id='reason'>
+                  <SelectValue placeholder='Selecciona una razón' />
                 </SelectTrigger>
                 <SelectContent>
                   {ADJUSTMENT_REASONS.map((reason) => (
@@ -263,11 +267,11 @@ export default function AdjustInventoryModal({
             </div>
 
             {/* Notas */}
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notas (opcional)</Label>
+            <div className='space-y-2'>
+              <Label htmlFor='notes'>Notas (opcional)</Label>
               <Textarea
-                id="notes"
-                placeholder="Agrega notas adicionales..."
+                id='notes'
+                placeholder='Agrega notas adicionales...'
                 value={formData.notes}
                 onChange={(e) => handleChange('notes', e.target.value)}
                 rows={3}
@@ -276,12 +280,12 @@ export default function AdjustInventoryModal({
 
             {/* Previsualización del nuevo stock */}
             {formData.quantity && (
-              <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-blue-900">
+              <div className='rounded-lg bg-blue-50 border border-blue-200 p-4'>
+                <div className='flex justify-between items-center'>
+                  <span className='text-sm font-medium text-blue-900'>
                     Nuevo stock:
                   </span>
-                  <span className="text-lg font-bold text-blue-900">
+                  <span className='text-lg font-bold text-blue-900'>
                     {inventory.stock} → {getNewStock()}
                   </span>
                 </div>
@@ -291,15 +295,15 @@ export default function AdjustInventoryModal({
 
           <DialogFooter>
             <Button
-              type="button"
-              variant="outline"
+              type='button'
+              variant='outline'
               onClick={onClose}
               disabled={loading}
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type='submit' disabled={loading}>
+              {loading && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}
               Ajustar Inventario
             </Button>
           </DialogFooter>
@@ -308,3 +312,5 @@ export default function AdjustInventoryModal({
     </Dialog>
   );
 }
+
+export default AdjustInventoryModal;

@@ -8,6 +8,47 @@
 
 import api from './axios';
 
+// ============================================================================
+// DASHBOARD DE INVENTARIO
+// ============================================================================
+
+/**
+ * Obtiene datos para el Dashboard de Inventario.
+ *
+ * @returns {Promise<Object>} Métricas del inventario
+ */
+export const getInventoryDashboard = async () => {
+  const response = await api.get('/inventory/dashboard');
+  return response.data;
+};
+
+/**
+ * Obtiene el progreso de configuración inicial del inventario.
+ *
+ * @returns {Promise<Object>} Progreso de configuración con checklist
+ */
+export const getSetupProgress = async () => {
+  const response = await api.get('/inventory/dashboard/setup-progress');
+  return response.data;
+};
+
+/**
+ * Obtiene la actividad reciente del inventario.
+ *
+ * @param {number} [limit=10] - Número máximo de actividades
+ * @returns {Promise<Array>} Lista de actividades recientes
+ */
+export const getRecentActivity = async (limit = 10) => {
+  const response = await api.get('/inventory/dashboard/recent-activity', {
+    params: { limit },
+  });
+  return response.data;
+};
+
+// ============================================================================
+// INVENTARIO POR SUCURSAL
+// ============================================================================
+
 /**
  * Lista el inventario de una sucursal específica con filtros y paginación.
  *

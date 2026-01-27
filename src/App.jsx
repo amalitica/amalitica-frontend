@@ -23,6 +23,8 @@ import { ProductsList, ProductForm, ProductDetail } from './pages/products';
 import { SuppliersList, SupplierForm } from './pages/suppliers';
 import { BrandsList, BrandForm } from './pages/brands';
 import { BranchInventoryList } from './pages/inventory';
+import { InventoryDashboard } from './pages/inventory/dashboard';
+import ProductsAndInventory from './pages/inventory/ProductsAndInventory';
 
 // Compliance (LFPDPPP)
 import { PrivacyNotice } from './pages/compliance';
@@ -91,24 +93,36 @@ function App() {
             <Route path='/users/new' element={<CreateUser />} />
             <Route path='/users/:id/edit' element={<EditUser />} />
 
-            {/* Productos */}
+            {/* Inventario (módulo completo) */}
+            <Route path='/inventory' element={<InventoryDashboard />} />
+            
+            {/* Proveedores (submódulo de inventario) */}
+            <Route path='/inventory/suppliers' element={<SuppliersList />} />
+            <Route path='/inventory/suppliers/new' element={<SupplierForm />} />
+            <Route path='/inventory/suppliers/:id/edit' element={<SupplierForm />} />
+
+            {/* Marcas (submódulo de inventario) */}
+            <Route path='/inventory/brands' element={<BrandsList />} />
+            <Route path='/inventory/brands/new' element={<BrandForm />} />
+            <Route path='/inventory/brands/:id/edit' element={<BrandForm />} />
+
+            {/* Productos y Stock (submódulo de inventario - vista unificada) */}
+            <Route path='/inventory/products' element={<ProductsAndInventory />} />
+            <Route path='/inventory/products/new' element={<ProductForm />} />
+            <Route path='/inventory/products/:id/edit' element={<ProductForm />} />
+            <Route path='/inventory/products/:id' element={<ProductDetail />} />
+            
+            {/* Rutas legacy (redirigir a /inventory/*) - mantener por compatibilidad */}
             <Route path='/products' element={<ProductsList />} />
             <Route path='/products/new' element={<ProductForm />} />
             <Route path='/products/:id/edit' element={<ProductForm />} />
             <Route path='/products/:id' element={<ProductDetail />} />
-
-            {/* Proveedores */}
             <Route path='/suppliers' element={<SuppliersList />} />
             <Route path='/suppliers/new' element={<SupplierForm />} />
             <Route path='/suppliers/:id/edit' element={<SupplierForm />} />
-
-            {/* Marcas */}
             <Route path='/brands' element={<BrandsList />} />
             <Route path='/brands/new' element={<BrandForm />} />
             <Route path='/brands/:id/edit' element={<BrandForm />} />
-
-            {/* Inventario */}
-            <Route path='/inventory' element={<BranchInventoryList />} />
 
             {/* Aquí irán las demás rutas protegidas */}
           </Route>

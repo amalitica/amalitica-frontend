@@ -40,7 +40,6 @@ import {
   SupplierForm,
   BrandsList,
   BrandForm,
-  ProductsList,
   ProductDetail,
   ProductForm,
   ProductsAndInventory,
@@ -127,8 +126,8 @@ function App() {
               <Route path='/inventory/products/:id/edit' element={<ProductForm />} />
               <Route path='/inventory/products/:id' element={<ProductDetail />} />
 
-              {/* Rutas legacy (mantener por compatibilidad) */}
-              <Route path='/products' element={<ProductsList />} />
+              {/* Rutas legacy (redirigir a nuevas rutas) */}
+              <Route path='/products' element={<ProductsAndInventory />} />
               <Route path='/products/new' element={<ProductForm />} />
               <Route path='/products/:id/edit' element={<ProductForm />} />
               <Route path='/products/:id' element={<ProductDetail />} />

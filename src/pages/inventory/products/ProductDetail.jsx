@@ -282,7 +282,7 @@ const ProductDetail = () => {
           description: 'No se pudo cargar el producto',
           variant: 'destructive',
         });
-        navigate('/products');
+        navigate('/inventory/products');
       } finally {
         setLoading(false);
       }
@@ -298,7 +298,7 @@ const ProductDetail = () => {
         title: 'Producto eliminado',
         description: `El producto "${product.name}" ha sido eliminado`,
       });
-      navigate('/products');
+      navigate('/inventory/products');
     } catch (error) {
       console.error('Error al eliminar producto:', error);
       toast({
@@ -339,7 +339,7 @@ const ProductDetail = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/products')}
+            onClick={() => navigate('/inventory/products')}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>

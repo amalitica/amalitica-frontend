@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Plus,
   Search,
@@ -19,6 +19,7 @@ import {
   AlertTriangle,
   ArrowLeftRight,
   Settings,
+  ArrowLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,12 +40,18 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { getProducts, deleteProduct, formatPrice, CATEGORY_LABELS } from '@/api/products';
+import {
+  getProducts,
+  deleteProduct,
+  formatPrice,
+  CATEGORY_LABELS,
+} from '@/api/products';
 import { getProductInventoryAllBranches } from '@/api/inventory';
 import AdjustInventoryModal from './AdjustInventoryModal';
 import TransferInventoryModal from './TransferInventoryModal';
 
 const ProductsAndInventory = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -166,10 +173,10 @@ const ProductsAndInventory = () => {
   };
 
   const getStockStatus = (inventory) => {
-    if (inventory.current_stock === 0) {
+    if (inventory.stock === 0) {
       return { label: 'Agotado', color: 'text-red-600', icon: AlertTriangle };
     }
-    if (inventory.current_stock <= inventory.reorder_level) {
+    if (inventory.stock <= inventory.reorder_level) {
       return {
         label: 'Stock bajo',
         color: 'text-yellow-600',
@@ -194,13 +201,23 @@ const ProductsAndInventory = () => {
     <div className='space-y-6'>
       {/* Header */}
       <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4'>
-        <div>
-          <h1 className='text-3xl font-bold text-gray-900'>
-            Productos y Stock
-          </h1>
-          <p className='mt-2 text-gray-600'>
-            Gestiona tu catálogo de productos e inventario por sucursal
-          </p>
+        <div className='flex items-center gap-4'>
+          <Button
+            variant='ghost'
+            size='icon'
+            onClick={() => navigate('/inventory')}
+            className='h-10 w-10'
+          >
+            <ArrowLeft className='h-5 w-5' />
+          </Button>
+          <div>
+            <h1 className='text-3xl font-bold text-gray-900'>
+              Productos y Stock
+            </h1>
+            <p className='mt-2 text-gray-600'>
+              Gestiona tu catálogo de productos e inventario por sucursal
+            </p>
+          </div>
         </div>
         <Link to='/inventory/products/new'>
           <Button>
@@ -291,7 +308,7 @@ const ProductsAndInventory = () => {
                 const isExpanded = expandedRows.has(product.id);
                 const inventory = inventoryData[product.id] || [];
                 const totalStock = inventory.reduce(
-                  (sum, inv) => sum + (inv.current_stock || 0),
+                  (sum, inv) => sum + (inv.stock || 0),
                   0
                 );
 
@@ -318,7 +335,8 @@ const ProductsAndInventory = () => {
                       </TableCell>
                       <TableCell>
                         <Badge className={getCategoryBadge(product.category)}>
-                          {CATEGORY_LABELS[product.category] || product.category}
+                          {CATEGORY_LABELS[product.category] ||
+                            product.category}
                         </Badge>
                       </TableCell>
                       <TableCell>{product.supplier_name || 'N/A'}</TableCell>
@@ -329,7 +347,9 @@ const ProductsAndInventory = () => {
                         {inventory.length > 0 ? (
                           <span className='font-medium'>{totalStock}</span>
                         ) : product.total_stock !== undefined ? (
-                          <span className='font-medium'>{product.total_stock}</span>
+                          <span className='font-medium'>
+                            {product.total_stock}
+                          </span>
                         ) : (
                           <span className='text-gray-400'>-</span>
                         )}
@@ -339,15 +359,23 @@ const ProductsAndInventory = () => {
                           className='flex justify-end gap-2'
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <Link to={`/inventory/products/${product.id}/edit`}>
-                            <Button variant='ghost' size='sm'>
-                              <Edit className='h-4 w-4' />
-                            </Button>
-                          </Link>
+                          <Button 
+                            variant='ghost' 
+                            size='sm'
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/inventory/products/${product.id}/edit`);
+                            }}
+                          >
+                            <Edit className='h-4 w-4' />
+                          </Button>
                           <Button
                             variant='ghost'
                             size='sm'
-                            onClick={() => handleDelete(product.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(product.id);
+                            }}
                           >
                             <Trash2 className='h-4 w-4 text-red-600' />
                           </Button>
@@ -355,105 +383,110 @@ const ProductsAndInventory = () => {
                       </TableCell>
                     </TableRow>
 
-                    {/* Fila expandida con inventario por sucursal */}
+                    {/* Fila expandida con inventario por sucursal - Tabla compacta */}
                     {isExpanded && (
                       <TableRow key={`${product.id}-expanded`}>
                         <TableCell colSpan={8} className='bg-gray-50 p-0'>
-                          <div className='p-6'>
+                          <div className='p-4'>
                             {loadingInventory[product.id] ? (
-                              <div className='text-center py-8'>
-                                <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
+                              <div className='text-center py-6'>
+                                <div className='animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto'></div>
                                 <p className='mt-2 text-sm text-gray-600'>
                                   Cargando inventario...
                                 </p>
                               </div>
                             ) : inventory.length === 0 ? (
-                              <div className='text-center py-8'>
-                                <Package className='h-10 w-10 text-gray-400 mx-auto mb-3' />
-                                <p className='text-gray-600 font-medium'>
+                              <div className='text-center py-6'>
+                                <Package className='h-8 w-8 text-gray-400 mx-auto mb-2' />
+                                <p className='text-gray-600 font-medium text-sm'>
                                   Sin inventario configurado
                                 </p>
-                                <p className='text-sm text-gray-500 mt-1'>
-                                  Este producto no tiene stock en ninguna
-                                  sucursal
+                                <p className='text-xs text-gray-500 mt-1'>
+                                  Este producto no tiene stock en ninguna sucursal
                                 </p>
                               </div>
                             ) : (
                               <div>
-                                <h4 className='text-sm font-semibold text-gray-900 mb-4'>
-                                  Inventario por Sucursal
-                                </h4>
-                                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-                                  {inventory.map((inv) => {
-                                    const status = getStockStatus(inv);
-                                    const StatusIcon = status.icon;
+                                <div className='flex justify-between items-center mb-3'>
+                                  <h4 className='text-sm font-semibold text-gray-900'>
+                                    Inventario por Sucursal
+                                  </h4>
+                                  <span className='text-xs text-gray-500'>
+                                    {inventory.length} sucursal{inventory.length !== 1 ? 'es' : ''}
+                                  </span>
+                                </div>
+                                <div className='border rounded-md overflow-hidden'>
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow className='bg-gray-100 hover:bg-gray-100'>
+                                        <TableHead className='text-xs py-2'>Sucursal</TableHead>
+                                        <TableHead className='text-xs py-2'>Ubicación</TableHead>
+                                        <TableHead className='text-xs py-2 text-right'>Stock</TableHead>
+                                        <TableHead className='text-xs py-2 text-right'>Mínimo</TableHead>
+                                        <TableHead className='text-xs py-2 text-right'>Seguridad</TableHead>
+                                        <TableHead className='text-xs py-2 text-center'>Estado</TableHead>
+                                        <TableHead className='text-xs py-2 text-right'>Acciones</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      {inventory.map((inv) => {
+                                        const status = getStockStatus(inv);
+                                        const StatusIcon = status.icon;
 
-                                    return (
-                                      <Card key={inv.id} className='p-4'>
-                                        <div className='flex justify-between items-start mb-3'>
-                                          <div>
-                                            <h5 className='font-semibold text-gray-900'>
-                                              {inv.branch_name}
-                                            </h5>
-                                            <p className='text-xs text-gray-500 mt-0.5'>
-                                              {inv.location || 'Sin ubicación'}
-                                            </p>
-                                          </div>
-                                          <StatusIcon
-                                            className={`h-5 w-5 ${status.color}`}
-                                          />
-                                        </div>
-
-                                        <div className='space-y-2 mb-4'>
-                                          <div className='flex justify-between text-sm'>
-                                            <span className='text-gray-600'>
-                                              Stock actual:
-                                            </span>
-                                            <span className='font-semibold'>
-                                              {inv.current_stock}
-                                            </span>
-                                          </div>
-                                          <div className='flex justify-between text-sm'>
-                                            <span className='text-gray-600'>
-                                              Nivel de reorden:
-                                            </span>
-                                            <span>{inv.reorder_level}</span>
-                                          </div>
-                                          <div className='flex justify-between text-sm'>
-                                            <span className='text-gray-600'>
-                                              Stock de seguridad:
-                                            </span>
-                                            <span>{inv.safety_stock}</span>
-                                          </div>
-                                        </div>
-
-                                        <div className='flex gap-2'>
-                                          <Button
-                                            size='sm'
-                                            variant='outline'
-                                            className='flex-1'
-                                            onClick={() =>
-                                              handleAdjustInventory(inv)
-                                            }
-                                          >
-                                            <Settings className='h-3 w-3 mr-1' />
-                                            Ajustar
-                                          </Button>
-                                          <Button
-                                            size='sm'
-                                            variant='outline'
-                                            className='flex-1'
-                                            onClick={() =>
-                                              handleTransferInventory(inv)
-                                            }
-                                          >
-                                            <ArrowLeftRight className='h-3 w-3 mr-1' />
-                                            Transferir
-                                          </Button>
-                                        </div>
-                                      </Card>
-                                    );
-                                  })}
+                                        return (
+                                          <TableRow key={inv.id} className='hover:bg-white'>
+                                            <TableCell className='py-2'>
+                                              <span className='font-medium text-sm'>{inv.branch_name}</span>
+                                            </TableCell>
+                                            <TableCell className='py-2'>
+                                              <span className='text-xs text-gray-500'>
+                                                {inv.location || '-'}
+                                              </span>
+                                            </TableCell>
+                                            <TableCell className='py-2 text-right'>
+                                              <span className='font-semibold text-sm'>{inv.stock}</span>
+                                            </TableCell>
+                                            <TableCell className='py-2 text-right text-xs text-gray-500'>
+                                              {inv.reorder_level}
+                                            </TableCell>
+                                            <TableCell className='py-2 text-right text-xs text-gray-500'>
+                                              {inv.safety_stock}
+                                            </TableCell>
+                                            <TableCell className='py-2 text-center'>
+                                              <div className='flex items-center justify-center gap-1'>
+                                                <StatusIcon className={`h-4 w-4 ${status.color}`} />
+                                                <span className={`text-xs ${status.color}`}>
+                                                  {status.label}
+                                                </span>
+                                              </div>
+                                            </TableCell>
+                                            <TableCell className='py-2 text-right'>
+                                              <div className='flex justify-end gap-1'>
+                                                <Button
+                                                  size='sm'
+                                                  variant='ghost'
+                                                  className='h-7 px-2 text-xs'
+                                                  onClick={() => handleAdjustInventory(inv)}
+                                                >
+                                                  <Settings className='h-3 w-3 mr-1' />
+                                                  Ajustar
+                                                </Button>
+                                                <Button
+                                                  size='sm'
+                                                  variant='ghost'
+                                                  className='h-7 px-2 text-xs'
+                                                  onClick={() => handleTransferInventory(inv)}
+                                                >
+                                                  <ArrowLeftRight className='h-3 w-3 mr-1' />
+                                                  Transferir
+                                                </Button>
+                                              </div>
+                                            </TableCell>
+                                          </TableRow>
+                                        );
+                                      })}
+                                    </TableBody>
+                                  </Table>
                                 </div>
                               </div>
                             )}

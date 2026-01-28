@@ -19,11 +19,10 @@ export { SuppliersList, SupplierForm } from './suppliers';
 // Marcas
 export { BrandsList, BrandForm } from './brands';
 
-// Productos
-export { ProductsList, ProductDetail, ProductForm } from './products';
-
-// Inventario por sucursal
-export { default as ProductsAndInventory } from './ProductsAndInventory';
-export { default as BranchInventoryList } from './BranchInventoryList';
-export { default as AdjustInventoryModal } from './AdjustInventoryModal';
-export { default as TransferInventoryModal } from './TransferInventoryModal';
+// Productos e Inventario
+export { default as AdjustInventoryModal } from './products/AdjustInventoryModal';
+export { default as BranchInventoryList } from './products/BranchInventoryList';
+export { default as ProductDetail } from './products/ProductDetail';
+export { default as ProductForm } from './products/ProductForm';
+export { default as ProductsAndInventory } from './products/ProductsAndInventory';
+export { default as TransferInventoryModal } from './products/TransferInventoryModal';

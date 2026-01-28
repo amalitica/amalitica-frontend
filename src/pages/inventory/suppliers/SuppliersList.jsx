@@ -16,6 +16,7 @@ import {
   Tag,
   Phone,
   Mail,
+  ArrowLeft,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -145,11 +146,21 @@ const SuppliersList = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Proveedores</h1>
-          <p className="text-muted-foreground">
-            Gestiona los proveedores de tu óptica
-          </p>
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/inventory')}
+            className="h-10 w-10"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Proveedores</h1>
+            <p className="text-muted-foreground">
+              Gestiona los proveedores de tu óptica
+            </p>
+          </div>
         </div>
         <Button onClick={() => navigate('/suppliers/new')}>
           <Plus className="mr-2 h-4 w-4" />

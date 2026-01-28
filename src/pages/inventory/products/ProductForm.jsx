@@ -1086,10 +1086,10 @@ const ProductForm = () => {
           console.error('Error al cargar producto:', error);
           toast({
             title: 'Error',
-            description: 'No se pudo cargar el producto',
+            description: error.response?.data?.detail || 'No se pudo cargar el producto',
             variant: 'destructive',
           });
-          navigate('/products');
+          navigate('/inventory/products');
         } finally {
           setLoading(false);
         }
@@ -1137,7 +1137,7 @@ const ProductForm = () => {
         });
       }
 
-      navigate('/products');
+      navigate('/inventory/products');
     } catch (error) {
       console.error('Error al guardar producto:', error);
       // Extract error message properly
@@ -1184,7 +1184,7 @@ const ProductForm = () => {
             type="button"
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/products')}
+            onClick={() => navigate('/inventory/products')}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>

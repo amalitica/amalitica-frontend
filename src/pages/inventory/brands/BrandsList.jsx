@@ -15,6 +15,7 @@ import {
   Package,
   Sparkles,
   Building2,
+  ArrowLeft,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -155,11 +156,21 @@ const BrandsList = () => {
     <div className='space-y-6'>
       {/* Header */}
       <div className='flex items-center justify-between'>
-        <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Marcas</h1>
-          <p className='text-muted-foreground'>
-            Gestiona las marcas de productos de tu óptica
-          </p>
+        <div className='flex items-center gap-4'>
+          <Button
+            variant='ghost'
+            size='icon'
+            onClick={() => navigate('/inventory')}
+            className='h-10 w-10'
+          >
+            <ArrowLeft className='h-5 w-5' />
+          </Button>
+          <div>
+            <h1 className='text-3xl font-bold tracking-tight'>Marcas</h1>
+            <p className='text-muted-foreground'>
+              Gestiona las marcas de productos de tu óptica
+            </p>
+          </div>
         </div>
         <Button onClick={() => navigate('/brands/new')}>
           <Plus className='mr-2 h-4 w-4' />

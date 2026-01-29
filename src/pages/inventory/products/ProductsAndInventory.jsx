@@ -49,10 +49,12 @@ import {
 import { getProductInventoryAllBranches } from '@/api/inventory';
 import AdjustInventoryModal from './AdjustInventoryModal';
 import TransferInventoryModal from './TransferInventoryModal';
+import { useAuthRole } from '@/hooks/useAuthRole';
 
 const ProductsAndInventory = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isAdmin } = useAuthRole();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -219,12 +221,14 @@ const ProductsAndInventory = () => {
             </p>
           </div>
         </div>
-        <Link to='/inventory/products/new'>
-          <Button>
-            <Plus className='mr-2 h-4 w-4' />
-            Nuevo Producto
-          </Button>
-        </Link>
+        {isAdmin() && (
+          <Link to='/inventory/products/new'>
+            <Button>
+              <Plus className='mr-2 h-4 w-4' />
+              Nuevo Producto
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Filtros */}
@@ -280,27 +284,30 @@ const ProductsAndInventory = () => {
               <TableHead>SKU</TableHead>
               <TableHead>Nombre</TableHead>
               <TableHead>Categoría</TableHead>
-              <TableHead>Proveedor</TableHead>
+              {isAdmin() && <TableHead>Proveedor</TableHead>}
               <TableHead className='text-right'>Precio</TableHead>
-              <TableHead className='text-right'>Stock Total</TableHead>
-              <TableHead className='text-right'>Acciones</TableHead>
+              {isAdmin() && <TableHead className='text-right'>Stock Total</TableHead>}
+              {!isAdmin() && <TableHead className='text-center'>Disponible</TableHead>}
+              {isAdmin() && <TableHead className='text-right'>Acciones</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className='text-center py-12'>
+                <TableCell colSpan={isAdmin() ? 8 : 6} className='text-center py-12'>
                   <Package className='h-12 w-12 text-gray-400 mx-auto mb-4' />
                   <p className='text-gray-600 font-medium'>No hay productos</p>
                   <p className='text-sm text-gray-500 mt-1'>
-                    Comienza agregando tu primer producto
+                    {isAdmin() ? 'Comienza agregando tu primer producto' : 'No se encontraron productos'}
                   </p>
-                  <Link to='/inventory/products/new'>
-                    <Button className='mt-4'>
-                      <Plus className='mr-2 h-4 w-4' />
-                      Agregar Producto
-                    </Button>
-                  </Link>
+                  {isAdmin() && (
+                    <Link to='/inventory/products/new'>
+                      <Button className='mt-4'>
+                        <Plus className='mr-2 h-4 w-4' />
+                        Agregar Producto
+                      </Button>
+                    </Link>
+                  )}
                 </TableCell>
               </TableRow>
             ) : (
@@ -339,54 +346,70 @@ const ProductsAndInventory = () => {
                             product.category}
                         </Badge>
                       </TableCell>
-                      <TableCell>{product.supplier_name || 'N/A'}</TableCell>
+                      {isAdmin() && (
+                        <TableCell>{product.supplier_name || 'N/A'}</TableCell>
+                      )}
                       <TableCell className='text-right'>
                         {formatPrice(product.price)}
                       </TableCell>
-                      <TableCell className='text-right'>
-                        {inventory.length > 0 ? (
-                          <span className='font-medium'>{totalStock}</span>
-                        ) : product.total_stock !== undefined ? (
-                          <span className='font-medium'>
-                            {product.total_stock}
-                          </span>
-                        ) : (
-                          <span className='text-gray-400'>-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className='text-right'>
-                        <div
-                          className='flex justify-end gap-2'
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Button 
-                            variant='ghost' 
-                            size='sm'
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/inventory/products/${product.id}/edit`);
-                            }}
+                      {isAdmin() ? (
+                        <TableCell className='text-right'>
+                          {inventory.length > 0 ? (
+                            <span className='font-medium'>{totalStock}</span>
+                          ) : product.total_stock !== undefined ? (
+                            <span className='font-medium'>
+                              {product.total_stock}
+                            </span>
+                          ) : (
+                            <span className='text-gray-400'>-</span>
+                          )}
+                        </TableCell>
+                      ) : (
+                        <TableCell className='text-center'>
+                          {product.is_available || (product.total_stock > 0) ? (
+                            <Badge className='bg-green-100 text-green-800'>
+                              Sí
+                            </Badge>
+                          ) : (
+                            <Badge variant='destructive'>No</Badge>
+                          )}
+                        </TableCell>
+                      )}
+                      {isAdmin() && (
+                        <TableCell className='text-right'>
+                          <div
+                            className='flex justify-end gap-2'
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <Edit className='h-4 w-4' />
-                          </Button>
-                          <Button
-                            variant='ghost'
-                            size='sm'
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDelete(product.id);
-                            }}
-                          >
-                            <Trash2 className='h-4 w-4 text-red-600' />
-                          </Button>
-                        </div>
-                      </TableCell>
+                            <Button 
+                              variant='ghost' 
+                              size='sm'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/inventory/products/${product.id}/edit`);
+                              }}
+                            >
+                              <Edit className='h-4 w-4' />
+                            </Button>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDelete(product.id);
+                              }}
+                            >
+                              <Trash2 className='h-4 w-4 text-red-600' />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
 
                     {/* Fila expandida con inventario por sucursal - Tabla compacta */}
                     {isExpanded && (
                       <TableRow key={`${product.id}-expanded`}>
-                        <TableCell colSpan={8} className='bg-gray-50 p-0'>
+                        <TableCell colSpan={isAdmin() ? 8 : 6} className='bg-gray-50 p-0'>
                           <div className='p-4'>
                             {loadingInventory[product.id] ? (
                               <div className='text-center py-6'>
@@ -408,9 +431,14 @@ const ProductsAndInventory = () => {
                             ) : (
                               <div>
                                 <div className='flex justify-between items-center mb-3'>
-                                  <h4 className='text-sm font-semibold text-gray-900'>
-                                    Inventario por Sucursal
-                                  </h4>
+                                  <div className='flex items-center gap-4'>
+                                    <h4 className='text-sm font-semibold text-gray-900'>
+                                      Inventario por Sucursal
+                                    </h4>
+                                    <span className='text-sm text-gray-600'>
+                                      Precio: <span className='font-semibold text-gray-900'>{formatPrice(product.price)}</span>
+                                    </span>
+                                  </div>
                                   <span className='text-xs text-gray-500'>
                                     {inventory.length} sucursal{inventory.length !== 1 ? 'es' : ''}
                                   </span>
@@ -421,11 +449,15 @@ const ProductsAndInventory = () => {
                                       <TableRow className='bg-gray-100 hover:bg-gray-100'>
                                         <TableHead className='text-xs py-2'>Sucursal</TableHead>
                                         <TableHead className='text-xs py-2'>Ubicación</TableHead>
-                                        <TableHead className='text-xs py-2 text-right'>Stock</TableHead>
-                                        <TableHead className='text-xs py-2 text-right'>Mínimo</TableHead>
-                                        <TableHead className='text-xs py-2 text-right'>Seguridad</TableHead>
+                                        {isAdmin() && (
+                                          <>
+                                            <TableHead className='text-xs py-2 text-right'>Stock</TableHead>
+                                            <TableHead className='text-xs py-2 text-right'>Mínimo</TableHead>
+                                            <TableHead className='text-xs py-2 text-right'>Seguridad</TableHead>
+                                          </>
+                                        )}
                                         <TableHead className='text-xs py-2 text-center'>Estado</TableHead>
-                                        <TableHead className='text-xs py-2 text-right'>Acciones</TableHead>
+                                        {isAdmin() && <TableHead className='text-xs py-2 text-right'>Acciones</TableHead>}
                                       </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -443,15 +475,19 @@ const ProductsAndInventory = () => {
                                                 {inv.location || '-'}
                                               </span>
                                             </TableCell>
-                                            <TableCell className='py-2 text-right'>
-                                              <span className='font-semibold text-sm'>{inv.stock}</span>
-                                            </TableCell>
-                                            <TableCell className='py-2 text-right text-xs text-gray-500'>
-                                              {inv.reorder_level}
-                                            </TableCell>
-                                            <TableCell className='py-2 text-right text-xs text-gray-500'>
-                                              {inv.safety_stock}
-                                            </TableCell>
+                                            {isAdmin() && (
+                                              <>
+                                                <TableCell className='py-2 text-right'>
+                                                  <span className='font-semibold text-sm'>{inv.stock}</span>
+                                                </TableCell>
+                                                <TableCell className='py-2 text-right text-xs text-gray-500'>
+                                                  {inv.reorder_level}
+                                                </TableCell>
+                                                <TableCell className='py-2 text-right text-xs text-gray-500'>
+                                                  {inv.safety_stock}
+                                                </TableCell>
+                                              </>
+                                            )}
                                             <TableCell className='py-2 text-center'>
                                               <div className='flex items-center justify-center gap-1'>
                                                 <StatusIcon className={`h-4 w-4 ${status.color}`} />
@@ -460,28 +496,30 @@ const ProductsAndInventory = () => {
                                                 </span>
                                               </div>
                                             </TableCell>
-                                            <TableCell className='py-2 text-right'>
-                                              <div className='flex justify-end gap-1'>
-                                                <Button
-                                                  size='sm'
-                                                  variant='ghost'
-                                                  className='h-7 px-2 text-xs'
-                                                  onClick={() => handleAdjustInventory(inv)}
-                                                >
-                                                  <Settings className='h-3 w-3 mr-1' />
-                                                  Ajustar
-                                                </Button>
-                                                <Button
-                                                  size='sm'
-                                                  variant='ghost'
-                                                  className='h-7 px-2 text-xs'
-                                                  onClick={() => handleTransferInventory(inv)}
-                                                >
-                                                  <ArrowLeftRight className='h-3 w-3 mr-1' />
-                                                  Transferir
-                                                </Button>
-                                              </div>
-                                            </TableCell>
+                                            {isAdmin() && (
+                                              <TableCell className='py-2 text-right'>
+                                                <div className='flex justify-end gap-1'>
+                                                  <Button
+                                                    size='sm'
+                                                    variant='ghost'
+                                                    className='h-7 px-2 text-xs'
+                                                    onClick={() => handleAdjustInventory(inv)}
+                                                  >
+                                                    <Settings className='h-3 w-3 mr-1' />
+                                                    Ajustar
+                                                  </Button>
+                                                  <Button
+                                                    size='sm'
+                                                    variant='ghost'
+                                                    className='h-7 px-2 text-xs'
+                                                    onClick={() => handleTransferInventory(inv)}
+                                                  >
+                                                    <ArrowLeftRight className='h-3 w-3 mr-1' />
+                                                    Transferir
+                                                  </Button>
+                                                </div>
+                                              </TableCell>
+                                            )}
                                           </TableRow>
                                         );
                                       })}

@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import useAuth from '@/hooks/useAuth';
+import { useAuthRole } from '@/hooks/useAuthRole';
 import { useEffect, useRef } from 'react';
 
 import logoAmalitica from '@/assets/images/amalitica_logo.png';
@@ -19,6 +20,7 @@ import logoAmalitica from '@/assets/images/amalitica_logo.png';
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { isAdmin } = useAuthRole();
   const sidebarRef = useRef(null);
 
   // 🔥 CRÍTICO: Prevenir propagación del scroll
@@ -68,7 +70,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Users, label: 'Pacientes', path: '/customers' },
     { icon: FileText, label: 'Consultas', path: '/consultations' },
-    { icon: Package, label: 'Inventario', path: '/inventory' },
+    { icon: Package, label: 'Inventario', path: isAdmin() ? '/inventory' : '/inventory/products' },
   ];
 
   const adminItems = [

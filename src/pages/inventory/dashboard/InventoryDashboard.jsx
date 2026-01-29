@@ -28,12 +28,14 @@ import {
   getSetupProgress,
 } from '@/api/inventory';
 import { formatPrice } from '@/api/products';
+import { useAuthRole } from '@/hooks/useAuthRole';
 
 const InventoryDashboard = () => {
   const [dashboard, setDashboard] = useState(null);
   const [setupProgress, setSetupProgress] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { isAdmin } = useAuthRole();
 
   useEffect(() => {
     fetchData();
@@ -83,7 +85,8 @@ const InventoryDashboard = () => {
     );
   }
 
-  const modules = [
+  // Módulos según el rol del usuario
+  const allModules = [
     {
       icon: Building2,
       title: 'Proveedores',
@@ -93,6 +96,7 @@ const InventoryDashboard = () => {
       color: 'blue',
       bgColor: 'bg-blue-50',
       iconColor: 'text-blue-600',
+      adminOnly: true,
     },
     {
       icon: Tag,
@@ -103,6 +107,7 @@ const InventoryDashboard = () => {
       color: 'purple',
       bgColor: 'bg-purple-50',
       iconColor: 'text-purple-600',
+      adminOnly: true,
     },
     {
       icon: Package,
@@ -113,30 +118,37 @@ const InventoryDashboard = () => {
       color: 'green',
       bgColor: 'bg-green-50',
       iconColor: 'text-green-600',
+      adminOnly: false,
     },
   ];
 
+  // Filtrar módulos según el rol
+  const modules = allModules.filter((module) => isAdmin() || !module.adminOnly);
+
+  // Alertas solo para administradores
   const alerts = [];
-  if (dashboard?.low_stock_count > 0) {
-    alerts.push({
-      type: 'warning',
-      message: `${dashboard.low_stock_count} producto(s) con stock bajo`,
-      link: '/inventory/products?filter=low_stock',
-    });
-  }
-  if (dashboard?.out_of_stock_count > 0) {
-    alerts.push({
-      type: 'error',
-      message: `${dashboard.out_of_stock_count} producto(s) agotado(s)`,
-      link: '/inventory/products?filter=out_of_stock',
-    });
-  }
-  if (dashboard?.products_without_inventory > 0) {
-    alerts.push({
-      type: 'info',
-      message: `${dashboard.products_without_inventory} producto(s) sin inventario configurado`,
-      link: '/inventory/products',
-    });
+  if (isAdmin()) {
+    if (dashboard?.low_stock_count > 0) {
+      alerts.push({
+        type: 'warning',
+        message: `${dashboard.low_stock_count} producto(s) con stock bajo`,
+        link: '/inventory/products?filter=low_stock',
+      });
+    }
+    if (dashboard?.out_of_stock_count > 0) {
+      alerts.push({
+        type: 'error',
+        message: `${dashboard.out_of_stock_count} producto(s) agotado(s)`,
+        link: '/inventory/products?filter=out_of_stock',
+      });
+    }
+    if (dashboard?.products_without_inventory > 0) {
+      alerts.push({
+        type: 'info',
+        message: `${dashboard.products_without_inventory} producto(s) sin inventario configurado`,
+        link: '/inventory/products',
+      });
+    }
   }
 
   return (
@@ -146,7 +158,9 @@ const InventoryDashboard = () => {
         <div>
           <h1 className='text-3xl font-bold text-gray-900'>Inventario</h1>
           <p className='mt-2 text-gray-600'>
-            Gestiona proveedores, marcas, productos y stock de tu negocio
+            {isAdmin() 
+              ? 'Gestiona proveedores, marcas, productos y stock de tu negocio'
+              : 'Consulta productos y disponibilidad de stock'}
           </p>
         </div>
         <Button onClick={fetchData} variant='outline' size='sm'>
@@ -155,8 +169,8 @@ const InventoryDashboard = () => {
         </Button>
       </div>
 
-      {/* Banner de configuración inicial */}
-      {setupProgress && !setupProgress.setup_complete && (
+      {/* Banner de configuración inicial - Solo para admins */}
+      {isAdmin() && setupProgress && !setupProgress.setup_complete && (
         <Alert className='border-blue-200 bg-blue-50'>
           <AlertTriangle className='h-4 w-4 text-blue-600' />
           <AlertDescription>
@@ -232,23 +246,25 @@ const InventoryDashboard = () => {
       )}
 
       {/* Métricas principales */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6'>
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>
-              Valor de Inventario
-            </CardTitle>
-            <TrendingUp className='h-4 w-4 text-green-600' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>
-              {formatPrice(dashboard?.inventory_value ?? 0)}
-            </div>
-            <p className='text-xs text-gray-600 mt-1'>
-              Valor total del stock
-            </p>
-          </CardContent>
-        </Card>
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${isAdmin() ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-4 lg:gap-6'`}>
+        {isAdmin() && (
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium'>
+                Valor de Inventario
+              </CardTitle>
+              <TrendingUp className='h-4 w-4 text-green-600' />
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold'>
+                {formatPrice(dashboard?.inventory_value ?? 0)}
+              </div>
+              <p className='text-xs text-gray-600 mt-1'>
+                Valor total del stock
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
@@ -265,35 +281,39 @@ const InventoryDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Stock Bajo</CardTitle>
-            <AlertTriangle className='h-4 w-4 text-yellow-600' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>
-              {dashboard?.low_stock_count ?? 0}
-            </div>
-            <p className='text-xs text-gray-600 mt-1'>
-              Requieren reorden
-            </p>
-          </CardContent>
-        </Card>
+        {isAdmin() && (
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium'>Stock Bajo</CardTitle>
+              <AlertTriangle className='h-4 w-4 text-yellow-600' />
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold'>
+                {dashboard?.low_stock_count ?? 0}
+              </div>
+              <p className='text-xs text-gray-600 mt-1'>
+                Requieren reorden
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
-        <Card>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Agotados</CardTitle>
-            <AlertTriangle className='h-4 w-4 text-red-600' />
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold'>
-              {dashboard?.out_of_stock_count ?? 0}
-            </div>
-            <p className='text-xs text-gray-600 mt-1'>
-              Sin stock disponible
-            </p>
-          </CardContent>
-        </Card>
+        {isAdmin() && (
+          <Card>
+            <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+              <CardTitle className='text-sm font-medium'>Agotados</CardTitle>
+              <AlertTriangle className='h-4 w-4 text-red-600' />
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold'>
+                {dashboard?.out_of_stock_count ?? 0}
+              </div>
+              <p className='text-xs text-gray-600 mt-1'>
+                Sin stock disponible
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Alertas */}
@@ -349,7 +369,7 @@ const InventoryDashboard = () => {
       {/* Módulos de acceso rápido */}
       <div>
         <h2 className='text-lg font-semibold text-gray-900 mb-4'>
-          Módulos de Inventario
+          {isAdmin() ? 'Módulos de Inventario' : 'Acceso a Inventario'}
         </h2>
         <div className='grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-6'>
           {modules.map((module) => {

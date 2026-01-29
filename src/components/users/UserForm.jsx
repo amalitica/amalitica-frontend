@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { ArrowLeft, Save, Calendar, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { ArrowLeft, Save, Calendar, Eye, EyeOff } from 'lucide-react';
 import { createUser, updateUser, getUserById } from '@/api/users';
 import { getAllBranches } from '@/api/branches';
 import { Button } from '@/components/ui/button';
@@ -23,14 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import PersonNameFields from '@/components/common/PersonNameFields';
 import { formatValidationError } from '@/utils/errorHandler';
-
-const ASSIGNMENT_ROLES = [
-  { value: 'Empleado', label: 'Empleado' },
-  { value: 'Gerente', label: 'Gerente' },
-];
 
 const UserForm = ({ mode = 'create' }) => {
   const navigate = useNavigate();
@@ -45,7 +39,6 @@ const UserForm = ({ mode = 'create' }) => {
   const {
     register,
     handleSubmit,
-    control,
     formState: { errors },
     setValue,
     watch,
@@ -61,13 +54,8 @@ const UserForm = ({ mode = 'create' }) => {
       password_confirmation: '',
       gender: null,
       birth_date: '',
-      assignments: [],
+      branch_id: null,
     },
-  });
-
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'assignments',
   });
 
   useEffect(() => {
@@ -85,39 +73,12 @@ const UserForm = ({ mode = 'create' }) => {
       setLoadingData(true);
       const user = await getUserById(id);
 
-      console.log('=== PASO 2: DATOS DEL BACKEND ===');
-      console.log('Usuario completo:', user);
-      console.log('Assignments cargados:', user.assignments); // ¡Corrige el typo!
-
-      // IMPORTANTE: Imprime con más detalle
-      if (user.assignments && user.assignments.length > 0) {
-        console.log('--- Detalle de cada assignment ---');
-        user.assignments.forEach((assignment, index) => {
-          console.log(`Assignment ${index}:`, {
-            id: assignment.id,
-            branch_id: assignment.branch_id,
-            assignment_role: assignment.assignment_role, // <-- ESTO ES LO QUE BUSCAMOS
-            start_date: assignment.start_date,
-            end_date: assignment.end_date,
-            is_primary: assignment.is_primary,
-            // Mostrar TODOS los campos
-            all_keys: Object.keys(assignment),
-          });
-        });
-      } else {
-        console.log('No hay assignments en este usuario');
-      }
-
-      console.log('=== ENUMS COMPARACIÓN ===');
-      console.log('ASSIGNMENT_ROLES en frontend:', ASSIGNMENT_ROLES);
-      // Esto nos dirá si los valores coinciden
+      // Setear todos los valores del usuario
       Object.keys(user).forEach((key) => {
         if (key === 'birth_date' && user[key]) {
           setValue(key, user[key].split('T')[0]);
-        } else if (key === 'assignments') {
-          setValue(key, user[key] || []);
         } else {
-          setValue(key, user[key] || '');
+          setValue(key, user[key] ?? '');
         }
       });
     } catch (err) {
@@ -134,8 +95,11 @@ const UserForm = ({ mode = 'create' }) => {
 
     try {
       const payload = { ...data };
+      
+      // Eliminar campos vacíos opcionales
       if (!payload.birth_date) delete payload.birth_date;
       if (!payload.gender) delete payload.gender;
+      if (!payload.branch_id) delete payload.branch_id;
 
       if (mode === 'create') {
         await createUser(payload);
@@ -153,16 +117,6 @@ const UserForm = ({ mode = 'create' }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const addAssignment = () => {
-    append({
-      branch_id: null,
-      assignment_role: 'EMPLOYEE',
-      start_date: new Date().toISOString().split('T')[0],
-      end_date: null,
-      is_primary: fields.length === 0,
-    });
   };
 
   if (loadingData) {
@@ -353,87 +307,35 @@ const UserForm = ({ mode = 'create' }) => {
           </CardContent>
         </Card>
 
-        {/* Card de Asignaciones a Sucursales */}
+        {/* Card de Asignación a Sucursal */}
         <Card>
           <CardHeader>
-            <CardTitle>Asignaciones a Sucursales</CardTitle>
+            <CardTitle>Asignación a Sucursal</CardTitle>
             <CardDescription>
-              Un usuario puede estar asignado a múltiples sucursales con
-              diferentes roles.
+              Selecciona la sucursal donde trabajará este usuario. 
+              Los administradores pueden no tener sucursal asignada.
             </CardDescription>
           </CardHeader>
           <CardContent className='space-y-4'>
-            {fields.map((field, index) => (
-              <div
-                key={field.id}
-                className='grid gap-4 p-4 border rounded-lg sm:grid-cols-5 items-end'
+            <div className='space-y-2'>
+              <Label htmlFor='branch_id'>Sucursal</Label>
+              <Select
+                value={watch('branch_id')?.toString() || 'null'}
+                onValueChange={(val) => setValue('branch_id', val === 'null' ? null : parseInt(val))}
               >
-                <div className='space-y-2 sm:col-span-2'>
-                  <Label>Sucursal</Label>
-                  <Select
-                    value={watch(`assignments.${index}.branch_id`)?.toString()}
-                    onValueChange={(val) =>
-                      setValue(`assignments.${index}.branch_id`, parseInt(val))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder='Seleccionar sucursal' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {branches.map((b) => (
-                        <SelectItem key={b.id} value={b.id.toString()}>
-                          {b.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className='space-y-2'>
-                  <Label>Rol en Sucursal</Label>
-                  <Select
-                    value={watch(`assignments.${index}.assignment_role`)}
-                    onValueChange={(val) =>
-                      setValue(`assignments.${index}.assignment_role`, val)
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder='Seleccionar rol' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ASSIGNMENT_ROLES.map((r) => (
-                        <SelectItem key={r.value} value={r.value}>
-                          {r.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className='flex items-center space-x-2'>
-                  <Checkbox
-                    id={`is_primary_${index}`}
-                    checked={watch(`assignments.${index}.is_primary`)}
-                    onCheckedChange={(checked) =>
-                      setValue(`assignments.${index}.is_primary`, checked)
-                    }
-                  />
-                  <Label htmlFor={`is_primary_${index}`} className='text-sm'>
-                    Principal
-                  </Label>
-                </div>
-                <Button
-                  type='button'
-                  variant='destructive'
-                  size='icon'
-                  onClick={() => remove(index)}
-                >
-                  <Trash2 className='h-4 w-4' />
-                </Button>
-              </div>
-            ))}
-            <Button type='button' variant='outline' onClick={addAssignment}>
-              <Plus className='mr-2 h-4 w-4' />
-              Añadir Asignación
-            </Button>
+                <SelectTrigger>
+                  <SelectValue placeholder='Seleccionar sucursal (opcional)' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='null'>Sin sucursal (Usuario corporativo)</SelectItem>
+                  {branches.map((b) => (
+                    <SelectItem key={b.id} value={b.id.toString()}>
+                      {b.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </CardContent>
         </Card>
 

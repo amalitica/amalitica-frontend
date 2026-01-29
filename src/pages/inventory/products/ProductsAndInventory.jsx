@@ -93,8 +93,8 @@ const ProductsAndInventory = () => {
     }
   };
 
-  const fetchInventoryForProduct = async (productId) => {
-    if (inventoryData[productId]) {
+  const fetchInventoryForProduct = async (productId, force = false) => {
+    if (!force && inventoryData[productId]) {
       // Ya tenemos los datos, no volver a cargar
       return;
     }
@@ -151,12 +151,16 @@ const ProductsAndInventory = () => {
   const handleModalSuccess = () => {
     // Recargar inventario del producto afectado
     if (selectedInventory?.product_id) {
+      // Limpiar datos antiguos y forzar recarga
       setInventoryData((prev) => {
         const newData = { ...prev };
         delete newData[selectedInventory.product_id];
         return newData;
       });
-      fetchInventoryForProduct(selectedInventory.product_id);
+      // Usar setTimeout para esperar a que React actualice el estado
+      setTimeout(() => {
+        fetchInventoryForProduct(selectedInventory.product_id, true);
+      }, 0);
     }
   };
 

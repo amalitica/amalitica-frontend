@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, MoreVertical, Edit, Trash2, User as UserIcon, Shield } from 'lucide-react';
+import { Plus, MoreVertical, Edit, Trash2, User as UserIcon, Building2 } from 'lucide-react';
 import { getUsers, deleteUser } from '@/api/users';
 import { Button } from '@/components/ui/button';
 import {
@@ -101,6 +101,7 @@ const UsersList = () => {
                   <TableHead>Nombre</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Rol</TableHead>
+                  <TableHead>Sucursal</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className='text-right'>Acciones</TableHead>
                 </TableRow>
@@ -116,6 +117,18 @@ const UsersList = () => {
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{getRoleBadge(user.role)}</TableCell>
+                    <TableCell>
+                      {user.branch ? (
+                        <div className='flex items-center gap-1.5'>
+                          <Building2 className='h-3.5 w-3.5 text-muted-foreground' />
+                          <span className='text-sm'>{user.branch.name}</span>
+                        </div>
+                      ) : (
+                        <span className='text-sm text-muted-foreground italic'>
+                          Sin sucursal
+                        </span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={user.active ? 'success' : 'destructive'}>
                         {user.active ? 'Activo' : 'Inactivo'}

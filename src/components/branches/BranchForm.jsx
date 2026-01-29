@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { ArrowLeft, Save } from 'lucide-react';
 import { createBranch, updateBranch, getBranchById } from '@/api/branches';
-import { getUsers } from '@/api/users';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,13 +14,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import GeographicSelector from '@/components/common/GeographicSelector';
 import { formatValidationError } from '@/utils/errorHandler';
 
@@ -31,7 +23,6 @@ const BranchForm = ({ mode = 'create' }) => {
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(mode === 'edit');
   const [error, setError] = useState(null);
-  const [users, setUsers] = useState([]);
 
   const {
     register,
@@ -54,18 +45,12 @@ const BranchForm = ({ mode = 'create' }) => {
       state_id: null,
       municipality_id: null,
       settlement_id: null,
-      manager_id: null,
       branch_type: 'estándar',
       has_lab: false,
     },
   });
 
   useEffect(() => {
-    // Cargar usuarios para el selector de manager
-    getUsers({ size: 100, management_roles: true })
-      .then((response) => setUsers(response.items || []))
-      .catch((err) => console.error('Error al cargar usuarios:', err));
-
     if (mode === 'edit' && id) {
       loadBranchData();
     }
@@ -192,6 +177,9 @@ const BranchForm = ({ mode = 'create' }) => {
         <Card>
           <CardHeader>
             <CardTitle>Contacto y Operación de la Sucursal</CardTitle>
+            <CardDescription>
+              El gerente se asigna desde la gestión de usuarios.
+            </CardDescription>
           </CardHeader>
           <CardContent className='grid gap-4 sm:grid-cols-2'>
             <div className='space-y-2'>
@@ -201,24 +189,6 @@ const BranchForm = ({ mode = 'create' }) => {
             <div className='space-y-2'>
               <Label htmlFor='email'>Email</Label>
               <Input id='email' type='email' {...register('email')} />
-            </div>
-            <div className='space-y-2'>
-              <Label htmlFor='manager_id'>Gerente / Encargado</Label>
-              <Select
-                value={watch('manager_id')?.toString()}
-                onValueChange={(val) => setValue('manager_id', parseInt(val))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Seleccionar gerente' />
-                </SelectTrigger>
-                <SelectContent>
-                  {users.map((u) => (
-                    <SelectItem key={u.id} value={u.id.toString()}>
-                      {u.name} {u.paternal_surname}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </CardContent>
         </Card>

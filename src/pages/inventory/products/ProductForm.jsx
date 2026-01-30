@@ -1,6 +1,6 @@
 /**
  * Formulario para crear y editar productos.
- * 
+ *
  * Incluye:
  * - Datos básicos del producto
  * - Selección de proveedor y marca desde catálogos normalizados
@@ -90,79 +90,77 @@ const productSchema = z.object({
 const BasicInfoSection = ({ control, errors, enums, suppliers, category }) => (
   <Card>
     <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <Package className="h-5 w-5" />
+      <CardTitle className='flex items-center gap-2'>
+        <Package className='h-5 w-5' />
         Información Básica
       </CardTitle>
-      <CardDescription>
-        Datos generales del producto
-      </CardDescription>
+      <CardDescription>Datos generales del producto</CardDescription>
     </CardHeader>
-    <CardContent className="grid gap-4 md:grid-cols-2">
-      <div className="space-y-2">
-        <Label htmlFor="sku">SKU *</Label>
+    <CardContent className='grid gap-4 md:grid-cols-2'>
+      <div className='space-y-2'>
+        <Label htmlFor='sku'>SKU *</Label>
         <Controller
-          name="sku"
+          name='sku'
           control={control}
           render={({ field }) => (
             <Input
               {...field}
-              id="sku"
-              placeholder="Ej: ARZ-RB-001"
+              id='sku'
+              placeholder='Ej: ARZ-RB-001'
               className={errors.sku ? 'border-red-500' : ''}
             />
           )}
         />
         {errors.sku && (
-          <p className="text-sm text-red-500">{errors.sku.message}</p>
+          <p className='text-sm text-red-500'>{errors.sku.message}</p>
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="barcode">Código de barras</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='barcode'>Código de barras</Label>
         <Controller
-          name="barcode"
+          name='barcode'
           control={control}
           render={({ field }) => (
             <Input
               {...field}
-              id="barcode"
-              placeholder="Ej: 7501234567890"
+              id='barcode'
+              placeholder='Ej: 7501234567890'
               value={field.value || ''}
             />
           )}
         />
       </div>
 
-      <div className="space-y-2 md:col-span-2">
-        <Label htmlFor="name">Nombre del producto *</Label>
+      <div className='space-y-2 md:col-span-2'>
+        <Label htmlFor='name'>Nombre del producto *</Label>
         <Controller
-          name="name"
+          name='name'
           control={control}
           render={({ field }) => (
             <Input
               {...field}
-              id="name"
-              placeholder="Ej: Armazón Ray-Ban Wayfarer Negro"
+              id='name'
+              placeholder='Ej: Armazón Ray-Ban Wayfarer Negro'
               className={errors.name ? 'border-red-500' : ''}
             />
           )}
         />
         {errors.name && (
-          <p className="text-sm text-red-500">{errors.name.message}</p>
+          <p className='text-sm text-red-500'>{errors.name.message}</p>
         )}
       </div>
 
-      <div className="space-y-2 md:col-span-2">
-        <Label htmlFor="description">Descripción</Label>
+      <div className='space-y-2 md:col-span-2'>
+        <Label htmlFor='description'>Descripción</Label>
         <Controller
-          name="description"
+          name='description'
           control={control}
           render={({ field }) => (
             <Textarea
               {...field}
-              id="description"
-              placeholder="Descripción detallada del producto..."
+              id='description'
+              placeholder='Descripción detallada del producto...'
               rows={3}
               value={field.value || ''}
             />
@@ -170,15 +168,17 @@ const BasicInfoSection = ({ control, errors, enums, suppliers, category }) => (
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="category">Categoría *</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='category'>Categoría *</Label>
         <Controller
-          name="category"
+          name='category'
           control={control}
           render={({ field }) => (
             <Select onValueChange={field.onChange} value={field.value}>
-              <SelectTrigger className={errors.category ? 'border-red-500' : ''}>
-                <SelectValue placeholder="Selecciona una categoría" />
+              <SelectTrigger
+                className={errors.category ? 'border-red-500' : ''}
+              >
+                <SelectValue placeholder='Selecciona una categoría' />
               </SelectTrigger>
               <SelectContent>
                 {enums?.categories?.map((cat) => (
@@ -191,22 +191,24 @@ const BasicInfoSection = ({ control, errors, enums, suppliers, category }) => (
           )}
         />
         {errors.category && (
-          <p className="text-sm text-red-500">{errors.category.message}</p>
+          <p className='text-sm text-red-500'>{errors.category.message}</p>
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="supplier_id">Proveedor</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='supplier_id'>Proveedor</Label>
         <Controller
-          name="supplier_id"
+          name='supplier_id'
           control={control}
           render={({ field }) => (
-            <Select 
-              onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} 
+            <Select
+              onValueChange={(value) =>
+                field.onChange(value ? parseInt(value) : null)
+              }
               value={field.value?.toString() || undefined}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona un proveedor" />
+                <SelectValue placeholder='Selecciona un proveedor' />
               </SelectTrigger>
               <SelectContent>
                 {suppliers?.map((supplier) => (
@@ -220,16 +222,16 @@ const BasicInfoSection = ({ control, errors, enums, suppliers, category }) => (
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="supplier_sku">SKU del proveedor</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='supplier_sku'>SKU del proveedor</Label>
         <Controller
-          name="supplier_sku"
+          name='supplier_sku'
           control={control}
           render={({ field }) => (
             <Input
               {...field}
-              id="supplier_sku"
-              placeholder="SKU en el catálogo del proveedor"
+              id='supplier_sku'
+              placeholder='SKU en el catálogo del proveedor'
               value={field.value || ''}
             />
           )}
@@ -245,65 +247,66 @@ const BasicInfoSection = ({ control, errors, enums, suppliers, category }) => (
 const PricingSection = ({ control, errors, enums }) => (
   <Card>
     <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <DollarSign className="h-5 w-5" />
+      <CardTitle className='flex items-center gap-2'>
+        <DollarSign className='h-5 w-5' />
         Precios
       </CardTitle>
-      <CardDescription>
-        Precio de venta y costo de adquisición
-      </CardDescription>
+      <CardDescription>Precio de venta y costo de adquisición</CardDescription>
     </CardHeader>
-    <CardContent className="grid gap-4 md:grid-cols-3">
-      <div className="space-y-2">
-        <Label htmlFor="price">Precio de venta (MXN) *</Label>
+    <CardContent className='grid gap-4 md:grid-cols-3'>
+      <div className='space-y-2'>
+        <Label htmlFor='price'>Precio de venta (MXN) *</Label>
         <Controller
-          name="price"
+          name='price'
           control={control}
           render={({ field }) => (
             <Input
               {...field}
-              id="price"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0.00"
+              id='price'
+              type='number'
+              step='0.01'
+              min='0'
+              placeholder='0.00'
               className={errors.price ? 'border-red-500' : ''}
             />
           )}
         />
         {errors.price && (
-          <p className="text-sm text-red-500">{errors.price.message}</p>
+          <p className='text-sm text-red-500'>{errors.price.message}</p>
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="cost">Costo de adquisición (MXN)</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='cost'>Costo de adquisición (MXN)</Label>
         <Controller
-          name="cost"
+          name='cost'
           control={control}
           render={({ field }) => (
             <Input
               {...field}
-              id="cost"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="0.00"
+              id='cost'
+              type='number'
+              step='0.01'
+              min='0'
+              placeholder='0.00'
               value={field.value || ''}
             />
           )}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="price_tier">Segmento de precio</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='price_tier'>Segmento de precio</Label>
         <Controller
-          name="price_tier"
+          name='price_tier'
           control={control}
           render={({ field }) => (
-            <Select onValueChange={field.onChange} value={field.value || undefined}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value || undefined}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona un segmento" />
+                <SelectValue placeholder='Selecciona un segmento' />
               </SelectTrigger>
               <SelectContent>
                 {enums?.price_tiers?.map((tier) => (
@@ -326,24 +329,27 @@ const PricingSection = ({ control, errors, enums }) => (
 const LifecycleSection = ({ control, enums }) => (
   <Card>
     <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <Info className="h-5 w-5" />
+      <CardTitle className='flex items-center gap-2'>
+        <Info className='h-5 w-5' />
         Ciclo de Vida
       </CardTitle>
       <CardDescription>
         Información para análisis y predicción de demanda
       </CardDescription>
     </CardHeader>
-    <CardContent className="grid gap-4 md:grid-cols-2">
-      <div className="space-y-2">
-        <Label htmlFor="season">Temporada</Label>
+    <CardContent className='grid gap-4 md:grid-cols-2'>
+      <div className='space-y-2'>
+        <Label htmlFor='season'>Temporada</Label>
         <Controller
-          name="season"
+          name='season'
           control={control}
           render={({ field }) => (
-            <Select onValueChange={field.onChange} value={field.value || undefined}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value || undefined}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona una temporada" />
+                <SelectValue placeholder='Selecciona una temporada' />
               </SelectTrigger>
               <SelectContent>
                 {enums?.seasons?.map((s) => (
@@ -357,15 +363,18 @@ const LifecycleSection = ({ control, enums }) => (
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="lifecycle_stage">Etapa del ciclo de vida</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='lifecycle_stage'>Etapa del ciclo de vida</Label>
         <Controller
-          name="lifecycle_stage"
+          name='lifecycle_stage'
           control={control}
           render={({ field }) => (
-            <Select onValueChange={field.onChange} value={field.value || undefined}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value || undefined}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona una etapa" />
+                <SelectValue placeholder='Selecciona una etapa' />
               </SelectTrigger>
               <SelectContent>
                 {enums?.lifecycle_stages?.map((stage) => (
@@ -379,32 +388,32 @@ const LifecycleSection = ({ control, enums }) => (
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="launch_date">Fecha de lanzamiento</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='launch_date'>Fecha de lanzamiento</Label>
         <Controller
-          name="launch_date"
+          name='launch_date'
           control={control}
           render={({ field }) => (
             <Input
               {...field}
-              id="launch_date"
-              type="date"
+              id='launch_date'
+              type='date'
               value={field.value || ''}
             />
           )}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="discontinuation_date">Fecha de descontinuación</Label>
+      <div className='space-y-2'>
+        <Label htmlFor='discontinuation_date'>Fecha de descontinuación</Label>
         <Controller
-          name="discontinuation_date"
+          name='discontinuation_date'
           control={control}
           render={({ field }) => (
             <Input
               {...field}
-              id="discontinuation_date"
-              type="date"
+              id='discontinuation_date'
+              type='date'
               value={field.value || ''}
             />
           )}
@@ -417,23 +426,33 @@ const LifecycleSection = ({ control, enums }) => (
 /**
  * Sección de detalles de armazón.
  */
-const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums, brands }) => (
+const FrameDetailsSection = ({
+  frameDetails,
+  setFrameDetails,
+  enums,
+  brands,
+}) => (
   <Card>
     <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <Glasses className="h-5 w-5" />
+      <CardTitle className='flex items-center gap-2'>
+        <Glasses className='h-5 w-5' />
         Detalles del Armazón
       </CardTitle>
     </CardHeader>
-    <CardContent className="grid gap-4 md:grid-cols-2">
-      <div className="space-y-2">
+    <CardContent className='grid gap-4 md:grid-cols-2'>
+      <div className='space-y-2'>
         <Label>Marca *</Label>
         <Select
           value={frameDetails.brand_id?.toString() || undefined}
-          onValueChange={(value) => setFrameDetails({ ...frameDetails, brand_id: value ? parseInt(value) : null })}
+          onValueChange={(value) =>
+            setFrameDetails({
+              ...frameDetails,
+              brand_id: value ? parseInt(value) : null,
+            })
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona una marca" />
+            <SelectValue placeholder='Selecciona una marca' />
           </SelectTrigger>
           <SelectContent>
             {brands?.map((brand) => (
@@ -445,41 +464,49 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums, brands }) =
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Modelo *</Label>
         <Input
           value={frameDetails.model || ''}
-          onChange={(e) => setFrameDetails({ ...frameDetails, model: e.target.value })}
-          placeholder="Ej: Wayfarer"
+          onChange={(e) =>
+            setFrameDetails({ ...frameDetails, model: e.target.value })
+          }
+          placeholder='Ej: Wayfarer'
         />
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Colección</Label>
         <Input
           value={frameDetails.collection || ''}
-          onChange={(e) => setFrameDetails({ ...frameDetails, collection: e.target.value })}
-          placeholder="Ej: Classic"
+          onChange={(e) =>
+            setFrameDetails({ ...frameDetails, collection: e.target.value })
+          }
+          placeholder='Ej: Classic'
         />
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Color *</Label>
         <Input
           value={frameDetails.color || ''}
-          onChange={(e) => setFrameDetails({ ...frameDetails, color: e.target.value })}
-          placeholder="Ej: Negro brillante"
+          onChange={(e) =>
+            setFrameDetails({ ...frameDetails, color: e.target.value })
+          }
+          placeholder='Ej: Negro brillante'
         />
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Material *</Label>
         <Select
           value={frameDetails.material || undefined}
-          onValueChange={(value) => setFrameDetails({ ...frameDetails, material: value })}
+          onValueChange={(value) =>
+            setFrameDetails({ ...frameDetails, material: value })
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona material" />
+            <SelectValue placeholder='Selecciona material' />
           </SelectTrigger>
           <SelectContent>
             {enums?.frame_materials?.map((m) => (
@@ -491,14 +518,16 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums, brands }) =
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Estilo *</Label>
         <Select
           value={frameDetails.style || undefined}
-          onValueChange={(value) => setFrameDetails({ ...frameDetails, style: value })}
+          onValueChange={(value) =>
+            setFrameDetails({ ...frameDetails, style: value })
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona estilo" />
+            <SelectValue placeholder='Selecciona estilo' />
           </SelectTrigger>
           <SelectContent>
             {enums?.frame_styles?.map((s) => (
@@ -510,14 +539,16 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums, brands }) =
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Forma</Label>
         <Select
           value={frameDetails.shape || undefined}
-          onValueChange={(value) => setFrameDetails({ ...frameDetails, shape: value })}
+          onValueChange={(value) =>
+            setFrameDetails({ ...frameDetails, shape: value })
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona forma" />
+            <SelectValue placeholder='Selecciona forma' />
           </SelectTrigger>
           <SelectContent>
             {enums?.frame_shapes?.map((shape) => (
@@ -529,14 +560,16 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums, brands }) =
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Género *</Label>
         <Select
           value={frameDetails.gender || undefined}
-          onValueChange={(value) => setFrameDetails({ ...frameDetails, gender: value })}
+          onValueChange={(value) =>
+            setFrameDetails({ ...frameDetails, gender: value })
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona género" />
+            <SelectValue placeholder='Selecciona género' />
           </SelectTrigger>
           <SelectContent>
             {enums?.genders?.map((g) => (
@@ -548,70 +581,96 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums, brands }) =
         </Select>
       </div>
 
-      <Separator className="md:col-span-2" />
+      <Separator className='md:col-span-2' />
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Ancho del lente (mm)</Label>
         <Input
-          type="number"
+          type='number'
           value={frameDetails.lens_width || ''}
-          onChange={(e) => setFrameDetails({ ...frameDetails, lens_width: e.target.value ? parseInt(e.target.value) : null })}
-          placeholder="Ej: 52"
+          onChange={(e) =>
+            setFrameDetails({
+              ...frameDetails,
+              lens_width: e.target.value ? parseInt(e.target.value) : null,
+            })
+          }
+          placeholder='Ej: 52'
         />
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Ancho del puente (mm)</Label>
         <Input
-          type="number"
+          type='number'
           value={frameDetails.bridge_width || ''}
-          onChange={(e) => setFrameDetails({ ...frameDetails, bridge_width: e.target.value ? parseInt(e.target.value) : null })}
-          placeholder="Ej: 18"
+          onChange={(e) =>
+            setFrameDetails({
+              ...frameDetails,
+              bridge_width: e.target.value ? parseInt(e.target.value) : null,
+            })
+          }
+          placeholder='Ej: 18'
         />
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Largo de varilla (mm)</Label>
         <Input
-          type="number"
+          type='number'
           value={frameDetails.temple_length || ''}
-          onChange={(e) => setFrameDetails({ ...frameDetails, temple_length: e.target.value ? parseInt(e.target.value) : null })}
-          placeholder="Ej: 145"
+          onChange={(e) =>
+            setFrameDetails({
+              ...frameDetails,
+              temple_length: e.target.value ? parseInt(e.target.value) : null,
+            })
+          }
+          placeholder='Ej: 145'
         />
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Ancho total (mm)</Label>
         <Input
-          type="number"
+          type='number'
           value={frameDetails.total_width || ''}
-          onChange={(e) => setFrameDetails({ ...frameDetails, total_width: e.target.value ? parseInt(e.target.value) : null })}
-          placeholder="Ej: 140"
+          onChange={(e) =>
+            setFrameDetails({
+              ...frameDetails,
+              total_width: e.target.value ? parseInt(e.target.value) : null,
+            })
+          }
+          placeholder='Ej: 140'
         />
       </div>
 
-      <Separator className="md:col-span-2" />
+      <Separator className='md:col-span-2' />
 
-      <div className="flex items-center space-x-2">
+      <div className='flex items-center space-x-2'>
         <Switch
           checked={frameDetails.is_prescription_ready ?? true}
-          onCheckedChange={(checked) => setFrameDetails({ ...frameDetails, is_prescription_ready: checked })}
+          onCheckedChange={(checked) =>
+            setFrameDetails({ ...frameDetails, is_prescription_ready: checked })
+          }
         />
         <Label>Listo para graduación</Label>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className='flex items-center space-x-2'>
         <Switch
           checked={frameDetails.is_sunglasses ?? false}
-          onCheckedChange={(checked) => setFrameDetails({ ...frameDetails, is_sunglasses: checked })}
+          onCheckedChange={(checked) =>
+            setFrameDetails({ ...frameDetails, is_sunglasses: checked })
+          }
         />
         <Label>Es lente de sol</Label>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className='flex items-center space-x-2'>
         <Switch
           checked={frameDetails.has_spring_hinges ?? false}
-          onCheckedChange={(checked) => setFrameDetails({ ...frameDetails, has_spring_hinges: checked })}
+          onCheckedChange={(checked) =>
+            setFrameDetails({ ...frameDetails, has_spring_hinges: checked })
+          }
         />
         <Label>Bisagras de resorte</Label>
       </div>
@@ -625,20 +684,25 @@ const FrameDetailsSection = ({ frameDetails, setFrameDetails, enums, brands }) =
 const LensDetailsSection = ({ lensDetails, setLensDetails, enums, brands }) => (
   <Card>
     <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <Eye className="h-5 w-5" />
+      <CardTitle className='flex items-center gap-2'>
+        <Eye className='h-5 w-5' />
         Detalles del Lente Oftálmico
       </CardTitle>
     </CardHeader>
-    <CardContent className="grid gap-4 md:grid-cols-2">
-      <div className="space-y-2">
+    <CardContent className='grid gap-4 md:grid-cols-2'>
+      <div className='space-y-2'>
         <Label>Marca *</Label>
         <Select
           value={lensDetails.brand_id?.toString() || undefined}
-          onValueChange={(value) => setLensDetails({ ...lensDetails, brand_id: value ? parseInt(value) : null })}
+          onValueChange={(value) =>
+            setLensDetails({
+              ...lensDetails,
+              brand_id: value ? parseInt(value) : null,
+            })
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona una marca" />
+            <SelectValue placeholder='Selecciona una marca' />
           </SelectTrigger>
           <SelectContent>
             {brands?.map((brand) => (
@@ -650,23 +714,27 @@ const LensDetailsSection = ({ lensDetails, setLensDetails, enums, brands }) => (
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Modelo</Label>
         <Input
           value={lensDetails.model || ''}
-          onChange={(e) => setLensDetails({ ...lensDetails, model: e.target.value })}
-          placeholder="Ej: Varilux"
+          onChange={(e) =>
+            setLensDetails({ ...lensDetails, model: e.target.value })
+          }
+          placeholder='Ej: Varilux'
         />
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Tipo de lente *</Label>
         <Select
           value={lensDetails.lens_type || undefined}
-          onValueChange={(value) => setLensDetails({ ...lensDetails, lens_type: value })}
+          onValueChange={(value) =>
+            setLensDetails({ ...lensDetails, lens_type: value })
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona tipo" />
+            <SelectValue placeholder='Selecciona tipo' />
           </SelectTrigger>
           <SelectContent>
             {enums?.lens_types?.map((t) => (
@@ -678,14 +746,16 @@ const LensDetailsSection = ({ lensDetails, setLensDetails, enums, brands }) => (
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Material *</Label>
         <Select
           value={lensDetails.material || undefined}
-          onValueChange={(value) => setLensDetails({ ...lensDetails, material: value })}
+          onValueChange={(value) =>
+            setLensDetails({ ...lensDetails, material: value })
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona material" />
+            <SelectValue placeholder='Selecciona material' />
           </SelectTrigger>
           <SelectContent>
             {enums?.lens_materials?.map((m) => (
@@ -697,14 +767,16 @@ const LensDetailsSection = ({ lensDetails, setLensDetails, enums, brands }) => (
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Tratamiento *</Label>
         <Select
           value={lensDetails.treatment || undefined}
-          onValueChange={(value) => setLensDetails({ ...lensDetails, treatment: value })}
+          onValueChange={(value) =>
+            setLensDetails({ ...lensDetails, treatment: value })
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona tratamiento" />
+            <SelectValue placeholder='Selecciona tratamiento' />
           </SelectTrigger>
           <SelectContent>
             {enums?.lens_treatments?.map((t) => (
@@ -716,47 +788,62 @@ const LensDetailsSection = ({ lensDetails, setLensDetails, enums, brands }) => (
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Índice de refracción</Label>
         <Input
-          type="number"
-          step="0.01"
+          type='number'
+          step='0.01'
           value={lensDetails.refractive_index || ''}
-          onChange={(e) => setLensDetails({ ...lensDetails, refractive_index: e.target.value ? parseFloat(e.target.value) : null })}
-          placeholder="Ej: 1.67"
+          onChange={(e) =>
+            setLensDetails({
+              ...lensDetails,
+              refractive_index: e.target.value
+                ? parseFloat(e.target.value)
+                : null,
+            })
+          }
+          placeholder='Ej: 1.67'
         />
       </div>
 
-      <Separator className="md:col-span-2" />
+      <Separator className='md:col-span-2' />
 
-      <div className="flex items-center space-x-2">
+      <div className='flex items-center space-x-2'>
         <Switch
           checked={lensDetails.has_anti_reflective ?? false}
-          onCheckedChange={(checked) => setLensDetails({ ...lensDetails, has_anti_reflective: checked })}
+          onCheckedChange={(checked) =>
+            setLensDetails({ ...lensDetails, has_anti_reflective: checked })
+          }
         />
         <Label>Antirreflejante</Label>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className='flex items-center space-x-2'>
         <Switch
           checked={lensDetails.has_blue_light_filter ?? false}
-          onCheckedChange={(checked) => setLensDetails({ ...lensDetails, has_blue_light_filter: checked })}
+          onCheckedChange={(checked) =>
+            setLensDetails({ ...lensDetails, has_blue_light_filter: checked })
+          }
         />
         <Label>Filtro de luz azul</Label>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className='flex items-center space-x-2'>
         <Switch
           checked={lensDetails.has_uv_protection ?? true}
-          onCheckedChange={(checked) => setLensDetails({ ...lensDetails, has_uv_protection: checked })}
+          onCheckedChange={(checked) =>
+            setLensDetails({ ...lensDetails, has_uv_protection: checked })
+          }
         />
         <Label>Protección UV</Label>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className='flex items-center space-x-2'>
         <Switch
           checked={lensDetails.is_photochromic ?? false}
-          onCheckedChange={(checked) => setLensDetails({ ...lensDetails, is_photochromic: checked })}
+          onCheckedChange={(checked) =>
+            setLensDetails({ ...lensDetails, is_photochromic: checked })
+          }
         />
         <Label>Fotocromático</Label>
       </div>
@@ -767,23 +854,33 @@ const LensDetailsSection = ({ lensDetails, setLensDetails, enums, brands }) => (
 /**
  * Sección de detalles de lente de contacto.
  */
-const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums, brands }) => (
+const ContactLensDetailsSection = ({
+  contactDetails,
+  setContactDetails,
+  enums,
+  brands,
+}) => (
   <Card>
     <CardHeader>
-      <CardTitle className="flex items-center gap-2">
-        <CircleDot className="h-5 w-5" />
+      <CardTitle className='flex items-center gap-2'>
+        <CircleDot className='h-5 w-5' />
         Detalles del Lente de Contacto
       </CardTitle>
     </CardHeader>
-    <CardContent className="grid gap-4 md:grid-cols-2">
-      <div className="space-y-2">
+    <CardContent className='grid gap-4 md:grid-cols-2'>
+      <div className='space-y-2'>
         <Label>Marca *</Label>
         <Select
           value={contactDetails.brand_id?.toString() || undefined}
-          onValueChange={(value) => setContactDetails({ ...contactDetails, brand_id: value ? parseInt(value) : null })}
+          onValueChange={(value) =>
+            setContactDetails({
+              ...contactDetails,
+              brand_id: value ? parseInt(value) : null,
+            })
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona una marca" />
+            <SelectValue placeholder='Selecciona una marca' />
           </SelectTrigger>
           <SelectContent>
             {brands?.map((brand) => (
@@ -795,26 +892,30 @@ const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums, b
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Modelo</Label>
         <Input
           value={contactDetails.model || ''}
-          onChange={(e) => setContactDetails({ ...contactDetails, model: e.target.value })}
-          placeholder="Ej: Acuvue Oasys"
+          onChange={(e) =>
+            setContactDetails({ ...contactDetails, model: e.target.value })
+          }
+          placeholder='Ej: Acuvue Oasys'
         />
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Tipo *</Label>
         <Select
-          value={contactDetails.contact_type || undefined}
-          onValueChange={(value) => setContactDetails({ ...contactDetails, contact_type: value })}
+          value={contactDetails.lens_type || undefined}
+          onValueChange={(value) =>
+            setContactDetails({ ...contactDetails, lens_type: value })
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona tipo" />
+            <SelectValue placeholder='Selecciona tipo' />
           </SelectTrigger>
           <SelectContent>
-            {enums?.contact_types?.map((t) => (
+            {enums?.contact_lens_types?.map((t) => (
               <SelectItem key={t.value} value={t.value}>
                 {t.label}
               </SelectItem>
@@ -823,17 +924,22 @@ const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums, b
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Frecuencia de reemplazo *</Label>
         <Select
           value={contactDetails.replacement_frequency || undefined}
-          onValueChange={(value) => setContactDetails({ ...contactDetails, replacement_frequency: value })}
+          onValueChange={(value) =>
+            setContactDetails({
+              ...contactDetails,
+              replacement_frequency: value,
+            })
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona frecuencia" />
+            <SelectValue placeholder='Selecciona frecuencia' />
           </SelectTrigger>
           <SelectContent>
-            {enums?.contact_frequencies?.map((f) => (
+            {enums?.contact_lens_frequencies?.map((f) => (
               <SelectItem key={f.value} value={f.value}>
                 {f.label}
               </SelectItem>
@@ -842,17 +948,19 @@ const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums, b
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Diseño</Label>
         <Select
           value={contactDetails.design || undefined}
-          onValueChange={(value) => setContactDetails({ ...contactDetails, design: value })}
+          onValueChange={(value) =>
+            setContactDetails({ ...contactDetails, design: value })
+          }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Selecciona diseño" />
+            <SelectValue placeholder='Selecciona diseño' />
           </SelectTrigger>
           <SelectContent>
-            {enums?.contact_designs?.map((d) => (
+            {enums?.contact_lens_designs?.map((d) => (
               <SelectItem key={d.value} value={d.value}>
                 {d.label}
               </SelectItem>
@@ -861,81 +969,109 @@ const ContactLensDetailsSection = ({ contactDetails, setContactDetails, enums, b
         </Select>
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Contenido de agua (%)</Label>
         <Input
-          type="number"
-          step="0.1"
+          type='number'
+          step='0.1'
           value={contactDetails.water_content || ''}
-          onChange={(e) => setContactDetails({ ...contactDetails, water_content: e.target.value ? parseFloat(e.target.value) : null })}
-          placeholder="Ej: 38.5"
+          onChange={(e) =>
+            setContactDetails({
+              ...contactDetails,
+              water_content: e.target.value ? parseFloat(e.target.value) : null,
+            })
+          }
+          placeholder='Ej: 38.5'
         />
       </div>
 
-      <Separator className="md:col-span-2" />
+      <Separator className='md:col-span-2' />
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Curva base (mm)</Label>
         <Input
-          type="number"
-          step="0.1"
+          type='number'
+          step='0.1'
           value={contactDetails.base_curve || ''}
-          onChange={(e) => setContactDetails({ ...contactDetails, base_curve: e.target.value ? parseFloat(e.target.value) : null })}
-          placeholder="Ej: 8.6"
+          onChange={(e) =>
+            setContactDetails({
+              ...contactDetails,
+              base_curve: e.target.value ? parseFloat(e.target.value) : null,
+            })
+          }
+          placeholder='Ej: 8.6'
         />
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Diámetro (mm)</Label>
         <Input
-          type="number"
-          step="0.1"
+          type='number'
+          step='0.1'
           value={contactDetails.diameter || ''}
-          onChange={(e) => setContactDetails({ ...contactDetails, diameter: e.target.value ? parseFloat(e.target.value) : null })}
-          placeholder="Ej: 14.2"
+          onChange={(e) =>
+            setContactDetails({
+              ...contactDetails,
+              diameter: e.target.value ? parseFloat(e.target.value) : null,
+            })
+          }
+          placeholder='Ej: 14.2'
         />
       </div>
 
-      <div className="space-y-2">
+      <div className='space-y-2'>
         <Label>Unidades por caja</Label>
         <Input
-          type="number"
+          type='number'
           value={contactDetails.units_per_box || ''}
-          onChange={(e) => setContactDetails({ ...contactDetails, units_per_box: e.target.value ? parseInt(e.target.value) : null })}
-          placeholder="Ej: 6"
+          onChange={(e) =>
+            setContactDetails({
+              ...contactDetails,
+              units_per_box: e.target.value ? parseInt(e.target.value) : null,
+            })
+          }
+          placeholder='Ej: 6'
         />
       </div>
 
-      <Separator className="md:col-span-2" />
+      <Separator className='md:col-span-2' />
 
-      <div className="flex items-center space-x-2">
+      <div className='flex items-center space-x-2'>
         <Switch
           checked={contactDetails.has_cylinder ?? false}
-          onCheckedChange={(checked) => setContactDetails({ ...contactDetails, has_cylinder: checked })}
+          onCheckedChange={(checked) =>
+            setContactDetails({ ...contactDetails, has_cylinder: checked })
+          }
         />
         <Label>Para astigmatismo (tórico)</Label>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className='flex items-center space-x-2'>
         <Switch
           checked={contactDetails.has_multifocal ?? false}
-          onCheckedChange={(checked) => setContactDetails({ ...contactDetails, has_multifocal: checked })}
+          onCheckedChange={(checked) =>
+            setContactDetails({ ...contactDetails, has_multifocal: checked })
+          }
         />
         <Label>Multifocal</Label>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className='flex items-center space-x-2'>
         <Switch
           checked={contactDetails.has_uv_protection ?? false}
-          onCheckedChange={(checked) => setContactDetails({ ...contactDetails, has_uv_protection: checked })}
+          onCheckedChange={(checked) =>
+            setContactDetails({ ...contactDetails, has_uv_protection: checked })
+          }
         />
         <Label>Protección UV</Label>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className='flex items-center space-x-2'>
         <Switch
           checked={contactDetails.is_colored ?? false}
-          onCheckedChange={(checked) => setContactDetails({ ...contactDetails, is_colored: checked })}
+          onCheckedChange={(checked) =>
+            setContactDetails({ ...contactDetails, is_colored: checked })
+          }
         />
         <Label>De color</Label>
       </div>
@@ -1038,8 +1174,10 @@ const ProductForm = () => {
             LENS: 'Lente Oftálmico',
             CONTACT_LENS: 'Lente de Contacto',
           };
-          
-          const brandsData = await getBrandsSimple({ category: categoryToEnumValue[category] });
+
+          const brandsData = await getBrandsSimple({
+            category: categoryToEnumValue[category],
+          });
           setBrands(brandsData);
         } catch (error) {
           console.error('Error al cargar marcas:', error);
@@ -1086,7 +1224,8 @@ const ProductForm = () => {
           console.error('Error al cargar producto:', error);
           toast({
             title: 'Error',
-            description: error.response?.data?.detail || 'No se pudo cargar el producto',
+            description:
+              error.response?.data?.detail || 'No se pudo cargar el producto',
             variant: 'destructive',
           });
           navigate('/inventory/products');
@@ -1105,6 +1244,7 @@ const ProductForm = () => {
       // Preparar datos según categoría
       const productData = {
         ...data,
+        barcode: data.barcode || null,
         cost: data.cost || null,
         price_tier: data.price_tier || null,
         supplier_id: data.supplier_id || null,
@@ -1145,9 +1285,15 @@ const ProductForm = () => {
       if (error.response?.data?.detail) {
         if (typeof error.response.data.detail === 'string') {
           errorMessage = error.response.data.detail;
-        } else if (typeof error.response.data.detail === 'object' && error.response.data.detail.msg) {
+        } else if (
+          typeof error.response.data.detail === 'object' &&
+          error.response.data.detail.msg
+        ) {
           errorMessage = error.response.data.detail.msg;
-        } else if (Array.isArray(error.response.data.detail) && error.response.data.detail.length > 0) {
+        } else if (
+          Array.isArray(error.response.data.detail) &&
+          error.response.data.detail.length > 0
+        ) {
           const firstError = error.response.data.detail[0];
           if (firstError.msg) {
             errorMessage = firstError.msg;
@@ -1156,7 +1302,7 @@ const ProductForm = () => {
           }
         }
       }
-      
+
       toast({
         title: 'Error',
         description: errorMessage,
@@ -1169,45 +1315,45 @@ const ProductForm = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className='flex items-center justify-center h-64'>
+        <Loader2 className='h-8 w-8 animate-spin' />
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className='flex items-center justify-between'>
+        <div className='flex items-center gap-4'>
           <Button
-            type="button"
-            variant="ghost"
-            size="icon"
+            type='button'
+            variant='ghost'
+            size='icon'
             onClick={() => navigate('/inventory/products')}
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className='h-4 w-4' />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1 className='text-3xl font-bold tracking-tight'>
               {isEditing ? 'Editar Producto' : 'Nuevo Producto'}
             </h1>
-            <p className="text-muted-foreground">
+            <p className='text-muted-foreground'>
               {isEditing
                 ? 'Modifica los datos del producto'
                 : 'Completa la información del nuevo producto'}
             </p>
           </div>
         </div>
-        <Button type="submit" disabled={saving}>
+        <Button type='submit' disabled={saving}>
           {saving ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className='mr-2 h-4 w-4 animate-spin' />
               Guardando...
             </>
           ) : (
             <>
-              <Save className="mr-2 h-4 w-4" />
+              <Save className='mr-2 h-4 w-4' />
               Guardar
             </>
           )}
@@ -1215,35 +1361,35 @@ const ProductForm = () => {
       </div>
 
       {/* Tabs de secciones */}
-      <Tabs defaultValue="basic" className="space-y-6">
+      <Tabs defaultValue='basic' className='space-y-6'>
         <TabsList>
-          <TabsTrigger value="basic">Información Básica</TabsTrigger>
-          <TabsTrigger value="pricing">Precios</TabsTrigger>
-          <TabsTrigger value="lifecycle">Ciclo de Vida</TabsTrigger>
+          <TabsTrigger value='basic'>Información Básica</TabsTrigger>
+          <TabsTrigger value='pricing'>Precios</TabsTrigger>
+          <TabsTrigger value='lifecycle'>Ciclo de Vida</TabsTrigger>
           {category && ['FRAME', 'LENS', 'CONTACT_LENS'].includes(category) && (
-            <TabsTrigger value="details">Detalles Específicos</TabsTrigger>
+            <TabsTrigger value='details'>Detalles Específicos</TabsTrigger>
           )}
         </TabsList>
 
-        <TabsContent value="basic">
-          <BasicInfoSection 
-            control={control} 
-            errors={errors} 
-            enums={enums} 
+        <TabsContent value='basic'>
+          <BasicInfoSection
+            control={control}
+            errors={errors}
+            enums={enums}
             suppliers={suppliers}
             category={category}
           />
         </TabsContent>
 
-        <TabsContent value="pricing">
+        <TabsContent value='pricing'>
           <PricingSection control={control} errors={errors} enums={enums} />
         </TabsContent>
 
-        <TabsContent value="lifecycle">
+        <TabsContent value='lifecycle'>
           <LifecycleSection control={control} enums={enums} />
         </TabsContent>
 
-        <TabsContent value="details">
+        <TabsContent value='details'>
           {category === 'FRAME' && (
             <FrameDetailsSection
               frameDetails={frameDetails}
